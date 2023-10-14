@@ -2,7 +2,7 @@
     #define DEBUG
 #endif
 
-#include <assert.h>
+#include <cassert>
 
 #include "bits.h"
 
