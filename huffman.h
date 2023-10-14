@@ -183,4 +183,9 @@ uint64_t static inline __stdcall sort_bytes(
 
 static inline void init_leaves(_In_ huffman_t* const restrict tree) { }
 
+static inline void printbytes(_In_ const huffman_t* const restrict tree) {
+    for (size_t i = 0; i < 256; ++i) wprintf_s(L"%3d: %10llu\n", tree->orderedbytes[i], tree->freqs[tree->orderedbytes[i]]);
+    return;
+}
+
 #endif //!__HUFFMAN__
