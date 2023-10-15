@@ -97,11 +97,12 @@ typedef struct huffman_t {
 } huffman_t;
     #pragma pack(pop)
 
-// We won't be hooking up nodes without children to parents, so those variants need not to be here.
+// We won't be hooking up nodes without two children to parents, so those variants need not to be here.
 typedef enum LINK_ {
-    NPSC = -3, // `No Parent, Single Child`
-    NPTC,      // `No Parent, Two Children`
-    PTC,       // `Parent, Two Children`
+    NPNC = -100, // `has no parent, has no children`
+    NPC,         // `has no parent, has a child`
+    NPCC,        // `has no parent, has two children`
+    PCC,         // `has a parent, has two children`
 } LINK;
 
 // context must be the predicate's first argument, function signature must be in the following form:
@@ -125,7 +126,8 @@ static void inline init_huffmantree(_Inout_ huffman_t* const restrict tree) {
 
     tree->nleaves = tree->nlinks = 0;
     for (size_t i = 0; i < MAX_TOTAL_NODES; ++i) {
-        tree->nodes[i].byte = tree->nodes[i].weight = 0;
+        tree->nodes[i].byte   = NPNC;
+        tree->nodes[i].weight = 0;
         tree->nodes[i].left = tree->nodes[i].left = NULL;
     }
     tree->is_initialized          = true;
@@ -150,7 +152,7 @@ static void inline __stdcall init_freqtable(
 // We'll then need 256 terminal nodes.
 // Each linking node will need 2 child nodes.
 // Total number of nodes (maximum possible) is 2N - 1 i.e = (256 * 2) - 1 = 511
-// Since we are willing to use 256 terminal nodes (again, we will never ever need nodes more than this. Sort of an overkill, but okay.)
+// Since we are willing to use 256 leaf nodes (again, we will never ever need leaf nodes more than this.
 // The number of linker nodes will be 2N - 1 - N = (N - 1) i.e 255
 
 // Sort the bytes array, using the frequencies of bytes in the byte stream as reference, and returns the offset of the first byte with
@@ -178,6 +180,7 @@ static void inline __stdcall sort_bytes(_Inout_ huffman_t* restrict const tree, 
         }
     }
     tree->nleaves = 256 - pos;                        // not 255 - pos!
+    tree->nlinks  = tree->nleaves - 1;                // N - 1
     return;
 }
 
@@ -203,6 +206,27 @@ static void inline printbytes(_In_ const huffman_t* const restrict tree) {
     return;
 }
 
+typedef struct nodepair_ {
+        node_t* left;
+        node_t* right;
+} nodepair_t;
+
+// scans the nodes array for a pair of un-hooked (no parent) nodes with the lowest frequencies.
+static nodepair_t inline scan_nodes(
+    _In_ const huffman_t* const restrict tree, _In_ const size_t ignore /* offsets to ignore */, _In_ const uint64_t cutoff
+) {
+    // check the node type.
+    // if it's a link node, check for its current status.
+    // check if the weight is less than or equal to the cutoff.
+
+    nodepair_t pair   = { NULL, NULL };
+    uint64_t   weight = 0;
+
+    for (size_t i = ignore; i < MAX_TOTAL_NODES; ++i)
+        if (tree->nodes[i].byte != PCC && tree->nodes[i].weight >= cutoff) pair.
+}
+
+// when creating new nodes, always make sure they are arranged in the ascending order of their weights, regardless of the node type.
 static void inline create_links(_Inout_ huffman_t* const restrict tree) { }
 
 #endif //!__HUFFMAN__
