@@ -220,10 +220,15 @@ static nodepair_t inline scan_nodes(
     // check if the weight is less than or equal to the cutoff.
 
     nodepair_t pair   = { NULL, NULL };
-    uint64_t   weight = 0;
+    uint64_t   weight = cutoff, offset = 0;
+    size_t     i = ignore;
 
-    for (size_t i = ignore; i < MAX_TOTAL_NODES; ++i)
-        if (tree->nodes[i].byte != PCC && tree->nodes[i].weight >= cutoff) pair.
+    for (; i < MAX_TOTAL_NODES; ++i) {
+        if (tree->nodes[i].byte != PCC && tree->nodes[i].weight >= cutoff) {
+            weight = tree->nodes[i].weight; // register the weight
+            break;
+        }
+    }
 }
 
 // when creating new nodes, always make sure they are arranged in the ascending order of their weights, regardless of the node type.

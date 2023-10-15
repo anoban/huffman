@@ -56,6 +56,10 @@ namespace utilities {
 
 } // namespace utilities
 
-namespace huffman { } // namespace huffman
+namespace huffman {
 
-#endif                // !__HUFFMAN__
+    struct node_t { };
+
+} // namespace huffman
+
+#endif // !__HUFFMAN__

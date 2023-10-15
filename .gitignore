@@ -387,10 +387,3 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-
-# Media
-*.bmp
-*.png
-*.jpeg
-*.jpg
-*.mp4
