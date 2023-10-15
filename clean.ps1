@@ -1,8 +1,8 @@
-Get-ChildItem *.exe -Recurse | foreach($_) {Remove-Item $_}
-Get-ChildItem *.obj -Recurse | foreach($_) {Remove-Item $_}	
-Get-ChildItem *.pdb -Recurse | foreach($_) {Remove-Item $_}
-Get-ChildItem *.exp -Recurse | foreach($_) {Remove-Item $_}
-Get-ChildItem *.dll -Recurse | foreach($_) {Remove-Item $_}
-Get-ChildItem *.lib -Recurse | foreach($_) {Remove-Item $_}
-Get-ChildItem *.ilk -Recurse | foreach($_) {Remove-Item $_}
-Get-ChildItem *.i -Recurse | foreach($_) {Remove-Item $_}
+Get-ChildItem *.exe -Recurse | Foreach-Object {Remove-Item $_.FullName -Force}
+Get-ChildItem *.obj -Recurse | Foreach-Object {Remove-Item $_.FullName -Force}	
+Get-ChildItem *.pdb -Recurse | Foreach-Object {Remove-Item $_.FullName -Force}
+Get-ChildItem *.exp -Recurse | Foreach-Object {Remove-Item $_.FullName -Force}
+Get-ChildItem *.dll -Recurse | Foreach-Object {Remove-Item $_.FullName -Force}
+Get-ChildItem *.lib -Recurse | Foreach-Object {Remove-Item $_.FullName -Force}
+Get-ChildItem *.ilk -Recurse | Foreach-Object {Remove-Item $_.FullName -Force}
+Get-ChildItem *.i -Recurse | Foreach-Object {Remove-Item $_.FullName -Force}

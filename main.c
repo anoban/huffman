@@ -12,7 +12,7 @@ int32_t wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) const wchar_t* a
     const uint8_t* bytes  = open(argv[1], &nbytes);
 
     if (!bytes) {
-        wprintf_s(stderr, L"Error: (Line %d, File %s) open returned NULL.\n", __LINE__, __FILEW__);
+        fwprintf_s(stderr, L"Error: (Line %d, File %s) open returned NULL.\n", __LINE__, __FILEW__);
         return EXIT_FAILURE;
     }
 
@@ -20,8 +20,10 @@ int32_t wmain(_In_opt_ const int32_t argc, _In_opt_count_(argc) const wchar_t* a
     init_huffmantree(&hftree);
     init_freqtable(&hftree, bytes, nbytes);
     sort_bytes(&hftree, predicate);
-
+    init_leaves(&hftree);
     printbytes(&hftree);
+
+    wprintf_s(L"%s has %llu different bytes in it.\n", argv[1], hftree.nleaves);
 
     free(bytes);
     return EXIT_SUCCESS;

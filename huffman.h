@@ -92,12 +92,13 @@ typedef struct huffman_t {
         uint8_t  orderedbytes[256];      // `bytes sorted by ascending frequency.`
         uint64_t nleaves;                // `number of leaf nodes in the tree.`
         uint64_t nlinks;                 // `number of link nodes in the tree.`
-        bool     isfreqtable_initialized, is_initialized;
+        bool     isfreqtable_initialized;
+        bool     is_initialized;
 } huffman_t;
     #pragma pack(pop)
 
 // We won't be hooking up nodes without children to parents, so those variants need not to be here.
-typedef enum LINK {
+typedef enum LINK_ {
     NPSC = -3, // `No Parent, Single Child`
     NPTC,      // `No Parent, Two Children`
     PTC,       // `Parent, Two Children`
@@ -154,9 +155,7 @@ static void inline __stdcall init_freqtable(
 
 // Sort the bytes array, using the frequencies of bytes in the byte stream as reference, and returns the offset of the first byte with
 // non-zero frequency. Uses UCRT's qsort internally. Caller does not need to initialize the `bytes` array.
-uint64_t static inline __stdcall sort_bytes(
-    _Inout_ huffman_t* restrict const tree, _In_ _CoreCrtSecureSearchSortCompareFunction predicate
-) {
+static void inline __stdcall sort_bytes(_Inout_ huffman_t* restrict const tree, _In_ _CoreCrtSecureSearchSortCompareFunction predicate) {
     if (!tree->isfreqtable_initialized) {
         fwprintf_s(
             stderr,
@@ -164,7 +163,7 @@ uint64_t static inline __stdcall sort_bytes(
             __LINE__,
             __FILEW__
         );
-        return 0;
+        return;
     }
 
     for (size_t i = 0; i < 256; ++i) tree->orderedbytes[i] = (uint8_t) i; // Initialize the array with bytes 0 to 255.
@@ -178,14 +177,32 @@ uint64_t static inline __stdcall sort_bytes(
             break;
         }
     }
-    return pos;
-}
-
-static inline void init_leaves(_In_ huffman_t* const restrict tree) { }
-
-static inline void printbytes(_In_ const huffman_t* const restrict tree) {
-    for (size_t i = 0; i < 256; ++i) wprintf_s(L"%3d: %10llu\n", tree->orderedbytes[i], tree->freqs[tree->orderedbytes[i]]);
+    tree->nleaves = 256 - pos;                        // not 255 - pos!
     return;
 }
+
+static void inline init_leaves(_In_ huffman_t* const restrict tree) {
+    if (!tree->is_initialized || !tree->isfreqtable_initialized) {
+        fwprintf_s(
+            stderr, L"Error: (Line %d, File %s) The frequency table and/or Huffman tree has/ven't been initialized.\n", __LINE__, __FILEW__
+        );
+        return;
+    }
+
+    const size_t nskips = 256 - tree->nleaves;
+    for (size_t i = 0; i < tree->nleaves; ++i) {
+        tree->nodes[i].byte   = tree->orderedbytes[nskips + i]; // cherry picking only the bytes with non-zero frequencies.
+        tree->nodes[i].weight = tree->freqs[tree->nodes[i].byte];
+        tree->nodes[i].left = tree->nodes[i].right = NULL;      // no branches for leaf nodes.
+    }
+    return;
+}
+
+static void inline printbytes(_In_ const huffman_t* const restrict tree) {
+    for (size_t i = 0; i < 256; ++i) wprintf_s(L"%4zu) %3d: %10llu\n", i, tree->orderedbytes[i], tree->freqs[tree->orderedbytes[i]]);
+    return;
+}
+
+static void inline create_links(_Inout_ huffman_t* const restrict tree) { }
 
 #endif //!__HUFFMAN__
