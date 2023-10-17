@@ -87,7 +87,7 @@ typedef struct node_t {
 
     #pragma pack(push, 8)
 typedef struct huffman_t {
-        node_t   nodes[MAX_TOTAL_NODES]; // `an array of 256 node_t s.`
+        node_t   nodes[MAX_TOTAL_NODES]; // `an array of 511 node_t s, sorted by weight`
         uint64_t freqs[256];             // `an array holding the frequencies of each byte in the file.`
         uint8_t  orderedbytes[256];      // `bytes sorted by ascending frequency.`
         uint64_t nleaves;                // `number of leaf nodes in the tree.`
@@ -213,7 +213,9 @@ typedef struct nodepair_ {
 
 // scans the nodes array for a pair of un-hooked (no parent) nodes with the lowest frequencies.
 static nodepair_t inline scan_nodes(
-    _In_ const huffman_t* const restrict tree, _In_ const size_t ignore /* offsets to ignore */, _In_ const uint64_t cutoff
+    _In_ const huffman_t* const restrict tree,
+    _In_ const size_t   ignore /* offsets to ignore */,
+    _In_ const uint64_t cutoff /* weights need to be greater than this  */
 ) {
     // check the node type.
     // if it's a link node, check for its current status.
