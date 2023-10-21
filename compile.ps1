@@ -3,7 +3,7 @@ $unrecognized = [System.Collections.ArrayList]::new()
 
 
 foreach ($arg in $args) {
-    if ($arg -clike "*.cpp") {
+    if ($arg -clike "*.c") {
         [void]$cfiles.Add($arg.ToString().Replace(".\", ""))
     }
     else {
@@ -34,8 +34,8 @@ $cflags = @(
     "/Oi",
     "/Ot",
     "/Qpar",
-    "/std:c++20",
-    "/TP",
+    "/std:c17",
+    "/TC",
     "/Wall",
     "/wd4710",      # not inlined
     "/wd4820",      # struct padding
@@ -50,6 +50,6 @@ cl.exe $cfiles $cflags
 
 if ($? -eq $True){
     foreach($file in $cfiles){
-        Remove-Item $file.Replace(".cpp", ".obj") -Force
+        Remove-Item $file.Replace(".c", ".obj") -Force
     }    
 }

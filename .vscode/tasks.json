@@ -24,7 +24,7 @@
                 "/Wall",
                 "/Od",
                 "/std:c17",
-                "/Fe${fileDirname}\\${fileBasenameNoExtension}-vscodedbg.exe",
+                "/Fe${fileDirname}\\${fileBasenameNoExtension}.exe",
                 "${file}",
                 "/link /DEBUG:full"
             ],
