@@ -66,7 +66,7 @@ namespace huffman {
             node_t*  right {};
 
             node_t(_In_ node_t* l, _In_ node_t* r) noexcept {
-                freq  = l->freq + r->freq;
+                freq  = l->freq + r->freq; // aggregate frequency of the two child nodes.
                 left  = l;
                 right = r;
             }
