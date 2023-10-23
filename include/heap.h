@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <memory.h>
 
+// Code improvised from Mastering Algorithms with C (1999) Kyle Loudon
+
 #define HPCAP 1024LLU
 
 // Many problems involve a programme to quickly determine the smallest or largest element from a collection
@@ -32,30 +34,62 @@
 // Under such scenaries, parent node will have a smaller weight compared to its children.
 // These trees are bottom heavy.
 
-// Heaps are typically left balanced. When new nodes are annexed to the tree, the tree grows from right to left.
+// Heaps are typically left balanced. When new nodes are annexed to the tree at a given level, the tree grows from left to right.
 
 // An efficient way to implement left-balanced binary trees is to store the nodes in a contiguous array.
 // Nodes are arranged in this array in the order we'd encounter them in a level traversal.
+
+// Say that we have 11 leaf nodes with weights 15, 7, 9, 18, 10, 12, 17, 19, 20, 22 ans 25 to begin with.
+// NOTE: Parent nodes here, aren't created from the children!
+// THIS TREE ISN'T REPRESENTATIVE OF AN ORDERED HEAP. JUST AN EXEMPLAR FOR REPRESENTING A TREE USING AN ARRAY.
+
+/*
+                            (25)             <--- 3rd (Root/Top)
+                         /       \
+                        /         \
+                      (20)         (22)      <--- 2nd
+                     /    \        /  \
+                    /      \      /    \
+                  (17)     (19) (10)  (12)   <--- 1st
+                  /  \     /  \
+                 /    \   /    \
+               (15)   (7)(9)  (18)           <--- 0th (Bottom)
+*/
+
+// The array representation will be:
+// We move left -> right, through the hierarchies.
+
+// {25}:                                         after traversing the 3rd level
+// {25, 20, 22}:                                 after traversing the 2nd level
+// {25, 20, 22, 17, 19, 10, 12}:                 after traversing the 1st level
+// {25, 20, 22, 17, 19, 10, 12, 15, 07, 09, 18}: after traversing the 0th level
+
+// Leftmost node must be the heaviest, and we do not care about the ordering of other nodes in the heap (array)
+
+
+static size_t inline __stdcall heapParentPos(_In_ const size_t pos) { return (pos - 1) / 2; }  // truncating division.
+static size_t inline __stdcall heapLeftPos(_In_ const size_t pos) { return (pos * 2) + 1; } 
+static size_t inline __stdcall heapRightPos(_In_ const size_t pos) { return (pos * 2) + 2; }
 
 
 typedef struct heap {
         uint64_t count;     // number of nodes.
         uint64_t capacity;  // number of nodes the heap can hold before requiring a reallocation.
-        int32_t  (*predicate)(_In_reads_(1) const void* const restrict _this, _In_reads_(1) const void* const restrict _next);
-        void     (*clean)(_In_reads_(1) const void* const restrict memblock);
+        int32_t  (*fnptr_pred)(_In_reads_(1) const void* const restrict _this, _In_reads_(1) const void* const restrict _next);
+        void     (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
         void**   tree;      // a heap allocated array containing pointers to heap allocated nodes.
                             // use malloc to allocate the tree and the nodes.
 }heap_t;
 
 static void inline heapInit(
     _In_ heap_t* const restrict heap,
-    _In_ const int32_t(*fnptr_pred)(_In_reads_(1) const void* const restrict _this, _In_reads_(1) const void* const restrict _next),
-    _In_ const void    (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock)
+    _In_ const int32_t(*predicate)(_In_reads_(1) const void* const restrict _this, _In_reads_(1) const void* const restrict _next),
+    _In_ const void    (*clean)(_In_reads_(1) const void* const restrict memblock)
 ) {
     heap->count     = 0;
-    heap->capacity  = HPCAP;
-    heap->predicate = fnptr_pred;
-    heap->clean     = fnptr_clean;
+    heap->capacity  = 0;
+    heap->fnptr_pred = predicate;
+    heap->fnptr_clean = clean;
     heap->tree      = NULL;
     return;
 }
@@ -68,7 +102,7 @@ static void inline heapClean(_In_ heap_t* const restrict heap) {
     return;
 }
 
-static bool inline heapPush(_In_ heap_t* const restrict heap, _In_ const void* const restrict data /* expects a heap allocated memory block */) {
+static bool inline heapPush(_In_ heap_t* const restrict heap, _In_ const void* const restrict data /* expects a heap allocated memory block (node) */) {
     void*  tmp    = NULL;
     size_t curpos = 0, prevpos = 0;
 
@@ -76,11 +110,15 @@ static bool inline heapPush(_In_ heap_t* const restrict heap, _In_ const void* c
     if (heap->count + 1 >= heap->capacity) {
         // ask for an additional 1024 * sizeof(uintptr_t) bytes. return false if the reallocation has failed.
         if (!(tmp = realloc(heap->tree, (heap->count + HPCAP) * sizeof(uintptr_t)))) return false;
-        heap->tree = tmp;
+        heap->tree = tmp;   // if reallocation was successful, reassign the new memory block.
     }
     
-    // This is terribly inefficient, genuinely fancying an arena allocator here!
+    heap->capacity          = heap->count + HPCAP;
+    // genuinely fancying an arena allocator here!
     heap->tree[heap->count] = data;
+
+
+    return true;
 }
 
 
