@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\bitio.h" />
+    <ClInclude Include="include\heap.h" />
     <ClInclude Include="include\huffman.h" />
     <ClInclude Include="include\pque.h" />
   </ItemGroup>
