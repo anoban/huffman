@@ -3,6 +3,8 @@
     #define __PQUE_H__
 #include <heap.h>
 
+typedef heap_t pque_t;
+
 // Priority que is a data structure derived from heaps.
 // Priority ques allow us to pick up the next highest priority element from a collection fastly.
 // "priority" here is subjective and can mean very different things depending on context.

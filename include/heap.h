@@ -89,15 +89,26 @@ static size_t inline __stdcall rightChildPos(_In_ const size_t parent_pos) { ret
 typedef struct heap {
         uint64_t count;     // number of nodes.
         uint64_t capacity;  // number of nodes the heap can hold before requiring a reallocation.
-        int32_t  (*fnptr_pred)(_In_reads_(1) const void* const restrict _this, _In_reads_(1) const void* const restrict _next);
+        bool  (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
         void     (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
         void**   tree;      // a heap allocated array containing pointers to heap allocated nodes.
                             // use malloc to allocate the tree and the nodes.
 }heap_t;
 
+/*
+// must return true whenever a swap is needed.
+bool inline __cdecl predicate(
+    _In_reads_(1) const void* const restrict child,
+    _In_reads_(1) const void* const restrict parent
+)
+{
+    retrun child->comparable > parent->comparable ? true : false;
+}
+*/
+
 static bool inline heapInit(
     _Inout_ heap_t* const restrict heap,
-    _In_ const int32_t(*predicate)(_In_reads_(1) const void* const restrict _this, _In_reads_(1) const void* const restrict _next),
+    _In_ const bool (*predicate)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent),
     _In_ const void    (*clean)(_In_reads_(1) const void* const restrict memblock)
 ) {
     heap->count     = 0;
@@ -203,7 +214,8 @@ static bool inline heapPush(_Inout_ heap_t* const restrict heap, _In_ const void
     childpos                = heap->count;  // offset of the newly inserted node.
     parentpos               = parentPos(childpos);  // offset of the new node's parent.
 
-    while ((childpos > 0) /* as long as we haven't reached the root node at offset 0 */ && heap->fnptr_pred(heap->tree[parentpos], heap->tree[childpos])) {
+    while ((childpos > 0) /* as long as we haven't reached the root node at offset 0 */ &&
+           heap->fnptr_pred(heap->tree[childpos], heap->tree[parentpos])) {
         // and the weight of the child is greater than that of the parent. (two conditions needed to perform the swap)
         
         tmp = heap->tree[childpos];
@@ -222,8 +234,7 @@ static bool inline heapPush(_Inout_ heap_t* const restrict heap, _In_ const void
 
 
 static bool inline heapPop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /* popped out */) {
-    void * save = NULL, *tmp = NULL;
-    size_t childpos = 0, parentpos = 0;
+    size_t leftchildpos = 0, rightchildpos = 0, parentpos = 0;
 
     // if the heap is empty,
     if (!heap->count) return false;
@@ -232,15 +243,15 @@ static bool inline heapPop(_Inout_ heap_t* const restrict heap, _Inout_ void** r
     if (heap->count == 1) {
         *data = heap->tree[0];  
         heap->count--;
-        heapClean(heap);
+        heapClean(heap);    // since heap->count = 0, the looped free()s inside heapClean() won't be executed.
+        return true;
     }
      
     // {25, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10} ----------\
                                                              // |  
-    // give up the node at the top (root node)s              // |
+    // give up the node at the top (root node)               // |
     *data = heap->tree[0];                                   // |
     heap->tree[0] = NULL;                                    // |
-    heap->count--;                                           // |
                                                              // |
     // {NULL, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10} <-------/
 
@@ -262,8 +273,43 @@ static bool inline heapPop(_Inout_ heap_t* const restrict heap, _Inout_ void** r
                (15)   (7)(9)  (18)(10)             <--- 0th (Bottom)
     */
 
-    // rearrange the tree.
     // Move the last node in the array to the root's position, offset 0.
+    heap->tree[0] = heap->tree[heap->count - 1];
+    heap->tree[heap->count - 1] = NULL;
+    heap->count--;
+
+    /* Now the tree looks like this:
+
+                               (10)               <--- 3rd (Root/Top)
+                             /     \
+                            /       \
+                           /         \
+                          /           \
+                         /             \
+                        /               \
+                      (20)              (24)       <--- 2nd
+                     /    \             /  \
+                    /      \           /    \
+                  (17)     (19)      (22)  (12)    <--- 1st
+                  /  \     /  \      
+                 /    \   /    \    
+               (15)   (7)(9)  (18)                 <--- 0th (Bottom)
+    */
+    // {10, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18}
+    // rearrange the tree
+
+    while (true) { 
+
+        // At the onset of iteration, parentpos = 0; currently points to the root node.
+        leftchildpos  = leftChildPos(parentpos);
+        rightchildpos = rightChildPos(parentpos);
+
+        if (leftchildpos < heap->count /* until we reach the rightmost end */ &&
+            heap->fnptr_pred(heap->tree[leftchildpos], heap->tree[parentpos])) {  // if the weight of the left child is greater than that of the parent,
+            // traverse down the left branch.
+
+        }
+    }
 
 }
 
