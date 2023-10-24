@@ -21,7 +21,7 @@
     <ClInclude Include="include\pque.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\bitio.h">
+    <ClInclude Include="include\fileio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\heap.h">

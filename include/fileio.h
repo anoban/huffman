@@ -1,6 +1,6 @@
 #pragma once
-#ifndef __BITIO_H__
-    #define __BITIO_H__
+#ifndef __FILEIO_H__
+    #define __FILEIO_H__
 
 #include <stdint.h>
 #include <stdio.h>
@@ -17,13 +17,14 @@
 #include <handleapi.h>
 #include <sal.h>
 
+#pragma comment(lib, "User32.lib")
+
 static inline uint8_t* open(_In_ const wchar_t* restrict file_name, _Inout_ uint64_t* const nread_bytes) {
     *nread_bytes    = 0;
-    void *   handle = NULL, *buffer = NULL;
+    void *handle = NULL, *buffer = NULL;
 
-    handle          = CreateFileW(file_name, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
-
-    if (handle == INVALID_HANDLE_VALUE) {
+    if ((handle = CreateFileW(file_name, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL)) ==
+        INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"Error %lu in CreateFileW\n", GetLastError());
         return NULL;
     }
@@ -54,4 +55,11 @@ errexit:
         return NULL;
 } 
 
-#endif // !__BITIO_H__
+static inline wchar_t* listdir(_In_ const wchar_t* const restrict dirpath) {
+    WIN32_FIND_DATAW fdatw;
+    HANDLE           fhandle = INVALID_HANDLE_VALUE;
+
+    fhandle                  = FindFirstFileW(dirpath, &fdatw);
+}
+
+#endif // !__FILEIO_H__

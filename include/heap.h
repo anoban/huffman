@@ -82,9 +82,9 @@
 
 // Leftmost node must be the heaviest, and we do not care about the ordering of other nodes in the heap (array)
 
-static size_t inline __stdcall parentPos(_In_ const size_t child_pos) { return (child_pos - 1) / 2; } // truncating division.
-static size_t inline __stdcall leftChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 1; }
-static size_t inline __stdcall rightChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 2; }
+static inline size_t __stdcall parentPos(_In_ const size_t child_pos) { return (child_pos - 1) / 2; } // truncating division.
+static inline size_t __stdcall leftChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 1; }
+static inline size_t __stdcall rightChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 2; }
 
 typedef struct heap {
         uint64_t count;     // number of nodes.
@@ -106,7 +106,7 @@ bool inline __cdecl predicate(
 }
 */
 
-static bool inline heapInit(
+static inline bool heapInit(
     _Inout_ heap_t* const restrict heap,
     _In_ const bool (*predicate)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent),
     _In_ const void    (*clean)(_In_reads_(1) const void* const restrict memblock)
@@ -121,7 +121,7 @@ static bool inline heapInit(
     return true;
 }
 
-static void inline heapClean(_Inout_ heap_t* const restrict heap) {
+static inline void heapClean(_Inout_ heap_t* const restrict heap) {
     for (size_t i = 0; i < heap->count; ++i) free(heap->tree[i]); // free the heap allocated nodes.
     free(heap->tree);   // free the array containing pointers to heap allocated nodes.
     // two levels of heap allocation happens here!
@@ -129,7 +129,9 @@ static void inline heapClean(_Inout_ heap_t* const restrict heap) {
     return;
 }
 
-static bool inline heapPush(_Inout_ heap_t* const restrict heap, _In_ const void* const restrict data /* expects a heap allocated memory block (node) to push in */) {
+static inline bool heapPush(
+    _Inout_ heap_t* const restrict heap, _In_ const void* const restrict data /* expects a heap allocated memory block (node) to push in */
+) {
     void*  tmp    = NULL;
     size_t childpos = 0, parentpos = 0;
 
@@ -233,7 +235,7 @@ static bool inline heapPush(_Inout_ heap_t* const restrict heap, _In_ const void
 }
 
 
-static bool inline heapPop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /* popped out */) {
+static inline bool heapPop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /* popped out */) {
     size_t leftchildpos = 0, rightchildpos = 0, parentpos = 0;
 
     // if the heap is empty,
