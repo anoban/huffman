@@ -1,3 +1,5 @@
+/* FOR COMPREHENSIVE IMPLEMENTATION DETAILS SEE heap.h */
+
 #pragma once
 #ifndef __PQUE_H__
     #define __PQUE_H__
@@ -17,18 +19,17 @@ static inline size_t __stdcall parentPos(_In_ const size_t child_pos) { return (
 static inline size_t __stdcall leftChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 1; }
 static inline size_t __stdcall rightChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 2; }
 
-typedef struct pque {
+typedef struct _pque {
         uint64_t count;
         uint64_t capacity;
         bool     (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
         void     (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
         void**   tree;
-
 } pque_t;
 
 /*
 // must return true whenever a swap is needed.
-bool inline __cdecl predicate(
+static inline bool __cdecl predicate(
     _In_reads_(1) const void* const restrict child,
     _In_reads_(1) const void* const restrict parent
 )
@@ -68,7 +69,6 @@ static inline bool pquePush(_Inout_ pque_t* const restrict pque, _In_ const void
     }
 
     pque->capacity          = pque->count + HPCAP;
-
     pque->tree[pque->count] = data;
     childpos                = pque->count;
     parentpos               = parentPos(childpos);
@@ -78,7 +78,6 @@ static inline bool pquePush(_Inout_ pque_t* const restrict pque, _In_ const void
         pque->tree[parentpos] = pque->tree[childpos];
         pque->tree[childpos]  = tmp;
         tmp                   = NULL;
-
         childpos              = parentpos;
         parentpos             = parentPos(childpos);
     }
@@ -102,7 +101,6 @@ static inline bool pquePop(_Inout_ pque_t* const restrict pque, _Inout_ void** r
 
     *data                       = pque->tree[0];
     pque->tree[0]               = NULL;
-
     pque->tree[0]               = pque->tree[pque->count - 1];
     pque->tree[pque->count - 1] = NULL;
     pque->count--;
@@ -117,17 +115,14 @@ static inline bool pquePop(_Inout_ pque_t* const restrict pque, _Inout_ void** r
             pos = parentpos;
 
         if (rightchildpos < pque->count && pque->fnptr_pred(pque->tree[rightchildpos], pque->tree[pos])) pos = rightchildpos;
-
         if (pos == parentpos) break;
 
         tmp                      = pque->tree[parentpos];
         pque->tree[parentpos]    = pque->tree[leftchildpos];
         pque->tree[leftchildpos] = tmp;
         tmp                      = NULL;
-
         parentpos                = pos;
     }
-
     return true;
 }
 

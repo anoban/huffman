@@ -96,7 +96,7 @@ typedef struct _heap {
 
 /*
 // must return true whenever a swap is needed.
-bool inline __cdecl predicate(
+static inline bool __cdecl predicate(
     _In_reads_(1) const void* const restrict child,
     _In_reads_(1) const void* const restrict parent
 )

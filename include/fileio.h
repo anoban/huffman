@@ -4,6 +4,7 @@
 
     #include <stdint.h>
     #include <stdio.h>
+    #include <stdbool.h>
     #include <stdlib.h>
 
     #ifdef _WIN32
@@ -19,7 +20,7 @@
 
     #pragma comment(lib, "User32.lib")
 
-static inline uint8_t* open(_In_ const wchar_t* restrict file_name, _Inout_ uint64_t* const nread_bytes) {
+static inline uint8_t* open(_In_ const wchar_t* restrict file_name, _Inout_ size_t* const nread_bytes) {
     *nread_bytes = 0;
     void *handle = NULL, *buffer = NULL;
 
@@ -54,11 +55,33 @@ errexit:
     return NULL;
 }
 
+
+static inline bool     write(_In_ const wchar_t* const restrict file_path, _In_ const uint8_t* const restrict buffer, _In_ const size_t size) { 
+    HANDLE hfile = CreateFileW(file_path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (hfile == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"Error %lu in CreateFileW\n", GetLastError());
+        return false;
+    }
+
+    DWORD nbyteswritten = 0;
+    if (!WriteFile(hfile, buffer, size, &nbyteswritten, NULL)) {
+        fwprintf_s(stderr, L"Error %lu in WriteFile\n", GetLastError());
+        CloseHandle(hfile);
+        return false;
+    }
+
+    CloseHandle(hfile);
+    return true;
+}
+
 static inline wchar_t* listdir(_In_ const wchar_t* const restrict dirpath) {
     WIN32_FIND_DATAW fdatw;
     HANDLE           fhandle = INVALID_HANDLE_VALUE;
 
     fhandle                  = FindFirstFileW(dirpath, &fdatw);
 }
+
+
 
 #endif // !__FILEIO_H__
