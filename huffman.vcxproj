@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\bitops.h" />
     <ClInclude Include="include\fileio.h" />
     <ClInclude Include="include\heap.h" />
     <ClInclude Include="include\huffman.h" />
@@ -26,13 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="src\bitio.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-      <FileType>Document</FileType>
-    </MASM>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

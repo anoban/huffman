@@ -27,15 +27,13 @@
     <ClInclude Include="include\heap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\bitops.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="src\bitio.asm">
-      <Filter>Source Files</Filter>
-    </MASM>
   </ItemGroup>
 </Project>
