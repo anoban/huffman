@@ -14,7 +14,7 @@ typedef struct _node {
     #pragma pack(push, 1)
 typedef struct _code {
         bool     is_used;
-        uint8_t  code_len;
+        uint8_t  length;
         uint16_t code;
 } code_t;
     #pragma pack(pop)

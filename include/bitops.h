@@ -15,7 +15,7 @@ static inline bool getbit(_Inout_ const uint8_t* const restrict bitstream, _In_ 
 }
 
 // switches a select bit on or off.
-static inline setbit(_Inout_ uint8_t* const restrict bitstream, _In_ const size_t offset, _In_ const bool flag) {
+static inline void setbit(_Inout_ uint8_t* const restrict bitstream, _In_ const size_t offset, _In_ const bool flag) {
     const size_t  offbit = offset % 8;            
     uint8_t       mask   = 0x01;                  // 0000 0001
     for (size_t i = offbit; i > 0; --i) mask <<= 1;
@@ -24,19 +24,16 @@ static inline setbit(_Inout_ uint8_t* const restrict bitstream, _In_ const size_
     return;
 }
 
-static inline xorbit(
+// computes the bitwise xor of the passed buffers, and stores the result in the output buffer.
+static inline void xorbit(
     _In_ const uint8_t* const restrict inbuff_0, _In_ const uint8_t* const restrict inbuff_1,
-    _Inout_ const uint8_t* const restrict outbuff, _In_ const size_t offset
+    _Inout_ uint8_t* const restrict outbuff, _In_ const size_t offset
 ) {
-    const size_t offbit = offset % 8;
-    uint8_t      mask   = 0x01; // 0000 0001
-    for (size_t i = offbit; i > 0; --i) mask <<= 1;
-    const uint8_t xor = (inbuff_0[offset / 8] & mask) ^ (inbuff_1[offset / 8] & mask);
-
-    if (flag)
-        bitstream[offset / 8] |= mask;
-    else
-        bitstream[offset / 8] &= (~mask);
+    if (getbit(inbuff_0, offset) != getbit(inbuff_1, offset)) { 
+        setbit(outbuff, offset, true);
+    } else {
+        setbit(outbuff, offset, false);
+    }
     return;
 }
 
