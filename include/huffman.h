@@ -1,8 +1,8 @@
 #pragma once
 #ifndef __HUFFMAN_H__
     #define __HUFFMAN_H__
-    #include <stdint.h>
     #include <stdbool.h>
+    #include <stdint.h>
 
 // A structure representing a Huffman node.
 typedef struct _node {

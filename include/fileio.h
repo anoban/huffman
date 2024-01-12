@@ -2,9 +2,9 @@
 #ifndef __FILEIO_H__
     #define __FILEIO_H__
 
+    #include <stdbool.h>
     #include <stdint.h>
     #include <stdio.h>
-    #include <stdbool.h>
     #include <stdlib.h>
 
     #ifdef _WIN32
@@ -55,8 +55,7 @@ errexit:
     return NULL;
 }
 
-
-static inline bool     write(_In_ const wchar_t* const restrict file_path, _In_ const uint8_t* const restrict buffer, _In_ const size_t size) { 
+static inline bool write(_In_ const wchar_t* const restrict file_path, _In_ const uint8_t* const restrict buffer, _In_ const size_t size) {
     HANDLE hfile = CreateFileW(file_path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hfile == INVALID_HANDLE_VALUE) {
@@ -74,14 +73,5 @@ static inline bool     write(_In_ const wchar_t* const restrict file_path, _In_ 
     CloseHandle(hfile);
     return true;
 }
-
-static inline wchar_t* listdir(_In_ const wchar_t* const restrict dirpath) {
-    WIN32_FIND_DATAW fdatw;
-    HANDLE           fhandle = INVALID_HANDLE_VALUE;
-
-    fhandle                  = FindFirstFileW(dirpath, &fdatw);
-}
-
-
 
 #endif // !__FILEIO_H__

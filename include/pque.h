@@ -3,8 +3,9 @@
 #pragma once
 #ifndef __PQUE_H__
     #define __PQUE_H__
-    #include <stdint.h>
+    #include <memory.h>
     #include <stdbool.h>
+    #include <stdint.h>
     #include <stdlib.h>
 
 // Priority que is a data structure derived from heaps.
@@ -22,9 +23,9 @@ static inline size_t __stdcall rightChildPos(_In_ const size_t parent_pos) { ret
 typedef struct _pque {
         uint64_t count;
         uint64_t capacity;
-        bool     (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
-        void     (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
-        void**   tree;
+        bool (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
+        void (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
+        void** tree;
 } pque_t;
 
 /*

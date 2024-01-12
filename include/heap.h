@@ -4,6 +4,7 @@
     #include <memory.h>
     #include <stdbool.h>
     #include <stdint.h>
+    #include <stdio.h>
     #include <stdlib.h>
 
 // Code improvised from Mastering Algorithms with C (1999) Kyle Loudon
@@ -88,9 +89,9 @@ static inline size_t __stdcall rightChildPos(_In_ const size_t parent_pos) { ret
 typedef struct _heap {
         uint64_t count;                                                                               // number of nodes.
         uint64_t capacity; // number of nodes the heap can hold before requiring a reallocation.
-        bool     (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
-        void     (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
-        void**   tree;     // a heap allocated array containing pointers to heap allocated nodes.
+        bool (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
+        void (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
+        void** tree;       // a heap allocated array containing pointers to heap allocated nodes.
                            // use malloc to allocate the tree and the nodes.
 } heap_t;
 
@@ -115,16 +116,18 @@ static inline bool heapInit(
     heap->fnptr_pred  = predicate;
     heap->fnptr_clean = clean;
     // will initially allocate memory to store 1024 pointers in the tree.
-    if (!(heap->tree = malloc(HPCAP * sizeof(uintptr_t)))) return false;
+    if (!(heap->tree = malloc(HPCAP * sizeof(uintptr_t)))) {
+        fwprintf_s(stderr, L"memory allocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
+        return false;
+    }
     memset(heap->tree, 0U, HPCAP * sizeof(uintptr_t));
     return true;
 }
 
 static inline void heapClean(_Inout_ heap_t* const restrict heap) {
-    for (size_t i = 0; i < heap->count; ++i) free(heap->tree[i]); // free the heap allocated nodes.
-    free(heap->tree);                                             // free the array containing pointers to heap allocated nodes.
-    // two levels of heap allocation happens here!
-    memset(heap, 0U, sizeof(heap_t));
+    for (size_t i = 0; i < heap->count; ++i) free(heap->tree[i]);             // free the heap allocated nodes.
+    free(heap->tree);                                                         // free the array containing pointers to heap allocated nodes.
+    memset(heap, 0U, sizeof(heap_t));                                         // zero out the struct
     return;
 }
 
@@ -138,7 +141,10 @@ static inline bool heapPush(
     if (heap->count + 1 > heap->capacity) {
         // ask for an additional 1024 * sizeof(uintptr_t) bytes. return false if the reallocation has failed.
         // genuinely fancying an arena allocator here!
-        if (!(tmp = realloc(heap->tree, (heap->count + HPCAP) * sizeof(uintptr_t)))) return false;
+        if (!(tmp = realloc(heap->tree, (heap->count + HPCAP) * sizeof(uintptr_t) /* new size */))) {
+            fwprintf_s(stderr, L"memory reallocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
+            return false;
+        }
         heap->tree = tmp; // if reallocation was successful, reassign the new memory block to tree.
     }
 
