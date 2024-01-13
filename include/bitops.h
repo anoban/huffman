@@ -4,6 +4,9 @@
     #include <stdbool.h>
     #include <stdint.h>
 
+// ALL ROUTINES HAVE BEEN TESTED
+// DO NOT REFACTOR WITHOUT RE-TESTING TO ENSURE IMPLEMENTATION INTEGRITY
+
 // get's the nth BIT in the buffer (which is an array of bytes)
 // views bitstream as a contiguous stream of bits.
 static inline bool __stdcall getbit(_In_ const uint8_t* const restrict bitstream, _In_ const size_t offset /* nth bit */) {
@@ -46,24 +49,37 @@ static inline void __stdcall xorbit(
 // 10110110 left rotated by 4 bits will be        01101011
 // whereas left shifting by 4 bits will result in 00001011
 static inline void __stdcall leftrotbit(
-    _Inout_ uint8_t* const restrict bitstream, _In_ const size_t offset, _In_ const size_t n /* rotate n bits left */
+    _Inout_ uint8_t* const restrict bitstream,
+    _In_ const size_t length /* length of bitstream in bits */,
+    _In_ const size_t n /* rotate n bits left */
 ) {
-    /* first stores the leftmost bit of the buffer temporarily, and shifts all the bits left and assigns the temporarily stored bit to the
-    rightmost position. Iteratively repeats this n times, admittedly inefficient, an efficient implementation would likely call for an
-    assembly routine or intrinsics using SIMD instructions */
+    /*
+    the goal is to rotate the entire bitstream left by n bits.
+    first the leftmost bit of the buffer is stored temporarily and all the bits are shifted one position left
+    the temporarily stored bit is assigned to the rightmost bit position.
+    Iteratively repeats this n times, admittedly inefficient, an efficient implementation would likely call for an assembly routine or
+    intrinsics using SIMD instructions.
+    */
 
-    bool leftmost = false, rightmost = false;
-    if (!offset) return;
+    if (!length) return;
 
-    for (size_t i = 0; i < n; ++i) {                        // number of bits to rotate
-        for (size_t j = 0; j <= (offset - 1) / 8LLU; ++j) { // number of bytes in the specified bitstream
-            leftmost = getbit(bitstream + j, 0 /* first bit of the current byte */);
-            if (!j)
-                rightmost = leftmost;
+    bool leftmost = false,
+         pushoff  = false; // leftmost and rightmost bits within the shift boundary i.e bitstream + offset to bitstream + offset + n
+
+    for (size_t _ = 0; _ < n; ++_) {                        // number of bits to rotate
+        for (size_t j = 0; j <= (length - 1) / 8LLU; ++j) { // number of bytes in the specified bitstream
+            // captures the state of the first bit of the selected byte
+            pushoff = getbit(bitstream + j, 0 /* first bit of the current byte */);
+
+            if (!j) // first bit and last bit of the stream need swapping, so store the first bit of first byte.
+                leftmost = pushoff;
             else
-                setbit(bitstream + j - 1 /* picking the previous byte */, 7 /* the last bit */, leftmost);
-            bitstream[j] <<= bitstream[j];
-        };
+                // swap the first (leftmost) bit of the current byte with the last (rightmost) bit of the previous byte.
+                setbit(bitstream + j - 1 /* picking the previous byte */, 7 /* the last bit */, pushoff);
+            bitstream[j] >>= 1; // Intel x86_64 is little endian, so we need to do a right shift for left rotation
+        }
+        // set the last (rightmost) bit of the rotate window to the first bit of it.
+        setbit(bitstream, length - 1, leftmost);
     }
 
     return;

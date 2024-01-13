@@ -20,7 +20,7 @@
 
     #pragma comment(lib, "User32.lib")
 
-static inline uint8_t* open(_In_ const wchar_t* restrict file_name, _Inout_ size_t* const nread_bytes) {
+static inline uint8_t* openFile(_In_ const wchar_t* restrict file_name, _Inout_ size_t* const nread_bytes) {
     *nread_bytes = 0;
     void *handle = NULL, *buffer = NULL;
 
@@ -55,7 +55,7 @@ errexit:
     return NULL;
 }
 
-static inline bool write(_In_ const wchar_t* const restrict file_path, _In_ const uint8_t* const restrict buffer, _In_ const size_t size) {
+static inline bool writeFile(_In_ const wchar_t* const restrict file_path, _In_ const uint8_t* const restrict buffer, _In_ const size_t size) {
     HANDLE hfile = CreateFileW(file_path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hfile == INVALID_HANDLE_VALUE) {

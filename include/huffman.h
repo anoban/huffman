@@ -20,6 +20,12 @@ typedef struct _code {
 } code_t;
     #pragma pack(pop)
 
-static inline int32_t compress(_In_ const uint8_t* const restrict inbuffer, _Inout_ uint8_t* restrict outbuffer, _In_ const size_t size) { }
+/* Prototypes */
+
+// returns the size of compressed data in bytes if the compression was successfull, -1 if the compression failed.
+int64_t compress(_In_ const uint8_t* const restrict inbuffer, _Inout_ uint8_t* restrict outbuffer, _In_ const size_t size);
+
+// returns the size of decompressed data in bytes if the decompression was successfull, -1 if the decompression failed.
+int64_t uncompress(_In_ const uint8_t* const restrict inbuffer, _Inout_ uint8_t* restrict outbuffer, _In_ const size_t size);
 
 #endif // !__HUFFMAN_H__

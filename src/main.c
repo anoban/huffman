@@ -1,12 +1,9 @@
 #include <fileio.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #if defined _DEBUG || defined DEBUG
 int                           main(void) {
     size_t         fsize   = 0;
-    const uint8_t* content = open(L"./media/anne.png", &fsize);
+    const uint8_t* content = openFile(L"./media/anne.png", &fsize);
 
 #else
 int wmain(_In_opt_ int argc, _In_opt_count_(argc) wchar_t* argv[]) {
