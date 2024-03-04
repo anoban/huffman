@@ -9,7 +9,7 @@
 
 // Code improvised from Mastering Algorithms with C (1999) Kyle Loudon
 
-    #define HPCAP 1024Ui64
+    #define HEAP_CAP 1024Ui64
 
 // Many problems involve a programme to quickly determine the smallest or largest element from a collection
 // capable of frequent insertions and deletions.
@@ -112,15 +112,15 @@ static inline bool heapInit(
     _In_ const void (*clean)(_In_reads_(1) const void* const restrict memblock)
 ) {
     heap->count       = 0;
-    heap->capacity    = HPCAP;
+    heap->capacity    = HEAP_CAP;
     heap->fnptr_pred  = predicate;
     heap->fnptr_clean = clean;
     // will initially allocate memory to store 1024 pointers in the tree.
-    if (!(heap->tree = malloc(HPCAP * sizeof(uintptr_t)))) {
+    if (!(heap->tree = malloc(HEAP_CAP * sizeof(uintptr_t)))) {
         fwprintf_s(stderr, L"memory allocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
         return false;
     }
-    memset(heap->tree, 0U, HPCAP * sizeof(uintptr_t));
+    memset(heap->tree, 0U, HEAP_CAP * sizeof(uintptr_t));
     return true;
 }
 
@@ -141,14 +141,14 @@ static inline bool heapPush(
     if (heap->count + 1 > heap->capacity) {
         // ask for an additional 1024 * sizeof(uintptr_t) bytes. return false if the reallocation has failed.
         // genuinely fancying an arena allocator here!
-        if (!(tmp = realloc(heap->tree, (heap->count + HPCAP) * sizeof(uintptr_t) /* new size */))) {
+        if (!(tmp = realloc(heap->tree, (heap->count + HEAP_CAP) * sizeof(uintptr_t) /* new size */))) {
             fwprintf_s(stderr, L"memory reallocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
             return false;
         }
         heap->tree = tmp; // if reallocation was successful, reassign the new memory block to tree.
     }
 
-    heap->capacity          = heap->count + HPCAP;
+    heap->capacity          = heap->count + HEAP_CAP;
 
     // Consider our previous tree:
     // { 25, 20, 22, 17, 19, 10, 12, 15, 07, 09, 18 }

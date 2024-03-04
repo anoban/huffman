@@ -14,7 +14,7 @@
 
 // Code improvised from Mastering Algorithms with C (1999) Kyle Loudon
 
-    #define HPCAP 1024Ui64
+    #define HEAP_CAP 1024Ui64
 
 static inline size_t __stdcall parentPos(_In_ const size_t child_pos) { return (child_pos - 1) / 2; } // truncating division.
 static inline size_t __stdcall leftChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 1; }
@@ -45,11 +45,11 @@ static inline bool pqueInit(
     _In_ const void (*clean)(_In_reads_(1) const void* const restrict memblock)
 ) {
     pque->count       = 0;
-    pque->capacity    = HPCAP;
+    pque->capacity    = HEAP_CAP;
     pque->fnptr_pred  = predicate;
     pque->fnptr_clean = clean;
-    if (!(pque->tree = malloc(HPCAP * sizeof(uintptr_t)))) return false;
-    memset(pque->tree, 0U, HPCAP * sizeof(uintptr_t));
+    if (!(pque->tree = malloc(HEAP_CAP * sizeof(uintptr_t)))) return false;
+    memset(pque->tree, 0U, HEAP_CAP * sizeof(uintptr_t));
     return true;
 }
 
@@ -65,11 +65,11 @@ static inline bool pquePush(_Inout_ pque_t* const restrict pque, _In_ const void
     size_t childpos = 0, parentpos = 0;
 
     if (pque->count + 1 > pque->capacity) {
-        if (!(tmp = realloc(pque->tree, (pque->count + HPCAP) * sizeof(uintptr_t)))) return false;
+        if (!(tmp = realloc(pque->tree, (pque->count + HEAP_CAP) * sizeof(uintptr_t)))) return false;
         pque->tree = tmp;
     }
 
-    pque->capacity          = pque->count + HPCAP;
+    pque->capacity          = pque->count + HEAP_CAP;
     pque->tree[pque->count] = data;
     childpos                = pque->count;
     parentpos               = parentPos(childpos);
