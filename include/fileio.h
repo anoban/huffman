@@ -21,28 +21,28 @@
     #pragma comment(lib, "User32.lib")
 
 static inline uint8_t* openFile(_In_ const wchar_t* restrict file_name, _Inout_ size_t* const nread_bytes) {
-    *nread_bytes = 0;
-    void *handle = NULL, *buffer = NULL;
+    *nread_bytes             = 0;
+    const HANDLE const hFile = CreateFileW(file_name, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
 
-    if ((handle = CreateFileW(file_name, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL)) == INVALID_HANDLE_VALUE) {
+    if (hFile == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"Error %lu in CreateFileW\n", GetLastError());
         return NULL;
     }
 
     LARGE_INTEGER fsize;
-    if (!GetFileSizeEx(handle, &fsize)) {
+    if (!GetFileSizeEx(hFile, &fsize)) {
         fwprintf_s(stderr, L"Error %lu in GetFileSizeEx\n", GetLastError());
         goto errexit;
     }
 
-    buffer = malloc(fsize.QuadPart); // caller is responsible for freeing this buffer.
+    uint8_t* const buffer = malloc(fsize.QuadPart); // caller is responsible for freeing this buffer.
     if (!buffer) {
         fputws(L"Memory allocation error: malloc returned NULL", stderr);
         goto errexit;
     }
 
-    if (ReadFile(handle, buffer, fsize.QuadPart, nread_bytes, NULL)) {
-        CloseHandle(handle);
+    if (ReadFile(hFile, buffer, fsize.QuadPart, nread_bytes, NULL)) {
+        CloseHandle(hFile);
         return buffer;
     } else {
         fwprintf_s(stderr, L"Error %lu in ReadFile\n", GetLastError());
@@ -51,12 +51,14 @@ static inline uint8_t* openFile(_In_ const wchar_t* restrict file_name, _Inout_ 
     }
 
 errexit:
-    CloseHandle(handle);
+    CloseHandle(hFile);
     return NULL;
 }
 
-static inline bool writeFile(_In_ const wchar_t* const restrict file_path, _In_ const uint8_t* const restrict buffer, _In_ const size_t size) {
-    HANDLE hfile = CreateFileW(file_path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+static inline bool writeFile(
+    _In_ const wchar_t* const restrict file_path, _In_ const uint8_t* const restrict buffer, _In_ const size_t size
+) {
+    const HANDLE const hfile = CreateFileW(file_path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hfile == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"Error %lu in CreateFileW\n", GetLastError());
