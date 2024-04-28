@@ -15,9 +15,9 @@
     #include <stdlib.h>
 
     #ifdef _WIN32
-        #define _AMD64_ // architecture
-        #define WIN32_LEAN_AND_MEAN
-        #define WIN32_EXTRA_MEAN
+        #define _AMD64_                  // architecture
+        #define WIN32_LEAN_AND_MEAN      1
+        #define WIN32_EXTRA_MEAN         1
         #define __STDC_WANT_SECURE_LIB__ 1
     #endif
 
@@ -34,22 +34,20 @@
 
 // we don't really need to be this frugal about the memory alignment here :(
 
-// a struct representing a Huffman node.
-typedef struct _node {
+typedef struct _node { // represents a Huffman node.
         uint8_t byte;
         size_t  freq;
 } node_t;
 
-// a struct representing a Huffman code
     #pragma pack(push, 4)
-typedef struct _code {
+typedef struct _code { // represents a Huffman code
         bool     is_used;
         uint8_t  length;
         uint16_t code;
 } code_t;
     #pragma pack(pop)
 
-typedef struct _heap {
+typedef struct _heap {     // heap
         uint64_t count;    // number of nodes.
         uint64_t capacity; // number of nodes the heap can hold before requiring a reallocation.
         bool (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
@@ -58,7 +56,7 @@ typedef struct _heap {
                      // use malloc to allocate the tree and the nodes.
 } heap_t;
 
-typedef struct _pque {
+typedef struct _pque { // priority que
         uint64_t count;
         uint64_t capacity;
         bool (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
