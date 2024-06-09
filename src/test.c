@@ -1,6 +1,6 @@
-#include <huffman.h> //#if defined(DEBUG) || defined(_DEBUG), huffman.h will define __RUN_TESTS__
+#ifdef __TEST__
 
-#ifdef __RUN_TESTS__
+    #include <huffman.h>
 
 int wmain(void) {
     size_t               avatar_size = 0, mobydick_size = 0;
@@ -13,7 +13,9 @@ int wmain(void) {
     free(avatar);
     free(mobydick);
 
+    const uint8_t const bitstream[] = { 0x00, 0x01, 0x0E, 0xA7, 0xAA, 0xEF, 0xFF, 0x56, 0x91, 0xA7 };
+
     return EXIT_SUCCESS;
 }
 
-#endif // __RUN_TESTS__
+#endif // __TEST__

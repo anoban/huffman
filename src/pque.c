@@ -1,8 +1,8 @@
 #include <huffman.h>
-// FOR COMPREHENSIVE IMPLEMENTATION DETAILS SEE heap.h
+// for comprehensive details on implementation, see heap.c
 
-// Priority que is a data structure derived from heaps.
-// Priority ques allow us to pick up the next highest priority element from a collection fastly.
+// priority que is a data structure derived from heaps.
+// priority ques allow us to pick up the next highest priority element from a collection fastly.
 // "priority" here is subjective and can mean very different things depending on context.
 
 // Code improvised from Mastering Algorithms with C (1999) Kyle Loudon
