@@ -1,22 +1,17 @@
-// master include for all project TUs.
-
 #pragma once
 #ifndef __HUFFMAN_H__
     #define __HUFFMAN_H__
 
-    #include <assert.h>
-    #include <stdbool.h>
-    #include <stdint.h>
-    #include <stdio.h>
-    #include <stdlib.h>
-
 // clang-format off
     #define _AMD64_                  
     #define WIN32_LEAN_AND_MEAN      
-    #define WIN32_EXTRA_MEAN         
+    #define WIN32_EXTRA_MEAN          
+    // UCRT headers, for some freaking reason, use a plain #if predicate for __STDC_WANT_SECURE_LIB__
+    // not an #ifdef predicate, so we need to provide a valued definition for __STDC_WANT_SECURE_LIB__,
+    // a plain #define results in a compile time error
     #define __STDC_WANT_SECURE_LIB__ 1
     #define NOMINMAX                 
-    
+
     #include <windef.h>
     #include <errhandlingapi.h>
     #include <fileapi.h>
@@ -24,9 +19,11 @@
     #include <sal.h>
 // clang-format on
 
-// MSVC headers, for some fucking reason use a plain #if directive for __STDC_WANT_SECURE_LIB__
-// not an #ifdef directive, so we need to provide a valued definition for __STDC_WANT_SECURE_LIB__
-// a plain #define will results in a compile time error!
+    #include <assert.h>
+    #include <stdbool.h>
+    #include <stdint.h>
+    #include <stdio.h>
+    #include <stdlib.h>
 
 typedef struct _node { // represents a Huffman node.
         uint8_t byte;
@@ -60,18 +57,13 @@ typedef struct _pque { // priority que
 } pque_t;
 static_assert(sizeof(pque_t) == 40, "");
 
-////////////////////////////
-// prototypes :: fileio.c //
-////////////////////////////
-
+    #pragma region FILEIO_PROTOTYPES
 uint8_t* __cdecl open(_In_ const wchar_t* restrict filepath, _Inout_ unsigned long* const nbytes);
 
 bool __cdecl write(_In_ const wchar_t* const restrict filepath, _In_ const uint8_t* const restrict buffer, _In_ const unsigned long size);
+    #pragma endregion FILEIO_PROTOTYPES
 
-//////////////////////////
-// prototypes :: heap.c //
-//////////////////////////
-
+    #pragma region HEAP_PROTOTYPES
 size_t __stdcall parentPos(_In_ const size_t child_pos);
 
 size_t __stdcall leftChildPos(_In_ const size_t parent_pos);
@@ -91,11 +83,9 @@ bool heapPush(
 );
 
 bool heapPop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /* popped out */);
+    #pragma endregion HEAP_PROTOTYPES
 
-//////////////////////////
-// prototypes :: pque.c //
-//////////////////////////
-
+    #pragma region PQUE_PROTOTYPES
 bool pqueInit(
     _Inout_ pque_t* const restrict pque,
     _In_ const bool (*predicate)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent),
@@ -109,15 +99,11 @@ bool pquePush(_Inout_ pque_t* const restrict pque, _In_ const void* const restri
 bool pquePop(_Inout_ pque_t* const restrict pque, _Inout_ void** restrict data);
 
 void* __stdcall pquePeek(_In_ const pque_t* const restrict pque);
+    #pragma endregion PQUE_PROTOTYPES
 
-/////////////////////////////
-// prototypes :: huffman.c //
-/////////////////////////////
-
-// returns the size of compressed data in bytes if the compression was successfull, -1 if the compression failed.
+    #pragma region HUFFMAN_PROTOTYPES
 int64_t compress(_In_ const uint8_t* const restrict inbuffer, _Inout_ uint8_t* restrict outbuffer, _In_ const size_t size);
 
-// returns the size of decompressed data in bytes if the decompression was successfull, -1 if the decompression failed.
 int64_t uncompress(_In_ const uint8_t* const restrict inbuffer, _Inout_ uint8_t* restrict outbuffer, _In_ const size_t size);
-
+    #pragma endregion HUFFMAN_PROTOTYPES
 #endif // !__HUFFMAN_H__

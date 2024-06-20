@@ -1,7 +1,5 @@
 #include <huffman.h>
 
-// Code improvised from Mastering Algorithms with C (1999) Kyle Loudon
-
 #define HEAP_CAP 1024Ui64
 
 // Many problems involve a programme to quickly determine the smallest or largest element from a collection

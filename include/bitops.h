@@ -17,25 +17,26 @@
 static __forceinline bool __stdcall getbit(
     _In_ const register uint8_t* const restrict bitstream, _In_ const register size_t offset /* nth bit */
 ) {
-    const uint8_t byte = bitstream[offset / 8 /* deliberate integer division */]; // first find the byte that contains the asked bit.
-    const size_t  bit  = offset % 8;                                              // offset of the asked bit within the byte.
-    uint8_t       mask = 0b1000'0000;
-    for (size_t _ = 0; _ < bit; ++_) mask >>= 1;
-    return byte & mask;
+    // const uint8_t byte   = bitstream[offset / 8 /* deliberate integer division */]; // first find the byte that contains the asked bit.
+    // const size_t  bit    = offset % 8;                                              // offset of the asked bit within the byte.
+    // uint8_t       mask   = 0b1000'0000;
+    // for (size_t _ = 0; _ < bit; ++_) mask >>= 1;
+    // mask >>= bit;
+    return bitstream[offset / 8] & (0b1000'0000 >> (offset % 8));
 }
 
 // toggles a select bit on or off.
 static __forceinline void __stdcall setbit(
     _Inout_ register uint8_t* const restrict bitstream, _In_ const size_t offset, _In_ const register bool flag /* on or off */
 ) {
-    const size_t bit  = offset % 8;
-    uint8_t      mask = 0b1000'0000;
-    for (size_t _ = 0; _ < bit; ++_) mask >>= 1;
-    if (flag) // set bit true
-        bitstream[offset / 8] |= mask;
-    else // set bit false
-        bitstream[offset / 8] &= (~mask);
-    return;
+    // const size_t bit    = offset % 8;
+    // uint8_t      mask   = 0b1000'0000;
+    // for (size_t _ = 0; _ < bit; ++_) mask >>= 1;
+    // mask              >>= bit;
+    if (flag)
+        bitstream[offset / 8] |= 0b1000'0000 >> (offset % 8);
+    else
+        bitstream[offset / 8] &= ~(0b1000'0000 >> (offset % 8));
 }
 
 // computes the bitwise xor of the passed buffers, and stores the result in the output buffer.
@@ -46,16 +47,12 @@ static __forceinline void __stdcall xorbit( // only if both of the bits are same
     _Inout_ register uint8_t* const restrict obuff,
     _In_ const register size_t offset
 ) {
-    if (getbit(ibuff_a, offset) != getbit(ibuff_b, offset))
-        setbit(obuff, offset, true);
-    else
-        setbit(obuff, offset, false);
-    return;
+    getbit(ibuff_a, offset) != getbit(ibuff_b, offset) ? setbit(obuff, offset, true) : setbit(obuff, offset, false);
 }
 
 // quite similar to bit shifts but here the bit that gets pushed off the boundary will be reintroduced into the byte at the other end.
-// 10110110 left rotated by 4 bits will be        01101011 whereas left shifting by 4 bits will result in 00001011
-static __forceinline void __stdcall lrotbits(
+// 0b10110110 left rotated by 4 bits will be 0b01101011 whereas left shifting by 4 bits will result in 0b01100000
+static __forceinline void __stdcall leftrotbits( // this does what MS Calculator calls a rotate through carry circular left shift
     _Inout_ register uint8_t* const restrict bitstream,
     _In_ register const size_t length, // length of bitstream in bits
     _In_ register const size_t n       // rotate n bits left
@@ -83,8 +80,6 @@ static __forceinline void __stdcall lrotbits(
         // set the last (rightmost) bit of the rotate window to the first bit of it.
         setbit(bitstream, length - 1, leftmost);
     }
-
-    return;
 }
 
 #endif // !__BITOPS_H__
