@@ -18,6 +18,9 @@
     <ClInclude Include="include\huffman.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\bitops.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.c">
@@ -27,9 +30,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\test.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\bitops.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\fileio.c">

@@ -61,25 +61,6 @@ typedef struct _pque { // priority que
 static_assert(sizeof(pque_t) == 40, "");
 
 ////////////////////////////
-// prototypes :: bitops.c //
-////////////////////////////
-
-bool __stdcall getbit(_In_ const register uint8_t* const restrict bitstream, _In_ const register size_t offset);
-
-void __stdcall setbit(_Inout_ register uint8_t* const restrict bitstream, _In_ const size_t offset, _In_ const register bool flag);
-
-void __stdcall xorbit(
-    _In_ const register uint8_t* const restrict ibuff_a,
-    _In_ const register uint8_t* const restrict ibuff_b,
-    _Inout_ register uint8_t* const restrict obuff,
-    _In_ const register size_t offset
-);
-
-void __stdcall lrotbits(
-    _Inout_ register uint8_t* const restrict bitstream, _In_ register const size_t length, _In_ register const size_t n
-);
-
-////////////////////////////
 // prototypes :: fileio.c //
 ////////////////////////////
 

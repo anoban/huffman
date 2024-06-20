@@ -27,10 +27,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\bitops.h" />
     <ClInclude Include="include\huffman.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\bitops.c" />
     <ClCompile Include="src\fileio.c" />
     <ClCompile Include="src\heap.c" />
     <ClCompile Include="src\huffman.c" />

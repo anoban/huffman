@@ -1,4 +1,8 @@
-#include <huffman.h>
+#pragma once
+#ifndef __BITOPS_H__
+    #define __BITOPS_H__
+    #include <stdbool.h>
+    #include <stdint.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                      CAUTION                                                      //
@@ -10,21 +14,23 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // get's the nth bit in the buffer (which is an array of bytes) which is viewed as a contiguous stream of bits.
-bool __stdcall getbit(_In_ const register uint8_t* const restrict bitstream, _In_ const register size_t offset /* nth bit */) {
-    const uint8_t byte   = bitstream[offset / 8 /* deliberate integer division */]; // first find the byte that contains the asked bit.
-    const size_t  offbit = offset % 8;                                              // offset of the asked bit within the byte.
-    uint8_t       mask   = 0b1000'0000;
-    for (size_t i = offbit; i > 0; --i) mask >>= 1;
+static __forceinline bool __stdcall getbit(
+    _In_ const register uint8_t* const restrict bitstream, _In_ const register size_t offset /* nth bit */
+) {
+    const uint8_t byte = bitstream[offset / 8 /* deliberate integer division */]; // first find the byte that contains the asked bit.
+    const size_t  bit  = offset % 8;                                              // offset of the asked bit within the byte.
+    uint8_t       mask = 0b1000'0000;
+    for (size_t _ = 0; _ < bit; ++_) mask >>= 1;
     return byte & mask;
 }
 
-// switches a select bit on or off.
-void __stdcall setbit(
+// toggles a select bit on or off.
+static __forceinline void __stdcall setbit(
     _Inout_ register uint8_t* const restrict bitstream, _In_ const size_t offset, _In_ const register bool flag /* on or off */
 ) {
-    const size_t offbit = offset % 8;
-    uint8_t      mask   = 0b0000'0001;
-    for (size_t i = offbit; i > 0; --i) mask <<= 1;
+    const size_t bit  = offset % 8;
+    uint8_t      mask = 0b1000'0000;
+    for (size_t _ = 0; _ < bit; ++_) mask >>= 1;
     if (flag) // set bit true
         bitstream[offset / 8] |= mask;
     else // set bit false
@@ -33,7 +39,8 @@ void __stdcall setbit(
 }
 
 // computes the bitwise xor of the passed buffers, and stores the result in the output buffer.
-void __stdcall xorbit(
+static __forceinline void __stdcall xorbit( // only if both of the bits are same, the result will be false
+    // otherwise the result will be true
     _In_ const register uint8_t* const restrict ibuff_a,
     _In_ const register uint8_t* const restrict ibuff_b,
     _Inout_ register uint8_t* const restrict obuff,
@@ -48,7 +55,7 @@ void __stdcall xorbit(
 
 // quite similar to bit shifts but here the bit that gets pushed off the boundary will be reintroduced into the byte at the other end.
 // 10110110 left rotated by 4 bits will be        01101011 whereas left shifting by 4 bits will result in 00001011
-void __stdcall lrotbits(
+static __forceinline void __stdcall lrotbits(
     _Inout_ register uint8_t* const restrict bitstream,
     _In_ register const size_t length, // length of bitstream in bits
     _In_ register const size_t n       // rotate n bits left
@@ -79,3 +86,5 @@ void __stdcall lrotbits(
 
     return;
 }
+
+#endif // !__BITOPS_H__
