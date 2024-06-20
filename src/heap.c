@@ -1,29 +1,22 @@
 #include <huffman.h>
 
-#define HEAP_CAP 1024Ui64
+#define DEFAULT_HEAP_CAPACITY 1024LLU
 
-// Many problems involve a programme to quickly determine the smallest or largest element from a collection
-// capable of frequent insertions and deletions.
-// One way to address this need is to keep the collection sorted all the time (ascending or descending order).
-// However, sorting a collection at every insertion or deletion is expensive.
+// many problems demand determination of the smallest or largest element from a collection that's capable of frequent insertions and deletions
+// one way to meet this need is to keep the collection sorted all the time but sorting a collection at every insertion or deletion is expensive
 
-// But this requirement does not imply that all the elements in a collection need to be sorted.
-// It's enough for the collection to know the location of the smallest or the largest element, for fast access.
-// Heaps and priority ques are the adept data structures for this kind of functionalities.
+// fortunately this requirement does not insinuate that all the elements in a collection need to be sorted.
+// it's enough for the collection to just know the location of the smallest or the largest element, enabling fast access.
+// heaps and priority ques are adept for this purpose
 
-// Heaps are organized trees (usually a binary tree) that allow fast access to the largest/smallest element.
-// Costs of preserving a tree is negligible compared to the performance penalty incurred by maintaining the container
-// sorted all the time.
+// heaps are organized trees (usually a binary tree) that allow easy access to the largest / smallest element.
+// the cost of creating and maintaining a tree is negligible compared to the performance overhead incurred by maintaining the container sorted all the time
 
-// In a heap each child node has a weight smaller than its parent's.
-// Therefore, it is the root node, that has the largest weight.
-// Binary trees like these are top heavy, as we climb up the strata nodes are positioned in, nodes will become
-// more and more heavy.
+// in a heap, each child node has a weight smaller than its parent's, ergo it is the root node that has the largest weight in a heap
+// binary trees like these are top heavy, as we climb up the hierarchy of nodes, nodes will become more and more heavy (will have a larger weight)
 
-// Trees can also be designed to hold the heaviest nodes at the bottom and lightest nodes at the top, whereby
-// the root node will be the one with the smallest weight.
-// Under such scenaries, parent node will have a smaller weight compared to its children.
-// These trees are bottom heavy.
+// trees can also be architectured to hold the heaviest nodes at the bottom and lightest nodes at the top, whereby the root node will be the one with the smallest weight
+// in that case, parent node will have a smaller weight compared to its children, hence making the tree bottom heavy
 
 // Heaps are typically left balanced. When new nodes are annexed to the tree at a given level, the tree grows from left to right.
 
@@ -104,15 +97,15 @@ bool heapInit(
     _In_ const void (*clean)(_In_reads_(1) const void* const restrict memblock)
 ) {
     heap->count       = 0;
-    heap->capacity    = HEAP_CAP;
+    heap->capacity    = DEFAULT_HEAP_CAPACITY;
     heap->fnptr_pred  = predicate;
     heap->fnptr_clean = clean;
     // will initially allocate memory to store 1024 pointers in the tree.
-    if (!(heap->tree = malloc(HEAP_CAP * sizeof(uintptr_t)))) {
+    if (!(heap->tree = malloc(DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t)))) {
         fwprintf_s(stderr, L"memory allocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
         return false;
     }
-    memset(heap->tree, 0U, HEAP_CAP * sizeof(uintptr_t));
+    memset(heap->tree, 0U, DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t));
     return true;
 }
 
@@ -133,14 +126,14 @@ bool heapPush(
     if (heap->count + 1 > heap->capacity) {
         // ask for an additional 1024 * sizeof(uintptr_t) bytes. return false if the reallocation has failed.
         // genuinely fancying an arena allocator here!
-        if (!(tmp = realloc(heap->tree, (heap->count + HEAP_CAP) * sizeof(uintptr_t) /* new size */))) {
+        if (!(tmp = realloc(heap->tree, (heap->count + DEFAULT_HEAP_CAPACITY) * sizeof(uintptr_t) /* new size */))) {
             fwprintf_s(stderr, L"memory reallocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
             return false;
         }
         heap->tree = tmp; // if reallocation was successful, reassign the new memory block to tree.
     }
 
-    heap->capacity          = heap->count + HEAP_CAP;
+    heap->capacity          = heap->count + DEFAULT_HEAP_CAPACITY;
 
     // Consider our previous tree:
     // { 25, 20, 22, 17, 19, 10, 12, 15, 07, 09, 18 }

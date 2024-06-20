@@ -7,7 +7,7 @@
 
 // Code improvised from Mastering Algorithms with C (1999) Kyle Loudon
 
-#define HEAP_CAP 1024Ui64
+#define DEFAULT_HEAP_CAPACITY 1024Ui64
 
 // intentionally using static linkage to avoid ODR violation errors because these functins are also defined in heap.c which are exposed in huffman.h
 static inline size_t __stdcall parentPos(_In_ const size_t child_pos) { return (child_pos - 1) / 2; } // truncating division.
@@ -40,11 +40,11 @@ bool pqueInit(
     _In_ const void (*clean)(_In_reads_(1) const void* const restrict memblock)
 ) {
     pque->count       = 0;
-    pque->capacity    = HEAP_CAP;
+    pque->capacity    = DEFAULT_HEAP_CAPACITY;
     pque->fnptr_pred  = predicate;
     pque->fnptr_clean = clean;
-    if (!(pque->tree = malloc(HEAP_CAP * sizeof(uintptr_t)))) return false;
-    memset(pque->tree, 0U, HEAP_CAP * sizeof(uintptr_t));
+    if (!(pque->tree = malloc(DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t)))) return false;
+    memset(pque->tree, 0U, DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t));
     return true;
 }
 
@@ -60,11 +60,11 @@ bool pquePush(_Inout_ pque_t* const restrict pque, _In_ const void* const restri
     size_t childpos = 0, parentpos = 0;
 
     if (pque->count + 1 > pque->capacity) {
-        if (!(tmp = realloc(pque->tree, (pque->count + HEAP_CAP) * sizeof(uintptr_t)))) return false;
+        if (!(tmp = realloc(pque->tree, (pque->count + DEFAULT_HEAP_CAPACITY) * sizeof(uintptr_t)))) return false;
         pque->tree = tmp;
     }
 
-    pque->capacity          = pque->count + HEAP_CAP;
+    pque->capacity          = pque->count + DEFAULT_HEAP_CAPACITY;
     pque->tree[pque->count] = data;
     childpos                = pque->count;
     parentpos               = parentPos(childpos);
