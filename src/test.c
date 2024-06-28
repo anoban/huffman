@@ -1,5 +1,6 @@
 #ifdef __TEST__
     #include <huffman.h>
+    #include <time.h>
     #define MUTABLE_BITSTREAM_SIZE 1000LLU // in bytes
 
     #pragma region __TEST_DATA__
@@ -297,7 +298,11 @@ static uint8_t rotbitstream[]                         = {
 
     #pragma endregion
 
+static inline bool _cdecl compare(const int a, const int b) { }
+
 int wmain(void) {
+    srand(time(NULL));
+
     #pragma region __TEST_BITOPS__
     // test getbit()
     for (unsigned i = 0; i < __crt_countof(bitstream) * 8; ++i) assert(getbit(bitstream, i) == (binstr[i] - 48)); // '0' is 48 and '1' is 49
@@ -310,22 +315,24 @@ int wmain(void) {
     for (unsigned i = 0; i < __crt_countof(bitstream) * 8; ++i) xorbit(bitstream, xorbitstream, outbitstream, i);
     for (unsigned i = 0; i < __crt_countof(bitstream) * 8; ++i)
         assert(getbit(outbitstream, i) == (getbit(bitstream, i) == getbit(xorbitstream, i)) ? false : true);
-    #pragma endregion __TEST_BITOPS__
+    #pragma endregion
 
     #pragma region __TEST_HEAP__
 
-    heap_t heap = { 0 };
+    heap_t heap_i = { 0 }; // heap containing 32 bit signed integers
     // heap_init(&heap);
 
-    #pragma endregion __TEST_HEAP__
+    //
 
-    unsigned long        sz    = 0;
-    const uint8_t* const image = open(L"./media/neytiri.jpg", &sz);
+    #pragma endregion
+
+    unsigned long        size  = 0;
+    const uint8_t* const image = open(L"./test/woman.jpg", &size); // one image file
     assert(image);
-    assert(sz == 4820673LLU);
-    const uint8_t* const text = open(L"./media/mobydick.txt", &sz);
+    assert(size == 2'888'417LLU);
+    const uint8_t* const text = open(L"./test/mobydick.txt", &size); // one text file
     assert(text);
-    assert(sz == 1276266LLU);
+    assert(size == 1'276'266LLU);
 
     free(image);
     free(text);
