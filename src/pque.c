@@ -1,18 +1,10 @@
 #include <huffman.h>
-// for comprehensive details on implementation, see heap.c
 
 // priority que is a data structure derived from heaps.
 // priority ques allow us to pick up the next highest priority element from a collection fastly.
 // "priority" here is subjective and can mean very different things depending on context.
 
-// Code improvised from Mastering Algorithms with C (1999) Kyle Loudon
-
 #define DEFAULT_HEAP_CAPACITY 1024Ui64
-
-// intentionally using static linkage to avoid ODR violation errors because these functins are also defined in heap.c which are exposed in huffman.h
-static inline size_t __stdcall parentPos(_In_ const size_t child_pos) { return (child_pos - 1) / 2; } // truncating division.
-static inline size_t __stdcall leftChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 1; }
-static inline size_t __stdcall rightChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 2; }
 
 // here just for reference, definition moved to huffman.h
 // typedef struct _pque {
@@ -67,7 +59,7 @@ bool pquePush(_Inout_ pque_t* const restrict pque, _In_ const void* const restri
     pque->capacity          = pque->count + DEFAULT_HEAP_CAPACITY;
     pque->tree[pque->count] = data;
     childpos                = pque->count;
-    parentpos               = parentPos(childpos);
+    parentpos               = get_parent(childpos);
 
     while ((childpos > 0) && pque->fnptr_pred(pque->tree[childpos], pque->tree[parentpos])) {
         tmp                   = pque->tree[childpos];
@@ -75,7 +67,7 @@ bool pquePush(_Inout_ pque_t* const restrict pque, _In_ const void* const restri
         pque->tree[childpos]  = tmp;
         tmp                   = NULL;
         childpos              = parentpos;
-        parentpos             = parentPos(childpos);
+        parentpos             = get_parent(childpos);
     }
 
     pque->count++;
@@ -102,8 +94,8 @@ bool pquePop(_Inout_ pque_t* const restrict pque, _Inout_ void** restrict data) 
     pque->count--;
 
     while (true) {
-        leftchildpos  = leftChildPos(parentpos);
-        rightchildpos = rightChildPos(parentpos);
+        leftchildpos  = get_leftchild(parentpos);
+        rightchildpos = get_rightchild(parentpos);
 
         if (leftchildpos < pque->count && pque->fnptr_pred(pque->tree[leftchildpos], pque->tree[parentpos]))
             pos = leftchildpos;

@@ -1,1 +1,1 @@
-Significant portion of the code is improvised from `Mastering Algorithms with C` (1999) Kyle Loudon.
+Significant portion of the code is improvised from `Mastering Algorithms with C (1999) Kyle Loudon`.

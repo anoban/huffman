@@ -18,13 +18,14 @@
 // trees can also be architectured to hold the heaviest nodes at the bottom and lightest nodes at the top, whereby the root node will be the one with the smallest weight
 // in that case, parent node will have a smaller weight compared to its children, hence making the tree bottom heavy
 
-// Heaps are typically left balanced. When new nodes are annexed to the tree at a given level, the tree grows from left to right.
+// heaps are typically left balanced.
+// when new nodes are annexed to the tree at a given level, the tree grows from left to right.
 
-// An efficient way to implement left-balanced binary trees is to store the nodes in a contiguous array.
-// Nodes are arranged in this array in the order we'd encounter them in a level traversal.
+// an efficient way to implement left-balanced binary tree is to store the nodes in a contiguous array.
+// nodes are arranged in this array in the order we'd encounter them in a level traversal.
 
-// Say that we have 11 leaf nodes with weights 15, 7, 9, 18, 10, 12, 17, 19, 20, 22 ans 25 to begin with.
-// NOTE: Parent nodes here, aren't created from the children!
+// say that we have 11 leaf nodes with weights 15, 7, 9, 18, 10, 12, 17, 19, 20, 22 ans 25 to begin with.
+// NOTE: parent nodes here aren't created from the children!
 // THIS TREE ISN'T REPRESENTATIVE OF AN ORDERED HEAP. JUST AN EXEMPLAR FOR REPRESENTING A TREE USING AN ARRAY.
 
 /*
@@ -42,56 +43,50 @@
                (15)   (7)(9)  (18)           <--- 0th (Bottom)
 */
 
-// The array representation will be:
-// We move left -> right, through the hierarchies.
+// the array representation will be:
+// we move left -> right, through the hierarchies.
 
-// {25}:                                         after traversing the 3rd level
-// {25, 20, 22}:                                 after traversing the 2nd level
-// {25, 20, 22, 17, 19, 10, 12}:                 after traversing the 1st level
-// {25, 20, 22, 17, 19, 10, 12, 15, 07, 09, 18}: after traversing the 0th level
+/*
+ {25}:                                          (after traversing the 3rd level)
+ {25, 20, 22}:                                  (after traversing the 2nd level)
+ {25, 20, 22, 17, 19, 10, 12}:                  (after traversing the 1st level)
+ {25, 20, 22, 17, 19, 10, 12, 15, 07, 09, 18}:  (after traversing the 0th level)
+*/
 
-// This design offers an inherent benefit where the parent node of a given node can easily be located by the
-// offset (i - 1) / 2 where i is the offset of the select node.
+// this design offers an inherent benefit that the parent node of a given node can easily be located by the
+// offset (i - 1) / 2 where i is the offset of the chosen child node.
 
-// E.g: What's the offset of node 19's parent?
-// Offset of node 19 is 4 (0 indexed array): i = 4
-// (4 - 1) integer division 2 = 1
+// E.g: what's the offset of node 19's parent?
+// offset of node 19 is 4 (0 indexed array): i = 4
+// (4 - 1) / 2 = 1 (integer division)
 // node at offset 1 is 20, and it indeed is the parent of node 19.
 
-// And the offset of a given node with offset i's left child is 2i + 1
-// and the offset of the right child is 2i + 2
+// and the offset of a given node with offset i's left child is 2i + 1 and its right child is 2i + 2
 // E.g. Take the node 20 for example, offset of node 20 is 1; i = 1
 // left child = 2 * 1 + 1 = 3 and right child = 2 * 1 + 2 = 4
 // 17 and 19 => correct!
 
-// Leftmost node must be the heaviest, and we do not care about the ordering of other nodes in the heap (array)
-
-size_t __stdcall parentPos(_In_ const size_t child_pos) { return (child_pos - 1) / 2; } // truncating division.
-size_t __stdcall leftChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 1; }
-size_t __stdcall rightChildPos(_In_ const size_t parent_pos) { return (parent_pos * 2) + 2; }
-
-// here just for reference, defintion moved to huffman.h
-// typedef struct _heap {
-//         uint64_t count;    // number of nodes.
-//         uint64_t capacity; // number of nodes the heap can hold before requiring a reallocation.
-//         bool (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
-//         void (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
-//         void** tree; // a heap allocated array containing pointers to heap allocated nodes.
-//                      // use malloc to allocate the tree and the nodes.
-// } heap_t;
+// leftmost node must be the heaviest, and we do not care about the ordering of other nodes in the heap (array)
 
 /*
+typedef struct _heap {
+         uint64_t count;    // number of nodes.
+         uint64_t capacity; // number of nodes the heap can hold before requiring a reallocation.
+         bool (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
+         void (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
+         void** tree; // a heap allocated array containing pointers to heap allocated nodes.
+                      // use malloc to allocate the tree and the nodes.
+ } heap_t;
+ */
+
+/* 
 // must return true whenever a swap is needed.
-static inline bool __cdecl predicate(
-    _In_reads_(1) const void* const restrict child,
-    _In_reads_(1) const void* const restrict parent
-)
-{
+static inline bool __cdecl predicate(const void* const restrict child, const void* const restrict parent){
     retrun child->comparable > parent->comparable ? true : false;
 }
 */
 
-bool heapInit(
+bool heap_init(
     _Inout_ heap_t* const restrict heap,
     _In_ const bool (*predicate)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent),
     _In_ const void (*clean)(_In_reads_(1) const void* const restrict memblock)
@@ -109,14 +104,14 @@ bool heapInit(
     return true;
 }
 
-void heapClean(_Inout_ heap_t* const restrict heap) {
+void heap_clean(_Inout_ heap_t* const restrict heap) {
     for (size_t i = 0; i < heap->count; ++i) free(heap->tree[i]); // free the heap allocated nodes.
     free(heap->tree);                                             // free the array containing pointers to heap allocated nodes.
     memset(heap, 0U, sizeof(heap_t));                             // zero out the struct
     return;
 }
 
-bool heapPush(
+bool heap_push(
     _Inout_ heap_t* const restrict heap, _In_ const void* const restrict data /* expects a heap allocated memory block (node) to push in */
 ) {
     void*  tmp      = NULL;
@@ -202,9 +197,9 @@ bool heapPush(
     // {25, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
     // Perfecto :)))
 
-    heap->tree[heap->count] = data;                // insert the new node, it's not count + 1! offsets start at 0.
-    childpos                = heap->count;         // offset of the newly inserted node.
-    parentpos               = parentPos(childpos); // offset of the new node's parent.
+    heap->tree[heap->count] = data;                 // insert the new node, it's not count + 1! offsets start at 0.
+    childpos                = heap->count;          // offset of the newly inserted node.
+    parentpos               = get_parent(childpos); // offset of the new node's parent.
 
     while ((childpos > 0) /* as long as we haven't reached the root node at offset 0 */ &&
            heap->fnptr_pred(heap->tree[childpos], heap->tree[parentpos])) {
@@ -216,15 +211,15 @@ bool heapPush(
         tmp                   = NULL;
 
         // prepare for the next swap in anticipation that the new positioning of the inserted node also needs a swap.
-        childpos              = parentpos;           // previous parent's offset now becomes the child's offset.
-        parentpos             = parentPos(childpos); // find the parent of the current child's offset.
+        childpos              = parentpos;            // previous parent's offset now becomes the child's offset.
+        parentpos             = get_parent(childpos); // find the parent of the current child's offset.
     }
 
     heap->count++; // increment the node count.
     return true;
 }
 
-bool heapPop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /* popped out */) {
+bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /* popped out */) {
     size_t leftchildpos = 0, rightchildpos = 0, parentpos = 0, pos = 0;
     void*  tmp = NULL;
 
@@ -235,7 +230,7 @@ bool heapPop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /
     if (heap->count == 1) {
         *data = heap->tree[0];
         heap->count--;
-        heapClean(heap); // since heap->count = 0, the looped free()s inside heapClean() won't be executed.
+        heap_clean(heap); // since heap->count = 0, the looped free()s inside heap_clean() won't be executed.
         return true;
     }
 
@@ -292,8 +287,8 @@ bool heapPop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /
 
     while (true) {
         // At the onset of iteration, parentpos = 0; currently points to the (new) root node.
-        leftchildpos  = leftChildPos(parentpos);
-        rightchildpos = rightChildPos(parentpos);
+        leftchildpos  = get_leftchild(parentpos);
+        rightchildpos = get_rightchild(parentpos);
 
         if (leftchildpos < heap->count /* until we reach the rightmost end */ &&
             heap->fnptr_pred(
