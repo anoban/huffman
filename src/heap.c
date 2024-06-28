@@ -87,15 +87,13 @@ static inline bool __cdecl predicate(const void* const restrict child, const voi
 */
 
 bool heap_init(
-    _Inout_ heap_t* const restrict heap,
-    _In_ const bool (*predicate)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent),
-    _In_ const void (*clean)(_In_reads_(1) const void* const restrict memblock)
+    _Inout_ heap_t* const restrict heap, _In_ const bool (*predicate)(_In_ const void* const restrict, _In_ const void* const restrict)
 ) {
-    heap->count       = 0;
-    heap->capacity    = DEFAULT_HEAP_CAPACITY;
-    heap->fnptr_pred  = predicate;
-    heap->fnptr_clean = clean;
-    // will initially allocate memory to store 1024 pointers in the tree.
+    heap->count      = 0;
+    heap->capacity   = DEFAULT_HEAP_CAPACITY; // this is the number of pointers, NOT BYTES
+    heap->fnptr_pred = predicate;
+
+    // will initially allocate memory to store DEFAULT_HEAP_CAPACITY pointers in the tree.
     if (!(heap->tree = malloc(DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t)))) {
         fwprintf_s(stderr, L"memory allocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
         return false;
@@ -117,18 +115,17 @@ bool heap_push(
     void*  tmp      = NULL;
     size_t childpos = 0, parentpos = 0;
 
-    // if the buffer doesn't have space for another pointer,
-    if (heap->count + 1 > heap->capacity) {
+    if (heap->count + 1 > heap->capacity) { // if the buffer doesn't have space for another pointer,
         // ask for an additional 1024 * sizeof(uintptr_t) bytes. return false if the reallocation has failed.
         // genuinely fancying an arena allocator here!
         if (!(tmp = realloc(heap->tree, (heap->count + DEFAULT_HEAP_CAPACITY) * sizeof(uintptr_t) /* new size */))) {
             fwprintf_s(stderr, L"memory reallocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
             return false;
         }
-        heap->tree = tmp; // if reallocation was successful, reassign the new memory block to tree.
-    }
 
-    heap->capacity          = heap->count + DEFAULT_HEAP_CAPACITY;
+        heap->tree     = tmp;                                 // if reallocation was successful, reassign the new memory block to tree.
+        heap->capacity = heap->count + DEFAULT_HEAP_CAPACITY; // update the capacity
+    }
 
     // Consider our previous tree:
     // { 25, 20, 22, 17, 19, 10, 12, 15, 07, 09, 18 }

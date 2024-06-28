@@ -31,10 +31,10 @@ bool pqueInit(
     _In_ const bool (*predicate)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent),
     _In_ const void (*clean)(_In_reads_(1) const void* const restrict memblock)
 ) {
-    pque->count       = 0;
-    pque->capacity    = DEFAULT_HEAP_CAPACITY;
-    pque->fnptr_pred  = predicate;
-    pque->fnptr_clean = clean;
+    pque->count      = 0;
+    pque->capacity   = DEFAULT_HEAP_CAPACITY;
+    pque->fnptr_pred = predicate;
+
     if (!(pque->tree = malloc(DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t)))) return false;
     memset(pque->tree, 0U, DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t));
     return true;

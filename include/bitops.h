@@ -51,36 +51,4 @@ static __forceinline void __stdcall xorbit( // the result will be false only if 
     getbit(ibuff_a, offset) == getbit(ibuff_b, offset) ? setbit(obuff, offset, false) : setbit(obuff, offset, true);
 }
 
-// quite similar to bit shifts but here the bit that gets pushed off the boundary will be reintroduced into the byte at the other end.
-// 0b10110110 left rotated by 4 bits will be 0b01101011 whereas left shifting by 4 bits will result in 0b01100000
-static __forceinline void __stdcall leftrotbits( // this does what MS Calculator calls a rotate through carry circular left shift
-    _Inout_ register uint8_t* const restrict bitstream,
-    _In_ register const size_t length, // length of bitstream in bits
-    _In_ register const size_t n       // rotate n bits left
-) {
-    // the goal is to rotate the entire bitstream left by n bits.
-    // first the leftmost bit of the buffer is stored temporarily and all the bits are shifted one position left
-    // the temporarily stored bit is assigned to the rightmost bit position.
-    if (!length) return;
-
-    bool leftmost = false, pushoff = false;
-    // leftmost and rightmost bits within the shift boundary i.e bitstream + offset to bitstream + offset + n
-
-    for (size_t _ = 0; _ < n; ++_) {                        // number of bits to rotate
-        for (size_t j = 0; j <= (length - 1) / 8LLU; ++j) { // number of bytes in the specified bitstream
-            // captures the state of the first bit of the selected byte
-            pushoff = getbit(bitstream + j, 0); // first bit of the current byte
-
-            if (!j) // first bit and last bit of the stream need swapping, so store the first bit of first byte.
-                leftmost = pushoff;
-            else
-                // swap the first (leftmost) bit of the current byte with the last (rightmost) bit of the previous byte.
-                setbit(bitstream + j - 1 /* picking the previous byte */, 7 /* the last bit */, pushoff);
-            bitstream[j] >>= 1; // Intel x86_64 is little endian, so we need to do a right shift for left rotation
-        }
-        // set the last (rightmost) bit of the rotate window to the first bit of it.
-        setbit(bitstream, length - 1, leftmost);
-    }
-}
-
 #endif // !__BITOPS_H__

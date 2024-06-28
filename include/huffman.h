@@ -8,7 +8,7 @@
     #define WIN32_EXTRA_MEAN          
     // UCRT headers, for some freaking reason, use a plain #if predicate for __STDC_WANT_SECURE_LIB__
     // not an #ifdef predicate, so we need to provide a valued definition for __STDC_WANT_SECURE_LIB__,
-    // a plain #define results in a compile time error
+    // a plain #define results in compile time error
     #define __STDC_WANT_SECURE_LIB__ 1
     #define NOMINMAX                 
 
@@ -55,33 +55,29 @@ static_assert(offsetof(code_t, code) == 2, "member 'code' must be aligned 2 byte
 typedef struct _heap {     // heap
         uint32_t count;    // number of nodes.
         uint32_t capacity; // number of nodes the heap can hold before requiring a reallocation.
-        bool (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
-        void (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
+        bool (*fnptr_pred)(_In_ const void* const restrict, _In_ const void* const restrict);
         void** tree; // a heap allocated array containing pointers to heap allocated nodes.
                      // use malloc to allocate the tree and the nodes.
 } heap_t;
 
-static_assert(sizeof(heap_t) == 32, "struct heap_t must be 32 bytes in size!");
-static_assert(offsetof(heap_t, count) == 0, "");
-static_assert(offsetof(heap_t, capacity) == 4, "");
-static_assert(offsetof(heap_t, fnptr_pred) == 8, "");
-static_assert(offsetof(heap_t, fnptr_clean) == 16, "");
-static_assert(offsetof(heap_t, tree) == 24, "");
+static_assert(sizeof(heap_t) == 24, "struct heap_t must be 32 bytes in size!");
+static_assert(offsetof(heap_t, count) == 0, "member 'count' must be aligned at the struct boundary!");
+static_assert(offsetof(heap_t, capacity) == 4, "member 'capacity' must be aligned 4 bytes away from the struct boundary!");
+static_assert(offsetof(heap_t, fnptr_pred) == 8, "member 'fnptr_pred' must be aligned 8 bytes away from the struct boundary!");
+static_assert(offsetof(heap_t, tree) == 16, "member 'tree' must be aligned 16 bytes away from the struct boundary!");
 
 typedef struct _pque { // priority que
         uint32_t count;
         uint32_t capacity;
-        bool (*fnptr_pred)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent);
-        void (*fnptr_clean)(_In_reads_(1) const void* const restrict memblock);
+        bool (*fnptr_pred)(_In_ const void* const restrict, _In_ const void* const restrict);
         void** tree;
 } pque_t;
 
-static_assert(sizeof(pque_t) == 32, "struct pque_t must be 32 bytes in size!");
-static_assert(offsetof(pque_t, count) == 0, "");
-static_assert(offsetof(pque_t, capacity) == 4, "");
-static_assert(offsetof(pque_t, fnptr_pred) == 8, "");
-static_assert(offsetof(pque_t, fnptr_clean) == 16, "");
-static_assert(offsetof(pque_t, tree) == 24, "");
+static_assert(sizeof(pque_t) == 24, "struct pque_t must be 32 bytes in size!");
+static_assert(offsetof(pque_t, count) == 0, "member 'count' must be aligned at the struct boundary!");
+static_assert(offsetof(pque_t, capacity) == 4, "member 'capacity' must be aligned 4 bytes away from the struct boundary!");
+static_assert(offsetof(pque_t, fnptr_pred) == 8, "member 'fnptr_pred' must be aligned 8 bytes away from the struct boundary!");
+static_assert(offsetof(pque_t, tree) == 16, "member 'tree' must be aligned 16 bytes away from the struct boundary!");
 
 static __forceinline uint32_t __stdcall get_parent(_In_ const uint32_t cpos) {
     return (cpos - 1) / 2 /* deliberate truncating division. */;
@@ -98,11 +94,8 @@ bool __cdecl write(_In_ const wchar_t* const restrict filepath, _In_ const uint8
     #pragma endregion
 
     #pragma region __HEAP_PROTOTYPES__
-
 bool heap_init(
-    _Inout_ heap_t* const restrict heap,
-    _In_ const bool (*predicate)(_In_reads_(1) const void* const restrict child, _In_reads_(1) const void* const restrict parent),
-    _In_ const void (*clean)(_In_reads_(1) const void* const restrict memblock)
+    _Inout_ heap_t* const restrict heap, _In_ const bool (*predicate)(_In_ const void* const restrict, _In_ const void* const restrict)
 );
 
 void heap_clean(_Inout_ heap_t* const restrict heap);
