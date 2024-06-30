@@ -95,7 +95,7 @@ bool __cdecl write(_In_ const wchar_t* const restrict filepath, _In_ const uint8
 
     #pragma region __HEAP_PROTOTYPES__
 bool heap_init(
-    _Inout_ heap_t* const restrict heap, _In_ const bool (*predicate)(_In_ const void* const restrict, _In_ const void* const restrict)
+    _Inout_ heap_t* const restrict heap, _In_ bool (*const predicate)(_In_ const void* const restrict, _In_ const void* const restrict)
 );
 
 void heap_clean(_Inout_ heap_t* const restrict heap);

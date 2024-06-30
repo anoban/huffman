@@ -2,6 +2,7 @@
     #include <huffman.h>
     #include <time.h>
     #define BITSTREAM_BYTE_COUNT 1000LLU // in bytes
+    #define NHEAP_PUSHES         200LLU
 
     #pragma region __TEST_DATA__
 
@@ -296,10 +297,10 @@ static uint8_t rotbitstream[BITSTREAM_BYTE_COUNT] = {
 
     #pragma endregion
 
-static inline bool _cdecl compare(const int a, const int b) { }
+static inline bool _cdecl compare(const int child, const int parent) { return child > parent ? true : false; }
 
 int wmain(void) {
-    srand(time(NULL));
+    srand(time(NULL)); // seed the random number generator
 
     #pragma region __TEST_BITOPS__
     // test getbit()
@@ -319,10 +320,26 @@ int wmain(void) {
 
     #pragma region __TEST_HEAP__
 
-    heap_t heap_i = { 0 }; // heap containing 32 bit signed integers
-    // heap_init(&heap);
+    heap_t integerheap = { 0 }; // heap containing 32 bit signed integers
+    heap_init(&integerheap, compare);
 
-    //
+    int* _hptrs[NHEAP_PUSHES]  = { NULL };
+    int  randoms[NHEAP_PUSHES] = { 0 };
+
+    for (int i = 0; i < NHEAP_PUSHES; ++i) {
+        _hptrs[i] = malloc(sizeof(int));
+        assert(_hptrs[i]);
+
+        randoms[i] = *_hptrs[i] = rand() % 10;
+        heap_push(&integerheap, _hptrs[i]);
+    }
+
+    int npops = 0, *popped = NULL;
+    while (heap_pop(&integerheap, &popped)) {
+        npops++;
+        wprintf_s(L"%d\n", *popped); //, randoms[npops]);
+    }
+    assert(npops == NHEAP_PUSHES);
 
     #pragma endregion
 

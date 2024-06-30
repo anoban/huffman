@@ -87,7 +87,7 @@ static inline bool __cdecl predicate(const void* const restrict child, const voi
 */
 
 bool heap_init(
-    _Inout_ heap_t* const restrict heap, _In_ const bool (*predicate)(_In_ const void* const restrict, _In_ const void* const restrict)
+    _Inout_ heap_t* const restrict heap, _In_ bool (*const predicate)(_In_ const void* const restrict, _In_ const void* const restrict)
 ) {
     heap->count      = 0;
     heap->capacity   = DEFAULT_HEAP_CAPACITY; // this is the number of pointers, NOT BYTES
@@ -173,9 +173,9 @@ bool heap_push(
                  /    \   /    \    /
                (15)   (7)(9)  (18)(10)            <--- 0th (Bottom)
     */
-    // Still we have 22 as parent of 24, swap these two again;
-    /* Now the tree assumes a shape like this:
-    *
+    // still we have 22 as parent of 24, swap these two again;
+    /* now the tree assumes a shape like this:
+    
                                (25)                <--- 3rd (Root/Top)
                              /     \
                             /       \
@@ -283,7 +283,7 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
     // rearrange the tree
 
     while (true) {
-        // At the onset of iteration, parentpos = 0; currently points to the (new) root node.
+        // at the onset of iteration, parentpos = 0; currently points to the (new) root node.
         leftchildpos  = get_leftchild(parentpos);
         rightchildpos = get_rightchild(parentpos);
 
@@ -296,7 +296,7 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
         } else {
             pos = parentpos; // otherwise hold the caret at the parent.
         }
-        // In our example, this conditional will choose the left arm.
+        // in our example, this conditional will choose the left arm.
 
         if (rightchildpos < heap->count /* until we reach the rightmost end */ &&
             heap->fnptr_pred(
@@ -304,12 +304,12 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
             )) { // if the weight of the right child is greater than that of the parent OR the left child (CONTEXT DEPENDENT)
             // choose to traverse down the right arm
             pos = rightchildpos;
-            // In our example this conditional will choose the right arm, because 24 > 10.
+            // in our example this conditional will choose the right arm, because 24 > 10.
         }
 
-        // In our example, both conditionals at line 310 and 318 will evaluate to true.
-        // Since the expressions predicted on the conditional at line 318 will be evaluated finally,
-        // It is the right child that will be swapped with the parent first.
+        // in our example, both conditionals at line 310 and 318 will evaluate to true.
+        // since the expressions predicted on the conditional at line 318 will be evaluated finally,
+        // it is the right child that will be swapped with the parent first.
 
         // if the root is heavier than both the left and right children, no need to rearrange the heap.
         if (pos == parentpos) break;
@@ -319,7 +319,7 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
         heap->tree[leftchildpos] = tmp;
         tmp                      = NULL;
 
-        /* Now the tree looks like this:
+        /* now the tree looks like this:
 
                           (24)                <--- 3rd (Root/Top)
                         /     \
@@ -341,7 +341,7 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
         parentpos                = pos;
     }
 
-    /* At the start of second iteration, the tree looks like this:
+    /* at the start of second iteration, the tree looks like this:
 
                            (24)                <--- 3rd (Root/Top)
                          /     \
@@ -357,11 +357,11 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
               /  \     /  \
              /    \   /    \
            (15)   (7)(9)  (18)                 <--- 0th (Bottom)
-        */
-    // Again the first conditional will pick the left arm for swapping as 22 > 10.
-    // Second conditional won't execute as 22 < 12, finally the left arm will be selected for swapping.
+    */
+    // again the first conditional will pick the left arm for swapping as 22 > 10.
+    // second conditional won't execute as 22 < 12, finally the left arm will be selected for swapping.
 
-    /* At the end of second iteration, the tree looks like this:
+    /* at the end of second iteration, the tree looks like this:
 
                            (24)                <--- 3rd (Root/Top)
                          /     \
@@ -377,8 +377,8 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
               /  \     /  \
              /    \   /    \
            (15)   (7)(9)  (18)                 <--- 0th (Bottom)
-        */
-    // No rearrangements are needed anymore.
+     */
+    // no rearrangements are needed anymore.
 
     return true;
 }
