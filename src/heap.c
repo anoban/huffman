@@ -1,6 +1,7 @@
 #include <huffman.h>
 
-#define DEFAULT_HEAP_CAPACITY 1024LLU
+#define DEFAULT_HEAP_CAPACITY       1024LLU
+#define DEFAULT_HEAP_CAPACITY_BYTES (DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t))
 
 // many problems demand determination of the smallest or largest element from a collection that's capable of frequent insertions and deletions
 // one way to meet this need is to keep the collection sorted all the time but sorting a collection at every insertion or deletion is expensive
@@ -92,49 +93,44 @@ bool heap_init(
     heap->count      = 0;
     heap->capacity   = DEFAULT_HEAP_CAPACITY; // this is the number of pointers, NOT BYTES
     heap->fnptr_pred = predicate;
+    heap->tree = malloc(DEFAULT_HEAP_CAPACITY_BYTES); // will allocate memory to store DEFAULT_HEAP_CAPACITY number of pointers in the tree.
 
-    // will initially allocate memory to store DEFAULT_HEAP_CAPACITY pointers in the tree.
-    if (!(heap->tree = malloc(DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t)))) {
+    if (!heap->tree) {
         fwprintf_s(stderr, L"memory allocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
         return false;
     }
-    memset(heap->tree, 0U, DEFAULT_HEAP_CAPACITY * sizeof(uintptr_t));
+
+    memset(heap->tree, 0U, DEFAULT_HEAP_CAPACITY_BYTES); // necessary??
     return true;
 }
 
-void heap_clean(_Inout_ heap_t* const restrict heap) {
-    for (size_t i = 0; i < heap->count; ++i) free(heap->tree[i]); // free the heap allocated nodes.
-    free(heap->tree);                                             // free the array containing pointers to heap allocated nodes.
-    memset(heap, 0U, sizeof(heap_t));                             // zero out the struct
-    return;
-}
-
 bool heap_push(
-    _Inout_ heap_t* const restrict heap, _In_ const void* const restrict data /* expects a heap allocated memory block (node) to push in */
+    _Inout_ heap_t* const restrict heap,
+    _In_ const void* const restrict data /* expects a heap allocated memory block to push into the heap */
 ) {
-    void*  tmp      = NULL;
-    size_t childpos = 0, parentpos = 0;
+    void*  _temp     = NULL;
+    size_t _childpos = 0, _parentpos = 0;
 
-    if (heap->count + 1 > heap->capacity) { // if the buffer doesn't have space for another pointer,
-        // ask for an additional 1024 * sizeof(uintptr_t) bytes. return false if the reallocation has failed.
-        // genuinely fancying an arena allocator here!
-        if (!(tmp = realloc(heap->tree, (heap->count + DEFAULT_HEAP_CAPACITY) * sizeof(uintptr_t) /* new size */))) {
+    if (heap->count + 1 > heap->capacity) { // if the existing buffer doesn't have space for another pointer,
+        // ask for an additional DEFAULT_HEAP_CAPACITY_BYTES bytes. return false if the reallocation failed.
+        if (!(_temp = realloc(heap->tree, (heap->capacity + DEFAULT_HEAP_CAPACITY) * sizeof(uintptr_t) /* new size */))) {
+            // heap->tree is still valid and points to the old buffer
             fwprintf_s(stderr, L"memory reallocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
             return false;
         }
 
-        heap->tree     = tmp;                                 // if reallocation was successful, reassign the new memory block to tree.
-        heap->capacity = heap->count + DEFAULT_HEAP_CAPACITY; // update the capacity
+        heap->tree     = _temp;                                  // if reallocation was successful, reassign the new memory block to tree.
+        heap->capacity = heap->capacity + DEFAULT_HEAP_CAPACITY; // update the capacity
     }
 
-    // Consider our previous tree:
+    // consider our previous tree:
     // { 25, 20, 22, 17, 19, 10, 12, 15, 07, 09, 18 }
     // let's try and push a node with weight 24
     // after pushing we'd end up with an array like this, with the pushed node appended at the rightmost end.
     // { 25, 20, 22, 17, 19, 10, 12, 15, 07, 09, 18, 24 }
     // 24 is at offset 11, that makes it a child of node (i - 1) / 2 = 5, that is node 10.
 
-    /* Now the tree assumes a shape like this:
+    /* now the tree assumes a shape like this:
 
                                (25)               <--- 3rd (Root/Top)
                              /     \
@@ -152,11 +148,11 @@ bool heap_push(
                (15)   (7)(9)  (18)(24)            <--- 0th (Bottom)
     */
 
-    // Since a child node cannot have a higher weight than a parent node in a top-heavy heap, this needs doctoring.
-    // To make this push comply to the heap data structure, we'll swap child and parents until we get to an acceptable structure.
+    // since a child node cannot have a bigger weight than its parent node in a top-heavy heap, this needs reordering.
+    // to make this push comply with the heap requisites, we'll swap child and parents until we get to an acceptable structure.
 
-    // First swap is between 24 and its parent 10;
-    /* Now the tree assumes a shape like this:
+    // first swap is between 24 and its parent 10;
+    /* now the tree assumes a shape like this:
 
                                (25)               <--- 3rd (Root/Top)
                              /     \
@@ -173,6 +169,7 @@ bool heap_push(
                  /    \   /    \    /
                (15)   (7)(9)  (18)(10)            <--- 0th (Bottom)
     */
+
     // still we have 22 as parent of 24, swap these two again;
     /* now the tree assumes a shape like this:
     
@@ -192,38 +189,43 @@ bool heap_push(
                (15)   (7)(9)  (18)(10)             <--- 0th (Bottom)
     */
     // {25, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
-    // Perfecto :)))
+    // perfecto :)))
 
-    heap->tree[heap->count] = data;                 // insert the new node, it's not count + 1! offsets start at 0.
-    childpos                = heap->count;          // offset of the newly inserted node.
-    parentpos               = get_parent(childpos); // offset of the new node's parent.
+    heap->count++;                                       // increment the node count.
+    heap->tree[heap->count - 1] = data;                  // hook in the new node
+    _childpos                   = heap->count - 1;       // offset of the newly inserted node.
+    _parentpos                  = get_parent(_childpos); // offset of the new node's parent.
 
-    while ((childpos > 0) /* as long as we haven't reached the root node at offset 0 */ &&
-           heap->fnptr_pred(heap->tree[childpos], heap->tree[parentpos])) {
-        // and the weight of the child is greater than that of the parent. (two conditions needed to perform the swap)
+    while ((_childpos > 0) /* as long as we haven't reached the root node at offset 0 */ &&
+           heap->fnptr_pred(
+               heap->tree[_childpos], heap->tree[_parentpos]
+           ) /* and the weight of the child is greater than that of the parent */) {
+        // two conditions needed to perform the swap
 
-        tmp                   = heap->tree[childpos];
-        heap->tree[parentpos] = heap->tree[childpos];
-        heap->tree[childpos]  = tmp;
-        tmp                   = NULL;
+        _temp                  = heap->tree[_childpos];
+        heap->tree[_parentpos] = heap->tree[_childpos];
+        heap->tree[_childpos]  = _temp;
+        _temp                  = NULL;
 
         // prepare for the next swap in anticipation that the new positioning of the inserted node also needs a swap.
-        childpos              = parentpos;            // previous parent's offset now becomes the child's offset.
-        parentpos             = get_parent(childpos); // find the parent of the current child's offset.
+        _childpos              = _parentpos;            // previous parent's offset now becomes the child's offset.
+        _parentpos             = get_parent(_childpos); // find the parent of the current child's offset.
     }
 
-    heap->count++; // increment the node count.
     return true;
 }
 
-bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /* popped out */) {
+bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data /* popped out pointer */) {
     size_t leftchildpos = 0, rightchildpos = 0, parentpos = 0, pos = 0;
     void*  tmp = NULL;
 
     // if the heap is empty,
-    if (!heap->count) return false;
+    if (!heap->count) {
+        *data = NULL;
+        return false;
+    }
 
-    // If the heap has only one node,
+    // if the heap has only one node,
     if (heap->count == 1) {
         *data = heap->tree[0];
         heap->count--;
@@ -239,7 +241,7 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
                                                  // |
     // {NULL, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10} <-------/
 
-    /* Now the tree looks like this:
+    /* now the tree looks like this:
 
                              (NULL)                <--- 3rd (Root/Top)
                              /     \
@@ -257,12 +259,12 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
                (15)   (7)(9)  (18)(10)             <--- 0th (Bottom)
     */
 
-    // Move the last node in the array to the root's position, offset 0.
+    // move the last node in the array to the root's position, offset 0.
     heap->tree[0]               = heap->tree[heap->count - 1];
     heap->tree[heap->count - 1] = NULL;
     heap->count--;
 
-    /* Now the tree looks like this:
+    /* now the tree looks like this:
 
                                (10)                <--- 3rd (Root/Top)
                              /     \
@@ -378,7 +380,14 @@ bool heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** restrict data 
              /    \   /    \
            (15)   (7)(9)  (18)                 <--- 0th (Bottom)
      */
-    // no rearrangements are needed anymore.
+    // no rearrangements needed anymore.
 
     return true;
+}
+
+void heap_clean(_Inout_ heap_t* const restrict heap) {
+    for (size_t i = 0; i < heap->count; ++i) free(heap->tree[i]); // free the heap allocated nodes.
+    free(heap->tree);                                             // free the array containing pointers to heap allocated nodes.
+    memset(heap, 0U, sizeof(heap_t));                             // zero out the struct
+    return;
 }

@@ -431,7 +431,7 @@ BreakInheritanceList: AfterColon
 #     Base2
 # {};
 
-BreakStringLiterals: false
+BreakStringLiterals: true
 # if set to true;
 # const char* x = "veryVeryVeryVeryVeryVe"
 #                 "ryVeryVeryVeryVeryVery"

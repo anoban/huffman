@@ -10,13 +10,14 @@
     // not an #ifdef predicate, so we need to provide a valued definition for __STDC_WANT_SECURE_LIB__,
     // a plain #define results in compile time error
     #define __STDC_WANT_SECURE_LIB__ 1
-    #define NOMINMAX                 
+    #define NOMINMAX     // it seems that only <Windows.h> has the internal header guards receptive to NOMINMAX
+    // if we include system headers directly without relying on <windows.h> #define NOMINMAX offers no help! YIKES!
 
     #include <windef.h>
     #include <errhandlingapi.h>
     #include <fileapi.h>
     #include <handleapi.h>
-    #include <sal.h>    // for gcc
+    #include <sal.h>
 // clang-format on
 
     #include <assert.h>
@@ -29,6 +30,12 @@
 // clang-format off
     #include <bitops.h>
 // clang-format on
+
+// static_assert(max(10, 0), "see max is reachable here!");
+    #if defined(min) && defined(max)
+        #undef min
+        #undef max
+    #endif
 
 typedef struct _node { // represents a Huffman node.
         uint8_t  byte;
