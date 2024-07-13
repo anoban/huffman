@@ -2,7 +2,7 @@
     #include <huffman.h>
     #include <time.h>
     #define BITSTREAM_BYTE_COUNT 1000LLU // in bytes
-    #define NHEAP_PUSHES         200LLU
+    #define NHEAP_PUSHES         35LLU
 
     #pragma region __TEST_DATA__
 
@@ -260,27 +260,8 @@ static const uint8_t xorbitstream[BITSTREAM_BYTE_COUNT] = {
     0b00101110, 0b01000110, 0b01111110, 0b00110100, 0b00011111, 0b01000010, 0b10011001, 0b01100010, 0b10001101, 0b01101110
 };
 
-static const int randoms[NHEAP_PUSHES] = {
-    13,  30,  44,  -87, -62,  -49, -95, -57,  90,  35,  85,  21,  -89, 77,  89,  5,   87,  9,   13,  -38, -82, 35,  -48, -78, -59,
-    59,  87,  -92, 64,  17,   17,  93,  84,   -19, 38,  -31, -24, 91,  87,  29,  75,  32,  -7,  -24, 54,  -29, -17, 33,  -29, -40,
-    -96, 58,  -15, -8,  60,   -86, -28, -100, -60, 50,  29,  56,  -49, -72, -4,  -96, -58, -8,  39,  93,  -65, -73, -30, -30, -11,
-    28,  78,  -45, -28, -8,   -89, 35,  -31,  -27, -23, 7,   -27, -61, -38, -70, -13, 34,  -9,  43,  -38, 22,  -96, 74,  85,  -99,
-    -9,  -54, 46,  52,  -37,  14,  21,  -67,  11,  96,  -82, 68,  57,  10,  74,  -87, -52, -11, 66,  78,  -48, -97, 0,   62,  18,
-    72,  2,   13,  -24, -83,  1,   -38, -46,  -81, 96,  -48, 65,  43,  -58, 81,  96,  85,  -27, 62,  -88, 49,  -79, 66,  -32, 38,
-    -22, 52,  -71, 66,  23,   -62, -34, 13,   -74, -54, -44, 50,  67,  74,  -49, -50, -2,  -3,  -14, -34, -28, 56,  -25, 43,  -97,
-    89,  53,  90,  44,  -100, 85,  -20, -74,  -19, 87,  -73, -94, 71,  89,  76,  -36, -53, 11,  -37, 11,  64,  85,  28,  -74, -30
-};
-
-static const int sorted_randoms[NHEAP_PUSHES] = {
-    -100, -100, -99, -97, -97, -96, -96, -96, -95, -94, -92, -89, -89, -88, -87, -87, -86, -83, -82, -82, -81, -79, -78, -74, -74,
-    -74,  -73,  -73, -72, -71, -70, -67, -65, -62, -62, -61, -60, -59, -58, -58, -57, -54, -54, -53, -52, -50, -49, -49, -49, -48,
-    -48,  -48,  -46, -45, -44, -40, -38, -38, -38, -38, -37, -37, -36, -34, -34, -32, -31, -31, -30, -30, -30, -29, -29, -28, -28,
-    -28,  -27,  -27, -27, -25, -24, -24, -24, -23, -22, -20, -19, -19, -17, -15, -14, -13, -11, -11, -9,  -9,  -8,  -8,  -8,  -7,
-    -4,   -3,   -2,  0,   1,   2,   5,   7,   9,   10,  11,  11,  11,  13,  13,  13,  13,  14,  17,  17,  18,  21,  21,  22,  23,
-    28,   28,   29,  29,  30,  32,  33,  34,  35,  35,  35,  38,  38,  39,  43,  43,  43,  44,  44,  46,  49,  50,  50,  52,  52,
-    53,   54,   56,  56,  57,  58,  59,  60,  62,  62,  64,  64,  65,  66,  66,  66,  67,  68,  71,  72,  74,  74,  74,  75,  76,
-    77,   78,   78,  81,  84,  85,  85,  85,  85,  85,  87,  87,  87,  87,  89,  89,  89,  90,  90,  91,  93,  93,  96,  96,  96
-};
+static const int randoms[NHEAP_PUSHES] = { -7, 2,   36,  17, 23,  2,   -11, -36, 5, 36, 21,  -39, 7,  9,   -3, -20, -5, 21,
+                                           0,  -45, -50, 29, -37, -14, -7,  1,   9, 6,  -32, 47,  -7, -21, 26, 36,  24 };
 
     #pragma endregion
 
@@ -288,21 +269,12 @@ static const int sorted_randoms[NHEAP_PUSHES] = {
 
 // return true when a swap is needed, i.e when the child is heavier than the parent
 // this predicate function is tailored to handle integer types (a directly comparable type, not an aggregate type)
-static inline bool _cdecl compare(const int child, const int parent) { return child > parent ? true : false; }
-
-static inline int __stdcall max(
-    _In_ const int** const restrict array /* an array of pointers to int */, _In_ const unsigned register size
-) {
-    assert(size);
-    assert(array);
-
-    int max = (*array)[0];
-    for (unsigned i = 0; i < size; ++i)
-        if (max < *array[i]) max = *array[i];
-    return max;
+static inline bool __stdcall comp(_In_ const int* const restrict child, _In_ const int* const restrict parent) {
+    return *child > *parent ? true : false;
 }
 
-static inline int __cdecl qsscompare( // typedef int (__cdecl* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*);
+// argument typedef int (__cdecl* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*) for qsort_s()
+static inline int __cdecl qsscompare(
     _In_opt_ const void* const restrict context /* we do not need this for our tests */,
     _In_ const int* const restrict this,
     _In_ const int* const restrict next
@@ -334,7 +306,7 @@ int wmain(void) {
     #pragma region __TEST_HEAP__
 
     heap_t integerheap = { 0 }; // heap containing 32 bit signed integers
-    assert(heap_init(&integerheap, compare));
+    assert(heap_init(&integerheap, comp));
 
     assert(!integerheap.count);
     assert(integerheap.capacity);
@@ -350,15 +322,18 @@ int wmain(void) {
         *_hptrs[npushes] = randoms[npushes];
         heap_push(&integerheap, _hptrs[npushes]);
         assert(integerheap.count == npushes + 1);
+        for (unsigned _ = 0; _ < npushes; ++_) wprintf_s(L"%4d", *(int*) integerheap.tree[_]);
+        _putws(L"");
     }
     assert(NHEAP_PUSHES == npushes);
 
     while (heap_pop(&integerheap, &popped)) {
         npops++;
-        wprintf_s(L"%d, %d\n", *popped, max(integerheap.tree, integerheap.count)); //, randoms[npops]);
+        wprintf_s(L"%d\n", *popped); //, randoms[npops]);
         // assert(integerheap.count == npushes--);
+        free(popped);
     }
-    // assert(npops == NHEAP_PUSHES);
+    assert(npops == NHEAP_PUSHES);
 
     #pragma endregion
 
@@ -376,6 +351,7 @@ int wmain(void) {
 
     free(image);
     free(text);
+    free(bin);
 
     #pragma endregion
 

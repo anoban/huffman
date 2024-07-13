@@ -11,7 +11,7 @@
     // a plain #define results in compile time error
     #define __STDC_WANT_SECURE_LIB__ 1
     #define NOMINMAX     // it seems that only <Windows.h> has the internal header guards receptive to NOMINMAX
-    // if we include system headers directly without relying on <windows.h> #define NOMINMAX offers no help! YIKES!
+    // if we include system headers directly without relying on <windows.h> for transient includes, #define NOMINMAX offers no help! YIKES!
 
     #include <windef.h>
     #include <errhandlingapi.h>
@@ -42,11 +42,10 @@ typedef struct _node { // represents a Huffman node.
         uint32_t freq;
 } node_t;
 
-static_assert(sizeof(node_t) == 8, "struct node_t must be 8 bytes in size!");
-static_assert(
-    offsetof(node_t, byte) == 0, "member 'byte' must be aligned at the struct boundary!"
-); // weird but static_assert(!offsetof(node_t, byte), ""); errs with MSVC, but works with gcc, clang & icx
-static_assert(offsetof(node_t, freq) == 4, "member 'freq' must be aligned 4 bytes away from the struct boundary!");
+static_assert(sizeof(node_t) == 8);
+static_assert(offsetof(node_t, byte) == 0);
+// weird but static_assert(!offsetof(node_t, byte)); errs with MSVC, but works with gcc, clang & icx
+static_assert(offsetof(node_t, freq) == 4);
 
 typedef struct _code { // represents a Huffman code
         bool     is_used;
@@ -54,10 +53,10 @@ typedef struct _code { // represents a Huffman code
         uint16_t code;
 } code_t;
 
-static_assert(sizeof(code_t) == 4, "struct code_t must be 4 bytes in size!");
-static_assert(offsetof(code_t, is_used) == 0, "member 'is_used' must be aligned at the struct boundary!");
-static_assert(offsetof(code_t, length) == 1, "member 'length' must be aligned 1 bytes away from the struct boundary!");
-static_assert(offsetof(code_t, code) == 2, "member 'code' must be aligned 2 bytes away from the struct boundary!");
+static_assert(sizeof(code_t) == 4);
+static_assert(offsetof(code_t, is_used) == 0);
+static_assert(offsetof(code_t, length) == 1);
+static_assert(offsetof(code_t, code) == 2);
 
 typedef struct _heap {     // heap
         uint32_t count;    // number of nodes.
@@ -67,11 +66,11 @@ typedef struct _heap {     // heap
                      // use malloc to allocate the tree and the nodes.
 } heap_t;
 
-static_assert(sizeof(heap_t) == 24, "struct heap_t must be 32 bytes in size!");
-static_assert(offsetof(heap_t, count) == 0, "member 'count' must be aligned at the struct boundary!");
-static_assert(offsetof(heap_t, capacity) == 4, "member 'capacity' must be aligned 4 bytes away from the struct boundary!");
-static_assert(offsetof(heap_t, fnptr_pred) == 8, "member 'fnptr_pred' must be aligned 8 bytes away from the struct boundary!");
-static_assert(offsetof(heap_t, tree) == 16, "member 'tree' must be aligned 16 bytes away from the struct boundary!");
+static_assert(sizeof(heap_t) == 24);
+static_assert(offsetof(heap_t, count) == 0);
+static_assert(offsetof(heap_t, capacity) == 4);
+static_assert(offsetof(heap_t, fnptr_pred) == 8);
+static_assert(offsetof(heap_t, tree) == 16);
 
 typedef struct _pque { // priority que
         uint32_t count;
@@ -80,14 +79,14 @@ typedef struct _pque { // priority que
         void** tree;
 } pque_t;
 
-static_assert(sizeof(pque_t) == 24, "struct pque_t must be 32 bytes in size!");
-static_assert(offsetof(pque_t, count) == 0, "member 'count' must be aligned at the struct boundary!");
-static_assert(offsetof(pque_t, capacity) == 4, "member 'capacity' must be aligned 4 bytes away from the struct boundary!");
-static_assert(offsetof(pque_t, fnptr_pred) == 8, "member 'fnptr_pred' must be aligned 8 bytes away from the struct boundary!");
-static_assert(offsetof(pque_t, tree) == 16, "member 'tree' must be aligned 16 bytes away from the struct boundary!");
+static_assert(sizeof(pque_t) == 24);
+static_assert(offsetof(pque_t, count) == 0);
+static_assert(offsetof(pque_t, capacity) == 4);
+static_assert(offsetof(pque_t, fnptr_pred) == 8);
+static_assert(offsetof(pque_t, tree) == 16);
 
 static __forceinline uint32_t __stdcall get_parent(_In_ const uint32_t cpos) {
-    return (cpos - 1) / 2 /* deliberate truncating division. */;
+    return cpos ? (cpos - 1) / 2 : 0 /* deliberate truncating division. */;
 }
 
 static __forceinline uint32_t __stdcall get_leftchild(_In_ const uint32_t ppos) { return ppos * 2 + 1; }

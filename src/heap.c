@@ -109,7 +109,7 @@ bool heap_push(
     _In_ const void* const restrict data /* expects a heap allocated memory block to push into the heap */
 ) {
     void*  _temp     = NULL;
-    size_t _childpos = 0, _parentpos = 0;
+    size_t _childpos = 0, _parentpos = 0; //
 
     if (heap->count + 1 > heap->capacity) { // if the existing buffer doesn't have space for another pointer,
         // ask for an additional DEFAULT_HEAP_CAPACITY_BYTES bytes. return false if the reallocation failed.
