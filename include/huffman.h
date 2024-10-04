@@ -25,11 +25,3 @@ static_assert(sizeof(code_t) == 4);
 static_assert(offsetof(code_t, is_used) == 0);
 static_assert(offsetof(code_t, length) == 1);
 static_assert(offsetof(code_t, code) == 2);
-
-#pragma region HUFFMAN_PROTOTYPES
-
-int64_t compress(_In_ const uint8_t* const inbuffer, _Inout_ uint8_t* outbuffer, _In_ const size_t size);
-
-int64_t uncompress(_In_ const uint8_t* const inbuffer, _Inout_ uint8_t* outbuffer, _In_ const size_t size);
-
-#pragma endregion

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\bitops.h" />
+    <ClInclude Include="include\compdcomp.h" />
     <ClInclude Include="include\fileio.h" />
     <ClInclude Include="include\heap.h" />
     <ClInclude Include="include\huffman.h" />
@@ -27,7 +28,6 @@
     <ClInclude Include="include\pqueue.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\huffman.c" />
     <ClCompile Include="src\main.c" />
   </ItemGroup>
   <ItemGroup>

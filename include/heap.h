@@ -101,14 +101,14 @@ static inline bool __cdecl predicate(const void* const  child, const void* const
 */
 
 static inline bool __cdecl heap_init(
-    _Inout_ heap_t* const restrict heap, _In_ bool (*const restrict predicate)(_In_ const void* const, _In_ const void* const)
+    _Inout_ heap_t* const restrict heap, _In_ bool (*const predicate)(_In_ const void* const, _In_ const void* const)
 ) {
     heap->count    = 0;
     heap->capacity = DEFAULT_HEAP_CAPACITY; // this is the number of pointers, NOT BYTES
     heap->predptr  = predicate;
     // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
     heap->tree     = _CXX_COMPAT_REINTERPRET_CAST(void**, malloc(DEFAULT_HEAP_CAPACITY_BYTES));
-    // (void**) malloc(DEFAULT_HEAP_CAPACITY_BYTES); // will allocate memory to store DEFAULT_HEAP_CAPACITY number of pointers in the tree.
+    // will allocate memory to store DEFAULT_HEAP_CAPACITY number of pointers in the tree.
 
     if (!heap->tree) {
         fwprintf_s(stderr, L"memory allocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
@@ -122,7 +122,7 @@ static inline bool __cdecl heap_init(
 static inline void __cdecl heap_clean(_Inout_ heap_t* const restrict heap) {
     for (unsigned i = 0; i < heap->count; ++i) {
         free(heap->tree[i]); // free the heap allocated nodes.
-                             // heap->tree[i] = NULL;
+                             // heap->tree[i] = NULL;   // redundant
     }
     free(heap->tree);                 // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
     memset(heap, 0U, sizeof(heap_t)); // zero out the struct
@@ -135,7 +135,7 @@ static inline bool __cdecl heap_push(
     void * _temp_node = NULL, **_temp_tree = NULL; // NOLINT(readability-isolate-declaration)
     size_t _childpos = 0, _parentpos = 0;          // NOLINT(readability-isolate-declaration)
 
-    if (heap->count + 1 > heap->capacity) { // if the existing buffer doesn't have space for another pointer,
+    if (heap->count + 2 >= heap->capacity) { // if the current buffer doesn't have space for another pointer,
         dbgwprinf_s(L"reallocation inside %s\n", __FUNCTIONW__);
 
         // NOLINTNEXTLINE(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
