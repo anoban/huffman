@@ -253,7 +253,7 @@ static inline bool __cdecl heap_pop(_Inout_ heap_t* const restrict heap, _Inout_
     if (heap->count == 1) { // if the heap has only one node,
         *popped     = heap->tree[0];
         heap->count = 0;
-        heap_clean(heap); // since heap->count = 0, the looped free()s inside heap_clean() won't be executed.
+        heap_clean(heap); // since heap->count is 0, the looped free()s inside heap_clean() won't be executed.
         return true;
     }
 
@@ -307,35 +307,32 @@ static inline bool __cdecl heap_pop(_Inout_ heap_t* const restrict heap, _Inout_
 
     assert(!_parentpos);
     while (true) { // rearrange the tree
-        // at the onset of iteration, parentpos = 0; currently points to the (new) root node.
+        // at the onset of iteration, parentpos = 0; currently points to the root node.
         _leftchildpos  = lchild_position(_parentpos);
         _rightchildpos = rchild_position(_parentpos);
 
-        // if we are not @ the end of the array and the weight of the left child is greater than that of the parent
+        // unless we are at the end of the array and the weight of the left child is greater than that of the parent
         _pos = (_leftchildpos < (heap->count - 1)) && (*heap->predptr)(heap->tree[_leftchildpos], heap->tree[_parentpos]) ? _leftchildpos :
                                                                                                                             _parentpos;
         // choose to traverse down the left arm of the node, otherwise hold the caret at the parent.
         // in our example, this block will choose the left arm.
 
-        // until we reach the rightmost end of the array
-        // if the weight of the right child is greater than that of the parent OR the left child (CONTEXT DEPENDENT)
-        if (_rightchildpos < heap->count - 1 && (*heap->predptr)(heap->tree[_rightchildpos], heap->tree[_pos])) {
-            // choose to traverse down the right arm
-            _pos = _rightchildpos;
-            // in our example this conditional will choose the right arm, because 24 > 10.
-        }
+        // unless we are at the end of the array and if the weight of the right child is greater than that of the parent OR the left child (CONTEXT DEPENDENT)
+        if ((_rightchildpos < (heap->count - 1)) && (*heap->predptr)(heap->tree[_rightchildpos], heap->tree[_pos])) _pos = _rightchildpos;
+        // choose to traverse down the right arm
+        // in our example this conditional will choose the right arm, because 24 > 10.
 
-        // in our example, both conditionals at line 310 and 318 will evaluate to true.
-        // since the expressions predicted on the conditional at line 318 will be evaluated finally,
+        // in our example, both conditionals at line 315 and 321 will evaluate to true.
+        // since the expressions predicted on the conditional at line 321 will be evaluated finally,
         // it is the right child that will be swapped with the parent first.
 
         // if the root is heavier than both the left and right children, no need to rearrange the heap.
         if (_pos == _parentpos) break;
 
-        _temp                     = heap->tree[_parentpos];
-        heap->tree[_parentpos]    = heap->tree[_leftchildpos];
-        heap->tree[_leftchildpos] = _temp;
-        _temp                     = NULL;
+        _temp                  = heap->tree[_parentpos];
+        heap->tree[_parentpos] = heap->tree[_pos];
+        heap->tree[_pos]       = _temp;
+        _temp                  = NULL;
 
         /* now the tree looks like this:
 
@@ -356,7 +353,7 @@ static inline bool __cdecl heap_pop(_Inout_ heap_t* const restrict heap, _Inout_
        */
 
         // move down one level. i.e the current right child becomes the parent node for the next iteration.
-        _parentpos                = _pos;
+        _parentpos             = _pos;
     }
 
     /* at the start of second iteration, the tree looks like this:

@@ -1,14 +1,8 @@
-#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 
 #include <pch.hpp>
-
-struct node final {
-        unsigned char      byte;
-        unsigned long long frequency;
-};
 
 using node_type             = unsigned; // for testing
 using constant_node_pointer = const node_type*;
@@ -173,19 +167,13 @@ namespace heap {
 
     TEST_F(HeapFixture, POP) {
         unsigned* ptrs[N_RANDNUMS] { nullptr };
-        unsigned* ptrs_sorted[N_RANDNUMS] { nullptr };
 
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            ptrs[i] = ptrs_sorted[i] = reinterpret_cast<unsigned*>(::malloc(sizeof(unsigned)));
+            ptrs[i] = reinterpret_cast<unsigned*>(::malloc(sizeof(unsigned)));
             ASSERT_TRUE(ptrs[i]);
             *ptrs[i] = randoms[i];
+            EXPECT_TRUE(huffman::heap_push(&heap, ptrs[i]));
         }
-
-        std::sort(std::begin(ptrs_sorted), std::end(ptrs_sorted), [](const auto* const current, const auto* const next) noexcept -> bool {
-            return *current > *next;
-        });
-
-        for (size_t i = 0; i < N_RANDNUMS; ++i) EXPECT_TRUE(huffman::heap_push(&heap, ptrs[i]));
 
         EXPECT_EQ(heap.count, N_RANDNUMS);
         EXPECT_EQ(heap.capacity, DEFAULT_HEAP_CAPACITY);
@@ -196,8 +184,42 @@ namespace heap {
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             EXPECT_TRUE(huffman::heap_pop(&heap, reinterpret_cast<void**>(&popped)));
             EXPECT_EQ(*popped, sorted_randoms[i]);
-            // ::wprintf_s(L"(%llu) => %u\n", i, *popped);
         }
+    }
+
+    struct node final {
+            unsigned           id;
+            unsigned long long frequency;
+
+            constexpr bool operator>(const node& other) const noexcept { return frequency > other.frequency; }
+    };
+
+    static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept {
+        return *reinterpret_cast<const node*>(child) > *reinterpret_cast<const node*>(parent);
+    }
+
+    // this will test reallocations inside the heap and the use of a non primitive type as the stored element
+    TEST(HEAP, EXTENDED) { // cannot use test fixtures using HeapFixture here because we need a custom compare function
+        huffman::heap_t heap {};
+        huffman::heap_init(&heap, nodecomp);
+
+        node* _temp {};
+
+        for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
+            _temp = reinterpret_cast<node*>(malloc(sizeof(node)));
+            ASSERT_TRUE(_temp);
+            _temp->id        = i;
+            _temp->frequency = randoms_ext[i];
+
+            EXPECT_TRUE(huffman::heap_push(&heap, _temp));
+        }
+
+        for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
+            huffman::heap_pop(&heap, reinterpret_cast<void**>(&_temp));
+            EXPECT_EQ(_temp->frequency, sorted_randoms_ext[i]);
+        }
+
+        huffman::heap_clean(&heap);
     }
 
 } // namespace heap
