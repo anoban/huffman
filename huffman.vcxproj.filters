@@ -30,7 +30,7 @@
     <ClInclude Include="include\fileio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\locate.h">
+    <ClInclude Include="include\utilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

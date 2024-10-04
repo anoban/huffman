@@ -7,7 +7,7 @@
 #include <string.h>
 
 // clang-format off
-#include <locate.h>
+#include <utilities.h>
 // clang-format on
 
 #define DEFAULT_HEAP_CAPACITY       1024LLU

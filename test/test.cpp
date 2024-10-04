@@ -55,17 +55,18 @@ namespace fileio {
     TEST(FILEIO, OPEN) {
         unsigned long size {};
 
-        const auto* buffer = huffman::___open(L"./../media/bronze.jpg", &size); // an image file
+        const auto* buffer = huffman::___open(LR"(./../media/bronze.jpg)", &size); // an image file
         EXPECT_TRUE(buffer);
         ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
         EXPECT_EQ(size, 589'001LLU);
 
-        buffer = huffman::___open(L"./../media/excerpt.txt", &size); // a text file
+        buffer = huffman::___open(LR"(./../media/excerpt.txt)",
+                                  &size); // a text file
         EXPECT_TRUE(buffer);
         ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
         EXPECT_EQ(size, 999'530LLU);
 
-        buffer = huffman::___open(L"./../media/sqlite3.dll", &size); // a binary file
+        buffer = huffman::___open(LR"(./../media/sqlite3.dll)", &size); // a binary file
         EXPECT_TRUE(buffer);
         ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
         EXPECT_EQ(size, 1'541'912LLU);
@@ -204,25 +205,11 @@ namespace heap {
 namespace pqueue {
 
     struct QueueFixture : public testing::Test {
-            huffman::pqueue_t pqueue {};
+            huffman::PQueue pqueue {};
 
-            inline virtual void SetUp() noexcept override {
-                pqueue.count      = 0;
-                pqueue.capacity   = 0;
-                pqueue.fnptr_pred = nullptr;
-                pqueue.tree       = nullptr;
+            inline virtual void SetUp() noexcept override { ASSERT_TRUE(huffman::PQueueInit(&pqueue, ::comp)); }
 
-                // ASSERT_TRUE(huffman::heap_init(&heap, ::comp));
-            }
-
-            inline virtual void TearDown() noexcept override {
-                pqueue.count      = 0;
-                pqueue.capacity   = 0;
-                pqueue.fnptr_pred = nullptr;
-                pqueue.tree       = nullptr;
-
-                // huffman::heap_clean(&heap);
-            }
+            inline virtual void TearDown() noexcept override { huffman::PQueueClean(&pqueue); }
     };
 
     TEST_F(QueueFixture, INIT) {

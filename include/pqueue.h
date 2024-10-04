@@ -6,7 +6,7 @@
 #include <string.h>
 
 // clang-format off
-#include <locate.h>
+#include <utilities.h>
 // clang-format on
 
 // priority que is a data structure derived from heaps.
@@ -20,27 +20,23 @@ typedef struct _pqueue { // priority que
         uint32_t capacity;
         bool (*fnptr_pred)(_In_ const void* const, _In_ const void* const);
         void** tree;
-} pqueue_t;
+} PQueue;
 
-static_assert(sizeof(pqueue_t) == 24);
-static_assert(offsetof(pqueue_t, count) == 0);
-static_assert(offsetof(pqueue_t, capacity) == 4);
-static_assert(offsetof(pqueue_t, fnptr_pred) == 8);
-static_assert(offsetof(pqueue_t, tree) == 16);
-/*
-// must return true whenever a swap is needed.
-static inline bool __cdecl predicate(_In_ const void* const  child, _In_ const void* const  parent) {
-    retrun child->comparable > parent->comparable ? true : false;
-}
-*/
+static_assert(sizeof(PQueue) == 24);
+static_assert(offsetof(PQueue, count) == 0);
+static_assert(offsetof(PQueue, capacity) == 4);
+static_assert(offsetof(PQueue, fnptr_pred) == 8);
+static_assert(offsetof(PQueue, tree) == 16);
 
-// using camelCase for queues
-
-static inline bool __cdecl pqueueInit(
-    _Inout_ pqueue_t* const pqueue,
-    _In_ bool (*const predicate)(_In_ const void* const child, _In_ const void* const parent),
-    _In_ void (*const clean)(_In_ const void* const memblock)
+// using pascal case for queues
+static inline bool __cdecl PQueueInit(
+    _Inout_ PQueue* const pqueue, _In_ bool (*const predicate)(_In_ const void* const child, _In_ const void* const parent)
 ) {
+    // predicate must return true whenever a swap is needed.
+    // static inline bool __cdecl predicate(_In_ const void* const  child, _In_ const void* const  parent) {
+    // retrun child->comparable > parent->comparable ? true : false;
+    // }
+
     pqueue->count      = 0;
     pqueue->capacity   = DEFAULT_QUEUE_CAPACITY;
     pqueue->fnptr_pred = predicate;
@@ -50,15 +46,15 @@ static inline bool __cdecl pqueueInit(
     return true;
 }
 
-static inline void __cdecl pqueueClean(_Inout_ pqueue_t* const pqueue) {
+static inline void __cdecl PQueueClean(_Inout_ PQueue* const pqueue) {
     for (size_t i = 0; i < pqueue->count; ++i) free(pqueue->tree[i]);
     free(pqueue->tree);
-    memset(pqueue, 0U, sizeof(pqueue_t));
+    memset(pqueue, 0U, sizeof(PQueue));
     return;
 }
 
 // enqueue
-static inline bool __cdecl pqueuePush(_Inout_ pqueue_t* const pqueue, _In_ const void* const data) {
+static inline bool __cdecl PQueuePush(_Inout_ PQueue* const pqueue, _In_ const void* const data) {
     void*  tmp      = NULL;
     size_t childpos = 0, parentpos = 0;
 
@@ -86,7 +82,7 @@ static inline bool __cdecl pqueuePush(_Inout_ pqueue_t* const pqueue, _In_ const
 }
 
 // dequeue
-static inline bool __cdecl pqueuePop(_Inout_ pqueue_t* const pqueue, _Inout_ void** data) {
+static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void** data) {
     size_t leftchildpos = 0, rightchildpos = 0, parentpos = 0, pos = 0;
     void*  tmp = NULL;
 
@@ -95,7 +91,7 @@ static inline bool __cdecl pqueuePop(_Inout_ pqueue_t* const pqueue, _Inout_ voi
     if (pqueue->count == 1) {
         *data = pqueue->tree[0];
         pqueue->count--;
-        pqueueClean(pqueue);
+        PQueueClean(pqueue);
         return true;
     }
 
@@ -126,4 +122,4 @@ static inline bool __cdecl pqueuePop(_Inout_ pqueue_t* const pqueue, _Inout_ voi
     return true;
 }
 
-static inline void* __stdcall pqueuePeek(_In_ const pqueue_t* const pqueue) { return !pqueue->tree ? NULL : pqueue->tree[0]; }
+static inline void* __stdcall PQueuePeek(_In_ const PQueue* const pqueue) { return !pqueue->tree ? NULL : pqueue->tree[0]; }
