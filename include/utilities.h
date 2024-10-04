@@ -9,7 +9,7 @@
     #define _CXX_COMPAT_CONST_CAST(type, identifier)       (identifier)
 #endif // __cplusplus
 
-#ifdef _DEBUG
+#if defined(_DEBUG) || defined(DEBUG)
     #define dbgwprinf_s(...) wprintf_s(__VA_ARGS__)
 #else
     #define dbgwprinf_s(...)

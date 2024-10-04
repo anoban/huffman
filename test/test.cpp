@@ -137,7 +137,7 @@ namespace heap {
 
         EXPECT_FALSE(heap.count);
         EXPECT_EQ(heap.capacity, DEFAULT_HEAP_CAPACITY);
-        EXPECT_EQ(heap.fnptr_pred, std::addressof(::comp));
+        EXPECT_EQ(heap.predptr, std::addressof(::comp));
         EXPECT_TRUE(heap.tree);
     }
 
@@ -164,7 +164,7 @@ namespace heap {
 
         EXPECT_EQ(heap.count, N_RANDNUMS);
         EXPECT_EQ(heap.capacity, DEFAULT_HEAP_CAPACITY);
-        EXPECT_EQ(heap.fnptr_pred, std::addressof(::comp));
+        EXPECT_EQ(heap.predptr, std::addressof(::comp));
         EXPECT_TRUE(heap.tree);
 
         // if all pushes worked as expected, the node at offset 0 must contain the largest value
@@ -189,7 +189,7 @@ namespace heap {
 
         EXPECT_EQ(heap.count, N_RANDNUMS);
         EXPECT_EQ(heap.capacity, DEFAULT_HEAP_CAPACITY);
-        EXPECT_EQ(heap.fnptr_pred, std::addressof(::comp));
+        EXPECT_EQ(heap.predptr, std::addressof(::comp));
         EXPECT_TRUE(heap.tree);
 
         unsigned* popped {};

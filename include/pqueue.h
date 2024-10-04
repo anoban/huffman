@@ -18,14 +18,14 @@
 typedef struct _pqueue { // priority que
         uint32_t count;
         uint32_t capacity;
-        bool (*fnptr_pred)(_In_ const void* const, _In_ const void* const);
+        bool (*predptr)(_In_ const void* const, _In_ const void* const);
         void** tree;
 } PQueue;
 
 static_assert(sizeof(PQueue) == 24);
 static_assert(offsetof(PQueue, count) == 0);
 static_assert(offsetof(PQueue, capacity) == 4);
-static_assert(offsetof(PQueue, fnptr_pred) == 8);
+static_assert(offsetof(PQueue, predptr) == 8);
 static_assert(offsetof(PQueue, tree) == 16);
 
 // using pascal case for queues
@@ -37,9 +37,9 @@ static inline bool __cdecl PQueueInit(
     // retrun child->comparable > parent->comparable ? true : false;
     // }
 
-    pqueue->count      = 0;
-    pqueue->capacity   = DEFAULT_QUEUE_CAPACITY;
-    pqueue->fnptr_pred = predicate;
+    pqueue->count    = 0;
+    pqueue->capacity = DEFAULT_QUEUE_CAPACITY;
+    pqueue->predptr  = predicate;
     // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion, bugprone-assignment-in-if-condition
     if (!(pqueue->tree = _CXX_COMPAT_REINTERPRET_CAST(void**, malloc(DEFAULT_QUEUE_CAPACITY * sizeof(uintptr_t))))) return false;
     memset(pqueue->tree, 0U, DEFAULT_QUEUE_CAPACITY * sizeof(uintptr_t));
@@ -68,7 +68,7 @@ static inline bool __cdecl PQueuePush(_Inout_ PQueue* const pqueue, _In_ const v
     childpos                    = pqueue->count;
     parentpos                   = parent_position(childpos);
 
-    while ((childpos > 0) && pqueue->fnptr_pred(pqueue->tree[childpos], pqueue->tree[parentpos])) {
+    while ((childpos > 0) && pqueue->predptr(pqueue->tree[childpos], pqueue->tree[parentpos])) {
         tmp                     = pqueue->tree[childpos];
         pqueue->tree[parentpos] = pqueue->tree[childpos];
         pqueue->tree[childpos]  = tmp;
@@ -105,12 +105,12 @@ static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void*
         leftchildpos  = lchild_position(parentpos);
         rightchildpos = rchild_position(parentpos);
 
-        if (leftchildpos < pqueue->count && pqueue->fnptr_pred(pqueue->tree[leftchildpos], pqueue->tree[parentpos]))
+        if (leftchildpos < pqueue->count && pqueue->predptr(pqueue->tree[leftchildpos], pqueue->tree[parentpos]))
             pos = leftchildpos;
         else
             pos = parentpos;
 
-        if (rightchildpos < pqueue->count && pqueue->fnptr_pred(pqueue->tree[rightchildpos], pqueue->tree[pos])) pos = rightchildpos;
+        if (rightchildpos < pqueue->count && pqueue->predptr(pqueue->tree[rightchildpos], pqueue->tree[pos])) pos = rightchildpos;
         if (pos == parentpos) break;
 
         tmp                        = pqueue->tree[parentpos];
