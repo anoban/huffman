@@ -135,8 +135,8 @@ static inline bool __cdecl heap_push(
     void * _temp_node = NULL, **_temp_tree = NULL; // NOLINT(readability-isolate-declaration)
     size_t _childpos = 0, _parentpos = 0;          // NOLINT(readability-isolate-declaration)
 
-    if (heap->count + 2 >= heap->capacity) { // if the current buffer doesn't have space for another pointer,
-        dbgwprinf_s(L"reallocation inside %s\n", __FUNCTIONW__);
+    if (heap->count == heap->capacity) { // if the current buffer doesn't have space for another pointer,
+        gtstwprinf_s(L"reallocation inside %s, heap->count => %u, heap->capacity => %u\n", __FUNCTIONW__, heap->count, heap->capacity);
 
         // NOLINTNEXTLINE(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
         if (!(_temp_tree = _CXX_COMPAT_REINTERPRET_CAST(void**, realloc(heap->tree, (heap->capacity + DEFAULT_HEAP_CAPACITY_BYTES))))) {
@@ -148,6 +148,8 @@ static inline bool __cdecl heap_push(
 
         heap->tree      = _temp_tree;            // if reallocation was successful, reassign the new memory block to tree.
         heap->capacity += DEFAULT_HEAP_CAPACITY; // update the capacity
+
+        gtstwprinf_s(L"reallocation finished, heap->count => %u, heap->capacity => %u\n", heap->count, heap->capacity);
     }
 
     // consider our previous tree:
@@ -218,7 +220,8 @@ static inline bool __cdecl heap_push(
     // {25, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
     // perfecto :)))
 
-    heap->count++;                                                       // increment the node count.
+    heap->count++; // increment the node count.
+    gtstwprinf_s(L"heap->count => %u, heap->capacity => %u\n", heap->count, heap->capacity);
     heap->tree[heap->count - 1] = _CXX_COMPAT_CONST_CAST(void*, pushed); // hook in the new node
 
     _childpos                   = heap->count - 1;            // offset of the newly inserted node.
@@ -332,7 +335,6 @@ static inline bool __cdecl heap_pop(_Inout_ heap_t* const restrict heap, _Inout_
         _temp                  = heap->tree[_parentpos];
         heap->tree[_parentpos] = heap->tree[_pos];
         heap->tree[_pos]       = _temp;
-        _temp                  = NULL;
 
         /* now the tree looks like this:
 

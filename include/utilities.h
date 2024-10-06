@@ -4,15 +4,17 @@
 #ifdef __cplusplus // for C++ compatibility
     #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (reinterpret_cast<type>((identifier)))
     #define _CXX_COMPAT_CONST_CAST(type, identifier)       (const_cast<type>((identifier)))
+    #define _CXX_COMPAT_CONLY_KEYWORD_GUARD(keyword)
 #else
     #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (identifier)
     #define _CXX_COMPAT_CONST_CAST(type, identifier)       (identifier)
+    #define _CXX_COMPAT_CONLY_KEYWORD_GUARD(keyword)       keyword
 #endif // __cplusplus
 
-#if defined(_DEBUG) || defined(DEBUG)
-    #define dbgwprinf_s(...) wprintf_s(__VA_ARGS__)
+#if (defined(__TEST__) || defined(_DEBUG) || defined(DEBUG)) && __VERBOSE_TEST_IO__
+    #define gtstwprinf_s(...) wprintf_s(__VA_ARGS__)
 #else
-    #define dbgwprinf_s(...)
+    #define gtstwprinf_s(...)
 #endif
 
 static __forceinline size_t __stdcall parent_position(_In_ register const size_t child) {
