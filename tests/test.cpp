@@ -1468,8 +1468,3 @@ namespace pqueue {
         //
     }
 } // namespace pqueue
-
-auto main() -> int {
-    testing::InitGoogleTest();
-    return RUN_ALL_TESTS();
-}

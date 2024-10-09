@@ -179,6 +179,7 @@
     <ClCompile Include="googletest\src\gtest-test-part.cc" />
     <ClCompile Include="googletest\src\gtest-typed-test.cc" />
     <ClCompile Include="googletest\src\gtest.cc" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
