@@ -103,6 +103,9 @@ static inline bool __cdecl predicate(const void* const  child, const void* const
 static inline bool __cdecl heap_init(
     _Inout_ heap_t* const restrict heap, _In_ bool (*const predicate)(_In_ const void* const, _In_ const void* const)
 ) {
+    assert(heap);
+    assert(predicate);
+
     heap->count    = 0;
     heap->capacity = DEFAULT_HEAP_CAPACITY; // this is the number of pointers, NOT BYTES
     heap->predptr  = predicate;
@@ -120,6 +123,8 @@ static inline bool __cdecl heap_init(
 }
 
 static inline void __cdecl heap_clean(_Inout_ heap_t* const restrict heap) {
+    assert(heap);
+
     for (unsigned i = 0; i < heap->count; ++i) {
         free(heap->tree[i]); // free the heap allocated nodes.
                              // heap->tree[i] = NULL;   // redundant
@@ -131,15 +136,20 @@ static inline void __cdecl heap_clean(_Inout_ heap_t* const restrict heap) {
 static inline bool __cdecl heap_push(
     _Inout_ heap_t* const restrict heap,
     _In_ const void* const restrict pushed /* expects a heap allocated memory block to push into the heap */
+
 ) {
+    assert(heap);
+    assert(pushed);
+
     void * _temp_node = NULL, **_temp_tree = NULL; // NOLINT(readability-isolate-declaration)
     size_t _childpos = 0, _parentpos = 0;          // NOLINT(readability-isolate-declaration)
 
-    if (heap->count == heap->capacity) { // if the current buffer doesn't have space for another pointer,
-        gtstwprinf_s(L"reallocation inside %s, heap->count => %u, heap->capacity => %u\n", __FUNCTIONW__, heap->count, heap->capacity);
+    if (heap->count + 1 > heap->capacity) { // if the current buffer doesn't have space for another pointer,
 
         // NOLINTNEXTLINE(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
-        if (!(_temp_tree = _CXX_COMPAT_REINTERPRET_CAST(void**, realloc(heap->tree, (heap->capacity + DEFAULT_HEAP_CAPACITY_BYTES))))) {
+        if (!(_temp_tree = _CXX_COMPAT_REINTERPRET_CAST(
+                  void**, realloc(heap->tree, heap->capacity * sizeof(uintptr_t) + DEFAULT_HEAP_CAPACITY_BYTES)
+              ))) {
             // ask for an additional DEFAULT_HEAP_CAPACITY_BYTES bytes.
             // at this point, heap->tree is valid and points to the old buffer
             fwprintf_s(stderr, L"memory reallocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
@@ -148,8 +158,6 @@ static inline bool __cdecl heap_push(
 
         heap->tree      = _temp_tree;            // if reallocation was successful, reassign the new memory block to tree.
         heap->capacity += DEFAULT_HEAP_CAPACITY; // update the capacity
-
-        gtstwprinf_s(L"reallocation finished, heap->count => %u, heap->capacity => %u\n", heap->count, heap->capacity);
     }
 
     // consider our previous tree:
@@ -220,8 +228,7 @@ static inline bool __cdecl heap_push(
     // {25, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
     // perfecto :)))
 
-    heap->count++; // increment the node count.
-    gtstwprinf_s(L"heap->count => %u, heap->capacity => %u\n", heap->count, heap->capacity);
+    heap->count++;                                                       // increment the node count.
     heap->tree[heap->count - 1] = _CXX_COMPAT_CONST_CAST(void*, pushed); // hook in the new node
 
     _childpos                   = heap->count - 1;            // offset of the newly inserted node.
@@ -245,6 +252,9 @@ static inline bool __cdecl heap_push(
 }
 
 static inline bool __cdecl heap_pop(_Inout_ heap_t* const restrict heap, _Inout_ void** const restrict popped /* popped out pointer */) {
+    assert(heap);
+    assert(popped);
+
     size_t _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
     void*  _temp = NULL;
 

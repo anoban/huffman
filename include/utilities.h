@@ -11,7 +11,7 @@
     #define _CXX_COMPAT_CONLY_KEYWORD_GUARD(keyword)       keyword
 #endif // __cplusplus
 
-#if (defined(__TEST__) || defined(_DEBUG) || defined(DEBUG)) && __VERBOSE_TEST_IO__
+#if defined(__TEST__) && defined(__VERBOSE_TEST_IO__)
     #define gtstwprinf_s(...) wprintf_s(__VA_ARGS__)
 #else
     #define gtstwprinf_s(...)

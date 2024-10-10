@@ -1,3 +1,5 @@
+#define __VERBOSE_TEST_IO__
+
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -1227,8 +1229,6 @@ static constexpr float sorted_randoms_ext[N_EXTRANDOMS] {
 
 #pragma endregion
 
-#define __VERBOSE_TEST_IO__ FALSE
-
 using node_type             = unsigned; // for testing
 using node_pointer          = node_type*;
 using constant_node_pointer = const node_type*;
@@ -1404,16 +1404,16 @@ namespace heap {
         }
     }
 
-    struct tsignal final { // a dummy aggregate type representing a thermal signal
-            unsigned  observatory_id;
-            float     temperature;
-            float     coord_x, coord_y;
-            struct tm time;
-
-            constexpr bool operator>(_In_ const tsignal& other) const noexcept { return temperature > other.temperature; }
-    };
-
     namespace heap_stress_test { // pushing the implementation to extremes
+
+        struct tsignal final { // a dummy aggregate type representing a thermal/heat signal
+                unsigned  observatory_id;
+                float     temperature;
+                float     coord_x, coord_y;
+                struct tm time;
+
+                constexpr bool operator>(_In_ const tsignal& other) const noexcept { return temperature > other.temperature; }
+        };
 
         using node_type             = tsignal; // shadows the global aliases
         using node_pointer          = tsignal*;
@@ -1423,7 +1423,7 @@ namespace heap {
         static_assert(std::is_standard_layout_v<node_type>);
 
         static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept {
-            return (*reinterpret_cast<constant_node_pointer>(child)) > (*reinterpret_cast<constant_node_pointer>(parent));
+            return (reinterpret_cast<constant_node_pointer>(child))->operator>(*reinterpret_cast<constant_node_pointer>(parent));
         }
 
         // this will test reallocations inside heap_push() and the use of a non primitive type as the stored type in heap
@@ -1431,20 +1431,21 @@ namespace heap {
             huffman::heap_t heap {};
             huffman::heap_init(&heap, nodecomp);
 
-            node_pointer _temp {};
+            node_pointer _ptr {};
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
-                _temp = reinterpret_cast<node_pointer>(malloc(sizeof(node_type)));
-                ASSERT_TRUE(_temp);
-                _temp->observatory_id = i;
-                _temp->temperature    = randoms_ext[i];
+                _ptr = reinterpret_cast<node_pointer>(malloc(sizeof(node_type)));
+                ASSERT_TRUE(_ptr);
+                _ptr->observatory_id = i;
+                _ptr->temperature    = randoms_ext[i];
 
-                EXPECT_TRUE(huffman::heap_push(&heap, _temp)); // expecting 5 reallocations
+                EXPECT_TRUE(huffman::heap_push(&heap, _ptr)); // expecting 5 reallocations
             }
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
-                huffman::heap_pop(&heap, reinterpret_cast<void**>(&_temp));
-                EXPECT_EQ(_temp->temperature, sorted_randoms_ext[i]);
+                huffman::heap_pop(&heap, reinterpret_cast<void**>(&_ptr));
+                wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_ext[i]);
+                EXPECT_EQ(_ptr->temperature, sorted_randoms_ext[i]);
             }
 
             huffman::heap_clean(&heap);
