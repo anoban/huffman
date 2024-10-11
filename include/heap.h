@@ -106,17 +106,18 @@ static inline bool __cdecl heap_init(
     assert(heap);
     assert(predicate);
 
-    heap->count    = 0;
-    heap->capacity = DEFAULT_HEAP_CAPACITY; // this is the number of pointers, NOT BYTES
-    heap->predptr  = predicate;
     // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
-    heap->tree     = _CXX_COMPAT_REINTERPRET_CAST(void**, malloc(DEFAULT_HEAP_CAPACITY_BYTES));
+    heap->tree = _CXX_COMPAT_REINTERPRET_CAST(void**, malloc(DEFAULT_HEAP_CAPACITY_BYTES));
     // will allocate memory to store DEFAULT_HEAP_CAPACITY number of pointers in the tree.
 
     if (!heap->tree) {
         fwprintf_s(stderr, L"memory allocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
         return false;
     }
+
+    heap->count    = 0;
+    heap->capacity = DEFAULT_HEAP_CAPACITY; // this is the number of pointers, NOT BYTES
+    heap->predptr  = predicate;
 
     memset(heap->tree, 0U, DEFAULT_HEAP_CAPACITY_BYTES); // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
     return true;

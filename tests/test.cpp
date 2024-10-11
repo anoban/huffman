@@ -7,6 +7,7 @@
 
 // the problem with namspacing <huffman.h> prior to including <gtest/gtest.h> is that all the symbols from headers directly and
 // indirecty included in <huffman.h> get scoped inside the namespace, won't be available in the global namespace
+// this includes symbols from __STDC__ headers :(
 // but the header guards will prevent these headers from being reincluded in gtest.h, hence we run in to a slew of errors
 // so we move the gtest include before the namespacing of <huffman.h> included symbols
 
@@ -31,7 +32,6 @@ static constexpr auto BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bi
 
 #pragma region TEST_DATA
 
-// print([f"0b{np.binary_repr(_, width = 8)}" for _ in np.random.randint(low = 0, high = 255, size = 1000, dtype = np.uint8)])
 static constexpr unsigned char const bitstream[BITSTREAM_BYTE_COUNT] = {
     0b00110110, 0b10011110, 0b11101111, 0b10010011, 0b01110100, 0b10100011, 0b01001011, 0b00110110, 0b00110010, 0b01000100, 0b01111101,
     0b11011011, 0b11100001, 0b00111010, 0b11011100, 0b11000010, 0b11101011, 0b00101010, 0b11011011, 0b11111100, 0b01000001, 0b10110010,
