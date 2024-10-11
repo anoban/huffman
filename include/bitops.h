@@ -1,4 +1,5 @@
 #pragma once
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -20,7 +21,7 @@
     // uint8_t       mask   = 0b1000'0000;
     // for (size_t _ = 0; _ < bit; ++_) mask >>= 1;
     // mask >>= bit;
-
+    assert(bitstream);
     return bitstream[offset / 8] & (0b1000'0000 >> (offset % 8));
 }
 
@@ -32,7 +33,7 @@ static __forceinline void __stdcall setbit(
     // uint8_t      mask   = 0b1000'0000;
     // for (size_t _ = 0; _ < bit; ++_) mask >>= 1;
     // mask              >>= bit;
-
+    assert(bitstream);
     if (flag)
         bitstream[offset / 8] |= 0b1000'0000 >> (offset % 8);
     else
@@ -46,5 +47,8 @@ static __forceinline void __stdcall xorbit( // the result will be false only if 
     _Inout_ register uint8_t* const restrict outbuff,
     _In_ register const size_t offset
 ) {
+    assert(inbuff_a);
+    assert(inbuff_b);
+    assert(outbuff);
     getbit(inbuff_a, offset) == getbit(inbuff_b, offset) ? setbit(outbuff, offset, false) : setbit(outbuff, offset, true);
 }

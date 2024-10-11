@@ -10,8 +10,8 @@
 #include <utilities.h>
 // clang-format on
 
-#define DEFAULT_QUEUE_CAPACITY       1024LLU
-#define DEFAULT_QUEUE_CAPACITY_BYTES (DEFAULT_QUEUE_CAPACITY * sizeof(uintptr_t))
+#define DEFAULT_PQUEUE_CAPACITY       1024LLU
+#define DEFAULT_PQUEUE_CAPACITY_BYTES (DEFAULT_PQUEUE_CAPACITY * sizeof(uintptr_t))
 
 typedef struct _pqueue { // priority queue
         uint32_t count;
@@ -33,7 +33,10 @@ static inline bool __cdecl PQueueInit(
     assert(pqueue);
     assert(predicate);
 
-    pqueue->tree = _CXX_COMPAT_REINTERPRET_CAST(void**, malloc(DEFAULT_QUEUE_CAPACITY_BYTES));
+    pqueue->tree = _CXX_COMPAT_REINTERPRET_CAST( // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
+        void**,
+        malloc(DEFAULT_PQUEUE_CAPACITY_BYTES)
+    );
 
     if (!pqueue->tree) {
         fwprintf_s(stderr, L"memory allocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
@@ -41,15 +44,15 @@ static inline bool __cdecl PQueueInit(
     }
 
     pqueue->count    = 0;
-    pqueue->capacity = DEFAULT_QUEUE_CAPACITY;
+    pqueue->capacity = DEFAULT_PQUEUE_CAPACITY;
     pqueue->predptr  = predicate;
-    memset(pqueue->tree, 0U, DEFAULT_QUEUE_CAPACITY_BYTES); // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
+    memset(pqueue->tree, 0U, DEFAULT_PQUEUE_CAPACITY_BYTES); // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
     return true;
 }
 
 static inline void __cdecl PQueueClean(_Inout_ PQueue* const pqueue) {
     for (size_t i = 0; i < pqueue->count; ++i) free(pqueue->tree[i]);
-    free(pqueue->tree);
+    free(pqueue->tree); // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
     memset(pqueue, 0U, sizeof(PQueue));
 }
 
@@ -64,13 +67,13 @@ static inline bool __cdecl PQueuePush(_Inout_ PQueue* const pqueue, _In_ const v
     if (pqueue->count + 1 > pqueue->capacity) {
         // NOLINTNEXTLINE(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
         if (!(_temp_tree = _CXX_COMPAT_REINTERPRET_CAST(
-                  void**, realloc(pqueue->tree, pqueue->capacity * sizeof(uintptr_t) + DEFAULT_QUEUE_CAPACITY_BYTES)
+                  void**, realloc(pqueue->tree, pqueue->capacity * sizeof(uintptr_t) + DEFAULT_PQUEUE_CAPACITY_BYTES)
               ))) {
             fwprintf_s(stderr, L"memory reallocation error inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
             return false;
         }
         pqueue->tree      = _temp_tree;
-        pqueue->capacity += DEFAULT_QUEUE_CAPACITY;
+        pqueue->capacity += DEFAULT_PQUEUE_CAPACITY;
     }
 
     pqueue->count++;
@@ -93,7 +96,7 @@ static inline bool __cdecl PQueuePush(_Inout_ PQueue* const pqueue, _In_ const v
 // dequeue
 static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void** data) {
     assert(pqueue);
-    assert(popped);
+    assert(data);
 
     size_t _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
     void*  _temp = NULL;

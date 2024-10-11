@@ -18,6 +18,7 @@
     #include <sal.h>
 // clang-format on
 
+#include <assert.h>
 #include <malloc.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,6 +41,9 @@
 [[nodiscard]] static inline uint8_t* __cdecl _TRIPLE_UNDERSCORE_PREFIX(open)(
     _In_ const wchar_t* const restrict filepath, _Inout_ unsigned long* const restrict nbytes
 ) {
+    assert(filepath);
+    assert(nbytes);
+
     *nbytes               = 0;
     const HANDLE64 hFile  = CreateFileW(filepath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
     uint8_t*       buffer = NULL; // DO NOT REFACTOR THIS AS AN SINGLE INLINE DEFINITION AT LINE 63
@@ -79,6 +83,9 @@ PREMATURE_RETURN:
 [[nodiscard]] static inline bool __cdecl _TRIPLE_UNDERSCORE_PREFIX(write)(
     _In_ const wchar_t* const restrict filepath, _In_ const uint8_t* const restrict buffer, _In_ const unsigned long size
 ) {
+    assert(filepath);
+    assert(buffer);
+
     const HANDLE hfile = CreateFileW(filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hfile == INVALID_HANDLE_VALUE) {

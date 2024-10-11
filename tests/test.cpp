@@ -1265,7 +1265,7 @@ namespace bitops {
         ::memset(mutablestream, 0U, BITSTREAM_BYTE_COUNT); // cleanu up after the previous use
         for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) huffman::xorbit(bitstream, xorbitstream, mutablestream, i);
         for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i)
-            EXPECT_EQ(huffman::getbit(mutablestream, i), huffman::getbit(bitstream, i) == huffman::getbit(xorbitstream, i) ? false : true);
+            EXPECT_EQ(huffman::getbit(mutablestream, i), !(huffman::getbit(bitstream, i) == huffman::getbit(xorbitstream, i)));
     }
 
 } // namespace bitops
@@ -1466,6 +1466,102 @@ namespace pqueue {
     };
 
     TEST_F(QueueFixture, INIT) {
-        //
+        // in google test, EXPECT_XXX family of macros dispactch their call to class template EqHelper where type deduction happens
+        // so comp and &comp have different types in the context of template type deduction, hence the use of std::addressof (a simple & will also work)
+
+        EXPECT_FALSE(pqueue.count);
+        EXPECT_EQ(pqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
+        EXPECT_EQ(pqueue.predptr, std::addressof(::comp));
+        EXPECT_TRUE(pqueue.tree);
     }
+
+    TEST_F(QueueFixture, PUSH) {
+        unsigned* ptrs[N_RANDNUMS] { nullptr }; // pointers to heap allocated random numbers
+
+        for (size_t i = 0; i < N_RANDNUMS; ++i) {
+            ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
+            ASSERT_TRUE(ptrs[i]);
+            *ptrs[i] = randoms[i];
+        }
+
+        for (size_t i = 0; i < N_RANDNUMS; ++i) EXPECT_TRUE(huffman::PQueuePush(&pqueue, ptrs[i]));
+
+        EXPECT_EQ(pqueue.count, N_RANDNUMS);
+        EXPECT_EQ(pqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
+        EXPECT_EQ(pqueue.predptr, std::addressof(::comp));
+        EXPECT_TRUE(pqueue.tree);
+
+        EXPECT_EQ(*reinterpret_cast<::node_pointer>(pqueue.tree[0]), sorted_randoms[0]);
+    }
+
+    TEST_F(QueueFixture, POP) {
+        unsigned* ptrs[N_RANDNUMS] { nullptr };
+
+        for (size_t i = 0; i < N_RANDNUMS; ++i) {
+            ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
+            ASSERT_TRUE(ptrs[i]);
+            *ptrs[i] = randoms[i];
+            EXPECT_TRUE(huffman::PQueuePush(&pqueue, ptrs[i]));
+        }
+
+        EXPECT_EQ(pqueue.count, N_RANDNUMS);
+        EXPECT_EQ(pqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
+        EXPECT_EQ(pqueue.predptr, std::addressof(::comp));
+        EXPECT_TRUE(pqueue.tree);
+
+        unsigned* popped {};
+        for (size_t i = 0; i < N_RANDNUMS; ++i) {
+            EXPECT_TRUE(huffman::PQueuePop(&pqueue, reinterpret_cast<void**>(&popped)));
+            EXPECT_EQ(*popped, sorted_randoms[i]);
+        }
+    }
+
+    namespace pqueue_stress_test {
+
+        struct student final {
+                unsigned id; // student id
+                float    gpa;
+                unsigned yob; // year of birth
+
+                constexpr bool operator>(_In_ const inventory_item& other) const noexcept { return temperature > other.temperature; }
+        };
+
+        using node_type             = student; // shadows the global aliases
+        using node_pointer          = student*;
+        using constant_node_pointer = const student*;
+
+        static_assert(sizeof(node_type) == 52);
+        static_assert(std::is_standard_layout_v<node_type>);
+
+        static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept {
+            return (reinterpret_cast<constant_node_pointer>(child))->operator>(*reinterpret_cast<constant_node_pointer>(parent));
+        }
+
+        // this will test reallocations inside heap_push() and the use of a non primitive type as the stored type in heap
+        TEST(QueueFixture, PUSH_AND_POP) { // cannot use HeapFixture here because we need a custom compare function
+            huffman::heap_t heap {};
+            huffman::heap_init(&heap, nodecomp);
+
+            node_pointer _ptr {};
+
+            for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
+                _ptr = reinterpret_cast<node_pointer>(malloc(sizeof(node_type)));
+                ASSERT_TRUE(_ptr);
+                _ptr->observatory_id = i;
+                _ptr->temperature    = randoms_ext[i];
+
+                EXPECT_TRUE(huffman::heap_push(&heap, _ptr)); // expecting 5 reallocations
+            }
+
+            for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
+                huffman::heap_pop(&heap, reinterpret_cast<void**>(&_ptr));
+                wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_ext[i]);
+                EXPECT_EQ(_ptr->temperature, sorted_randoms_ext[i]);
+            }
+
+            huffman::heap_clean(&heap);
+        }
+
+    } // namespace pqueue_stress_test
+
 } // namespace pqueue
