@@ -29,6 +29,8 @@ namespace huffman {
 
 static constexpr auto BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
 static constexpr auto BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bits
+static constexpr auto N_RANDNUMS { 200LLU };
+static constexpr auto N_EXTRANDOMS { 5000LLU };
 
 #pragma region TEST_DATA
 
@@ -285,8 +287,6 @@ static constexpr unsigned char xorbitstream[BITSTREAM_BYTE_COUNT] = {
     0b00101110, 0b01000110, 0b01111110, 0b00110100, 0b00011111, 0b01000010, 0b10011001, 0b01100010, 0b10001101, 0b01101110
 };
 
-static constexpr size_t N_RANDNUMS { 200 };
-
 static constexpr unsigned randoms[N_RANDNUMS] {
     854, 751, 714, 971, 776, 894, 376, 841, 659, 669, 5,   361, 827, 115, 304, 928, 959, 436, 669, 300, 416, 901, 742, 525, 754,
     416, 108, 256, 659, 648, 845, 228, 19,  337, 795, 292, 549, 122, 730, 382, 889, 66,  317, 178, 303, 745, 88,  588, 299, 641,
@@ -308,8 +308,6 @@ static constexpr unsigned sorted_randoms[N_RANDNUMS] {
     292, 275, 271, 270, 256, 253, 252, 236, 234, 228, 225, 209, 200, 198, 189, 185, 180, 178, 170, 165, 159, 156, 156, 142, 132,
     127, 124, 122, 118, 115, 108, 106, 102, 98,  88,  79,  79,  77,  71,  66,  60,  33,  32,  22,  20,  19,  17,  17,  5,   5
 };
-
-static constexpr size_t N_EXTRANDOMS { 5000 };
 
 static constexpr float randoms_ext[N_EXTRANDOMS] {
     -41.900936, 2.715344,   15.601340,  -3.094640,  -13.144461, 29.873814,  87.536712,  12.297067,  90.324477,  -18.130732, -1.659150,
@@ -1225,7 +1223,7 @@ static constexpr float sorted_randoms_ext[N_EXTRANDOMS] {
     -49.330959, -50.020056, -50.082749, -51.094882, -51.390423, -52.285024, -52.293271, -52.441072, -52.484648, -52.837121, -53.168656,
     -53.192411, -53.448135, -53.925362, -53.958575, -54.026306, -54.847983, -55.921898, -56.297531, -59.273341, -59.364875, -59.531219,
     -59.796741, -62.541223, -62.951353, -64.295628, -67.769009, -76.223872
-};
+}; // -64.295628, -67.769009
 
 #pragma endregion
 
@@ -1234,14 +1232,14 @@ using node_pointer          = node_type*;
 using constant_node_pointer = const node_type*;
 
 // return true when a swap is needed, i.e when the child is heavier than the parent
-static __declspec(noinline) bool __stdcall comp(_In_ const void* const child, _In_ const void* const parent) noexcept {
+[[nodiscard]] static __declspec(noinline) bool __stdcall comp(_In_ const void* const child, _In_ const void* const parent) noexcept {
     return *reinterpret_cast<constant_node_pointer>(child) > *reinterpret_cast<constant_node_pointer>(parent);
 }
 
 // argument typedef int (__cdecl* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*)
-static __declspec(noinline) int __cdecl ptrcompare( // to be used with qsort_s()
-    _In_opt_ [[maybe_unused]] void* const context,  // we do not need this for our tests
-    _In_ constant_node_pointer* const     current,  // cannot use long double here directly
+[[nodiscard]] static __declspec(noinline) int __cdecl ptrcompare( // to be used with qsort_s()
+    _In_opt_ [[maybe_unused]] void* const context,                // we do not need this for our tests
+    _In_ constant_node_pointer* const     current,                // cannot use long double here directly
     _In_ constant_node_pointer* const     next
 ) noexcept {
     assert(reinterpret_cast<uintptr_t>(*current) & reinterpret_cast<uintptr_t>(*next));
@@ -1341,6 +1339,14 @@ namespace position {
 
 } // namespace position
 
+template<typename _TyNode>
+[[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
+    requires requires(const _TyNode& _left, const _TyNode& _right) { _left.operator>(_right); }
+{ // explicitly calling the .operator>() member instead of > because we do not want primitive types meeting this template type constraint
+    return (reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(child))
+        ->operator>(*reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(parent));
+}
+
 namespace heap {
 
     struct HeapFixture : public testing::Test {
@@ -1415,21 +1421,16 @@ namespace heap {
                 constexpr bool operator>(_In_ const tsignal& other) const noexcept { return temperature > other.temperature; }
         };
 
-        using node_type             = tsignal; // shadows the global aliases
-        using node_pointer          = tsignal*;
-        using constant_node_pointer = const tsignal*;
+        using node_type    = tsignal; // shadows the global aliases
+        using node_pointer = tsignal*;
 
         static_assert(sizeof(node_type) == 52);
         static_assert(std::is_standard_layout_v<node_type>);
 
-        static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept {
-            return (reinterpret_cast<constant_node_pointer>(child))->operator>(*reinterpret_cast<constant_node_pointer>(parent));
-        }
-
         // this will test reallocations inside heap_push() and the use of a non primitive type as the stored type in heap
         TEST(HEAP, PUSH_AND_POP) { // cannot use HeapFixture here because we need a custom compare function
             huffman::heap_t heap {};
-            huffman::heap_init(&heap, nodecomp);
+            huffman::heap_init(&heap, ::nodecomp<node_type>);
 
             node_pointer _ptr {};
 
@@ -1521,26 +1522,22 @@ namespace pqueue {
         struct record final {
                 unsigned id;  // record id
                 unsigned yor; // year of release
-                double   unit_price;
+                float    unit_price;
+                unsigned _padding;
                 double   sales;
 
                 constexpr bool operator>(_In_ const record& other) const noexcept { return unit_price > other.unit_price; }
         };
 
-        using node_type             = record;
-        using node_pointer          = record*;
-        using constant_node_pointer = const record*;
+        using node_type    = record;
+        using node_pointer = record*;
 
         static_assert(sizeof(node_type) == 24);
         static_assert(std::is_standard_layout_v<node_type>);
 
-        static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept {
-            return (reinterpret_cast<constant_node_pointer>(child))->operator>(*reinterpret_cast<constant_node_pointer>(parent));
-        }
-
         TEST(PQUEUE, PUSH_AND_POP) {
             huffman::PQueue pqueue {};
-            huffman::PQueueInit(&pqueue, nodecomp);
+            huffman::PQueueInit(&pqueue, ::nodecomp<node_type>);
 
             node_pointer _ptr {};
 
