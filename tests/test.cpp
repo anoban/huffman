@@ -546,7 +546,7 @@ namespace heap {
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
                 huffman::heap_pop(&heap, reinterpret_cast<void**>(&_ptr));
                 // wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_extra[i]);
-                // wprintf_s(L"%5zu :: %.5f\n", i, reinterpret_cast<node_pointer>(heap.tree[0])->temperature);
+                // wprintf_s(L"%5zu :: %.5f\n", i, reinterpret_cast<node_pointer>(heap.tree[0])->temperature);  // !!!!!SEHs ahead
                 EXPECT_EQ(_ptr->temperature, sorted_randoms_extra[i]);
             }
 
