@@ -309,7 +309,7 @@ static constexpr unsigned sorted_randoms[N_RANDNUMS] {
     127, 124, 122, 118, 115, 108, 106, 102, 98,  88,  79,  79,  77,  71,  66,  60,  33,  32,  22,  20,  19,  17,  17,  5,   5
 };
 
-static constexpr float randoms_ext[N_EXTRANDOMS] {
+static constexpr float randoms_extra[N_EXTRANDOMS] {
     -41.900936, 2.715344,   15.601340,  -3.094640,  -13.144461, 29.873814,  87.536712,  12.297067,  90.324477,  -18.130732, -1.659150,
     38.848409,  -4.349191,  18.977625,  8.806665,   24.859578,  63.037940,  7.487012,   38.265843,  46.087740,  35.950678,  28.528001,
     34.949098,  22.733125,  27.519764,  17.412177,  25.014228,  -24.113113, 30.413121,  7.487990,   50.884952,  -14.076817, 32.830962,
@@ -767,7 +767,7 @@ static constexpr float randoms_ext[N_EXTRANDOMS] {
     -8.153069,  20.240848,  17.639334,  44.982780,  9.051006,   29.338550
 };
 
-static constexpr float sorted_randoms_ext[N_EXTRANDOMS] {
+static constexpr float sorted_randoms_extra[N_EXTRANDOMS] {
     90.324477,  89.668926,  89.182624,  88.549103,  88.480658,  88.278436,  87.746308,  87.581049,  87.536712,  87.213133,  86.541857,
     85.934347,  85.521640,  85.400555,  82.881273,  82.294755,  82.110742,  82.058091,  81.605275,  80.765031,  80.711819,  80.533018,
     80.453081,  80.204137,  79.992898,  79.560102,  79.447028,  79.378963,  79.105097,  78.918567,  78.042666,  77.990762,  77.830399,
@@ -1246,6 +1246,14 @@ using constant_node_pointer = const node_type*;
     return (**current == **next) ? 0 : (**current > **next) ? 1 : -1;
 }
 
+template<typename _TyNode>
+[[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
+    requires requires(const _TyNode& _left, const _TyNode& _right) { _left.operator>(_right); }
+{ // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this template type constraint
+    return (reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(child))
+        ->operator>(*reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(parent));
+}
+
 namespace bitops {
 
     TEST(BITOPS, GETBIT) {
@@ -1261,9 +1269,11 @@ namespace bitops {
 
     TEST(BITOPS, XORBIT) {
         ::memset(mutablestream, 0U, BITSTREAM_BYTE_COUNT); // cleanu up after the previous use
-        for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) huffman::xorbit(bitstream, xorbitstream, mutablestream, i);
-        for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i)
+
+        for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) {
+            huffman::xorbit(bitstream, xorbitstream, mutablestream, i);
             EXPECT_EQ(huffman::getbit(mutablestream, i), !(huffman::getbit(bitstream, i) == huffman::getbit(xorbitstream, i)));
+        }
     }
 
 } // namespace bitops
@@ -1284,7 +1294,7 @@ namespace fileio {
         ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
         EXPECT_EQ(size, 999'530LLU);
 
-        buffer = huffman::___open(LR"(./../media/sqlite3.dll)", &size); // a binary file
+        buffer = huffman::___open(LR"(./../media/sqlite3.dll)", &size); // a binary file (DLL)
         EXPECT_TRUE(buffer);
         ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
         EXPECT_EQ(size, 1'541'912LLU);
@@ -1338,14 +1348,6 @@ namespace position {
     }
 
 } // namespace position
-
-template<typename _TyNode>
-[[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
-    requires requires(const _TyNode& _left, const _TyNode& _right) { _left.operator>(_right); }
-{ // explicitly calling the .operator>() member instead of > because we do not want primitive types meeting this template type constraint
-    return (reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(child))
-        ->operator>(*reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(parent));
-}
 
 namespace heap {
 
@@ -1438,15 +1440,15 @@ namespace heap {
                 _ptr = reinterpret_cast<node_pointer>(malloc(sizeof(node_type)));
                 ASSERT_TRUE(_ptr);
                 _ptr->observatory_id = i;
-                _ptr->temperature    = randoms_ext[i];
+                _ptr->temperature    = randoms_extra[i];
 
                 EXPECT_TRUE(huffman::heap_push(&heap, _ptr)); // expecting 5 reallocations
             }
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
                 huffman::heap_pop(&heap, reinterpret_cast<void**>(&_ptr));
-                //  wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_ext[i]);
-                EXPECT_EQ(_ptr->temperature, sorted_randoms_ext[i]);
+                wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_extra[i]);
+                EXPECT_EQ(_ptr->temperature, sorted_randoms_extra[i]);
             }
 
             huffman::heap_clean(&heap);
@@ -1545,14 +1547,14 @@ namespace pqueue {
                 _ptr = reinterpret_cast<node_pointer>(malloc(sizeof(node_type)));
                 ASSERT_TRUE(_ptr);
                 _ptr->id         = i;
-                _ptr->unit_price = randoms_ext[i];
+                _ptr->unit_price = randoms_extra[i];
                 EXPECT_TRUE(huffman::PQueuePush(&pqueue, _ptr));
             }
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
                 huffman::PQueuePop(&pqueue, reinterpret_cast<void**>(&_ptr));
-                // wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_ext[i]);
-                EXPECT_EQ(_ptr->unit_price, sorted_randoms_ext[i]);
+                // wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_extra[i]);
+                EXPECT_EQ(_ptr->unit_price, sorted_randoms_extra[i]);
             }
 
             huffman::PQueueClean(&pqueue);
