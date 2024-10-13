@@ -32,7 +32,13 @@ namespace huffman {
 static constexpr auto BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
 static constexpr auto BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bits
 static constexpr auto N_RANDNUMS { 200LLU };
-static constexpr auto N_EXTRANDOMS { 5000LLU };
+
+// removing constexpr because that gives them internal linkage yikes cpp!
+auto  N_EXTRANDOMS { 5000LLU };
+float RAND_LLIMIT { -25.0 }, RAND_ULIMIT { 25.0 };
+
+extern std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
+extern std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
 
 #pragma region TEST_DATA
 
@@ -520,18 +526,6 @@ namespace heap {
             huffman::heap_t heap {};
             huffman::heap_init(&heap, ::nodecomp<node_type>);
 
-            auto randoms_extra { std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS) };
-            auto sorted_randoms_extra { std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS) };
-            ASSERT_TRUE(randoms_extra.get());
-            ASSERT_TRUE(sorted_randoms_extra.get());
-            std::mt19937_64                       rndeng { std::random_device()() };
-            std::uniform_real_distribution<float> urdist { -100.00, 100.00 };
-            std::generate(randoms_extra.get(), randoms_extra.get() + N_EXTRANDOMS, [&rndeng, &urdist]() noexcept -> float {
-                return urdist(rndeng);
-            });
-            std::copy(randoms_extra.get(), randoms_extra.get() + N_EXTRANDOMS, sorted_randoms_extra.get());
-            std::sort(sorted_randoms_extra.get(), sorted_randoms_extra.get() + N_EXTRANDOMS, std::greater<float> {});
-
             node_pointer _ptr {};
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
@@ -639,18 +633,6 @@ namespace pqueue {
         TEST(PQUEUE, PUSH_AND_POP) {
             huffman::PQueue pqueue {};
             huffman::PQueueInit(&pqueue, ::nodecomp<node_type>);
-
-            auto randoms_extra { std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS) };
-            auto sorted_randoms_extra { std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS) };
-            ASSERT_TRUE(randoms_extra.get());
-            ASSERT_TRUE(sorted_randoms_extra.get());
-            std::mt19937_64                       rndeng { std::random_device()() };
-            std::uniform_real_distribution<float> urdist { -100.00, 100.00 };
-            std::generate(randoms_extra.get(), randoms_extra.get() + N_EXTRANDOMS, [&rndeng, &urdist]() noexcept -> float {
-                return urdist(rndeng);
-            });
-            std::copy(randoms_extra.get(), randoms_extra.get() + N_EXTRANDOMS, sorted_randoms_extra.get());
-            std::sort(sorted_randoms_extra.get(), sorted_randoms_extra.get() + N_EXTRANDOMS, std::greater<float> {});
 
             node_pointer _ptr {};
 
