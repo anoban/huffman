@@ -1,5 +1,6 @@
 #define __VERBOSE_TEST_IO__
 
+#include <array>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -29,18 +30,17 @@ namespace huffman {
 
 } // namespace huffman
 
+#pragma region TEST_DATA
+
 static constexpr auto BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
 static constexpr auto BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bits
 static constexpr auto N_RANDNUMS { 200LLU };
+static constexpr auto N_EXTRANDOMS { 5000LLU };
 
-// removing constexpr because that gives them internal linkage yikes cpp!
-auto  N_EXTRANDOMS { 5000LLU };
-float RAND_LLIMIT { -25.0 }, RAND_ULIMIT { 25.0 };
-
-extern std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
-extern std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
-
-#pragma region TEST_DATA
+std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
+std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
+std::array<unsigned short, N_RANDNUMS>                 randoms;
+std::array<unsigned short, N_RANDNUMS>                 sorted_randoms;
 
 static constexpr unsigned char const bitstream[BITSTREAM_BYTE_COUNT] = {
     0b00110110, 0b10011110, 0b11101111, 0b10010011, 0b01110100, 0b10100011, 0b01001011, 0b00110110, 0b00110010, 0b01000100, 0b01111101,
@@ -295,31 +295,9 @@ static constexpr unsigned char xorbitstream[BITSTREAM_BYTE_COUNT] = {
     0b00101110, 0b01000110, 0b01111110, 0b00110100, 0b00011111, 0b01000010, 0b10011001, 0b01100010, 0b10001101, 0b01101110
 };
 
-static constexpr unsigned randoms[N_RANDNUMS] {
-    854, 751, 714, 971, 776, 894, 376, 841, 659, 669, 5,   361, 827, 115, 304, 928, 959, 436, 669, 300, 416, 901, 742, 525, 754,
-    416, 108, 256, 659, 648, 845, 228, 19,  337, 795, 292, 549, 122, 730, 382, 889, 66,  317, 178, 303, 745, 88,  588, 299, 641,
-    209, 98,  997, 951, 662, 786, 435, 813, 873, 619, 983, 271, 132, 589, 930, 234, 142, 156, 861, 558, 681, 200, 106, 573, 459,
-    947, 537, 480, 483, 777, 612, 481, 768, 787, 185, 504, 670, 983, 165, 675, 79,  659, 949, 376, 198, 868, 741, 525, 20,  270,
-    861, 862, 424, 275, 566, 159, 322, 156, 604, 17,  514, 5,   446, 349, 900, 170, 778, 560, 922, 32,  490, 102, 395, 803, 415,
-    685, 252, 497, 596, 349, 791, 71,  738, 409, 33,  17,  865, 662, 338, 322, 980, 694, 413, 236, 977, 903, 910, 351, 406, 180,
-    60,  118, 571, 127, 936, 924, 77,  520, 294, 510, 297, 925, 427, 643, 352, 595, 737, 522, 416, 225, 635, 296, 791, 473, 682,
-    189, 253, 653, 976, 500, 574, 888, 79,  22,  384, 666, 346, 703, 379, 555, 943, 960, 553, 486, 124, 937, 599, 468, 835, 902
-};
-
-static constexpr unsigned sorted_randoms[N_RANDNUMS] {
-    997, 983, 983, 980, 977, 976, 971, 960, 959, 951, 949, 947, 943, 937, 936, 930, 928, 925, 924, 922, 910, 903, 902, 901, 900,
-    894, 889, 888, 873, 868, 865, 862, 861, 861, 854, 845, 841, 835, 827, 813, 803, 795, 791, 791, 787, 786, 778, 777, 776, 768,
-    754, 751, 745, 742, 741, 738, 737, 730, 714, 703, 694, 685, 682, 681, 675, 670, 669, 669, 666, 662, 662, 659, 659, 659, 653,
-    648, 643, 641, 635, 619, 612, 604, 599, 596, 595, 589, 588, 574, 573, 571, 566, 560, 558, 555, 553, 549, 537, 525, 525, 522,
-    520, 514, 510, 504, 500, 497, 490, 486, 483, 481, 480, 473, 468, 459, 446, 436, 435, 427, 424, 416, 416, 416, 415, 413, 409,
-    406, 395, 384, 382, 379, 376, 376, 361, 352, 351, 349, 349, 346, 338, 337, 322, 322, 317, 304, 303, 300, 299, 297, 296, 294,
-    292, 275, 271, 270, 256, 253, 252, 236, 234, 228, 225, 209, 200, 198, 189, 185, 180, 178, 170, 165, 159, 156, 156, 142, 132,
-    127, 124, 122, 118, 115, 108, 106, 102, 98,  88,  79,  79,  77,  71,  66,  60,  33,  32,  22,  20,  19,  17,  17,  5,   5
-};
-
 #pragma endregion
 
-using node_type             = unsigned; // for testing
+using node_type             = unsigned short; // for testing
 using node_pointer          = node_type*;
 using constant_node_pointer = const node_type*;
 
@@ -462,7 +440,7 @@ namespace heap {
     }
 
     TEST_F(HeapFixture, PUSH) {
-        unsigned* ptrs[N_RANDNUMS] { nullptr }; // pointers to heap allocated random numbers
+        ::node_pointer ptrs[N_RANDNUMS] { nullptr }; // pointers to heap allocated random numbers
 
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
@@ -483,7 +461,7 @@ namespace heap {
     }
 
     TEST_F(HeapFixture, POP) {
-        unsigned* ptrs[N_RANDNUMS] { nullptr };
+        ::node_pointer ptrs[N_RANDNUMS] { nullptr };
 
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
@@ -497,7 +475,7 @@ namespace heap {
         EXPECT_EQ(heap.predptr, std::addressof(::comp));
         EXPECT_TRUE(heap.tree);
 
-        unsigned* popped {};
+        ::node_pointer popped {};
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             EXPECT_TRUE(huffman::heap_pop(&heap, reinterpret_cast<void**>(&popped)));
             EXPECT_EQ(*popped, sorted_randoms[i]);
@@ -572,7 +550,7 @@ namespace pqueue {
     }
 
     TEST_F(PQueueFixture, PUSH) {
-        unsigned* ptrs[N_RANDNUMS] { nullptr }; // pointers to heap allocated random numbers
+        ::node_pointer ptrs[N_RANDNUMS] { nullptr }; // pointers to heap allocated random numbers
 
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
@@ -591,7 +569,7 @@ namespace pqueue {
     }
 
     TEST_F(PQueueFixture, POP) {
-        unsigned* ptrs[N_RANDNUMS] { nullptr };
+        ::node_pointer ptrs[N_RANDNUMS] { nullptr };
 
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
@@ -605,7 +583,7 @@ namespace pqueue {
         EXPECT_EQ(pqueue.predptr, std::addressof(::comp));
         EXPECT_TRUE(pqueue.tree);
 
-        unsigned* popped {};
+        ::node_pointer popped {};
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             EXPECT_TRUE(huffman::PQueuePop(&pqueue, reinterpret_cast<void**>(&popped)));
             EXPECT_EQ(*popped, sorted_randoms[i]);
