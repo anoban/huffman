@@ -34,8 +34,8 @@ namespace huffman {
 
 static constexpr auto BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
 static constexpr auto BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bits
-static constexpr auto N_RANDNUMS { 200LLU };
-static constexpr auto N_EXTRANDOMS { 5000LLU };
+static constexpr auto N_RANDNUMS { 1LLU << 7 };
+static constexpr auto N_EXTRANDOMS { 4LLU << 10 };
 
 std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
 std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
@@ -297,7 +297,7 @@ static constexpr unsigned char xorbitstream[BITSTREAM_BYTE_COUNT] = {
 
 #pragma endregion
 
-using node_type             = unsigned short; // for testing
+using node_type             = unsigned short; // for testing using fixtures
 using node_pointer          = node_type*;
 using constant_node_pointer = const node_type*;
 
@@ -449,15 +449,15 @@ namespace heap {
             *ptrs[i] = randoms[i];
         }
 
-        for (size_t i = 0; i < N_RANDNUMS; ++i) EXPECT_TRUE(huffman::heap_push(&heap, ptrs[i]));
+        for (size_t i = 0; i < N_RANDNUMS; ++i) {
+            EXPECT_TRUE(huffman::heap_push(&heap, ptrs[i]));
+            EXPECT_EQ(*reinterpret_cast<::node_pointer>(heap.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
+        }
 
         EXPECT_EQ(heap.count, N_RANDNUMS);
         EXPECT_EQ(heap.capacity, DEFAULT_HEAP_CAPACITY);
         EXPECT_EQ(heap.predptr, std::addressof(::comp));
         EXPECT_TRUE(heap.tree);
-
-        // if all pushes worked as expected, the node at offset 0 must contain the largest value
-        EXPECT_EQ(*reinterpret_cast<::node_pointer>(heap.tree[0]), sorted_randoms[0]);
     }
 
     TEST_F(HeapFixture, POP) {
@@ -512,7 +512,11 @@ namespace heap {
                 _ptr->observatory_id = i;
                 _ptr->temperature    = randoms_extra[i];
 
-                EXPECT_TRUE(huffman::heap_push(&heap, _ptr)); // expecting 5 reallocations
+                EXPECT_TRUE(huffman::heap_push(&heap, _ptr)); // expecting reallocations
+                EXPECT_EQ(
+                    reinterpret_cast<node_pointer>(heap.tree[0])->temperature,
+                    *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
+                );
             }
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
@@ -558,7 +562,10 @@ namespace pqueue {
             *ptrs[i] = randoms[i];
         }
 
-        for (size_t i = 0; i < N_RANDNUMS; ++i) EXPECT_TRUE(huffman::PQueuePush(&pqueue, ptrs[i]));
+        for (size_t i = 0; i < N_RANDNUMS; ++i) {
+            EXPECT_TRUE(huffman::PQueuePush(&pqueue, ptrs[i]));
+            EXPECT_EQ(*reinterpret_cast<::node_pointer>(pqueue.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
+        }
 
         EXPECT_EQ(pqueue.count, N_RANDNUMS);
         EXPECT_EQ(pqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
@@ -619,7 +626,12 @@ namespace pqueue {
                 ASSERT_TRUE(_ptr);
                 _ptr->id         = i;
                 _ptr->unit_price = randoms_extra[i];
+
                 EXPECT_TRUE(huffman::PQueuePush(&pqueue, _ptr));
+                EXPECT_EQ(
+                    reinterpret_cast<node_pointer>(pqueue.tree[0])->unit_price,
+                    *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
+                );
             }
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
