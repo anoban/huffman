@@ -9,8 +9,13 @@
 #include <gtest/gtest.h>
 // clang-format on
 
-namespace huffman {
+// the problem with namspacing <huffman.h> prior to including <gtest/gtest.h> is that all the symbols from headers directly and
+// indirecty included in <huffman.h> get scoped inside the namespace, won't be available in the global namespace
+// this includes symbols from __STDC__ headers :(
+// but the header guards will prevent these headers from being reincluded in gtest.h, hence we run in to a slew of errors
+// so we move the gtest include before the namespacing of <huffman.h> included symbols
 
+namespace huffman {
 #define restrict
 #define register
     extern "C" {
@@ -18,7 +23,6 @@ namespace huffman {
     }
 #undef restrict
 #undef register
-
 } // namespace huffman
 
 static constexpr auto N_RANDNUMS { 1LLU << 7 };
@@ -138,7 +142,7 @@ namespace heap {
         static_assert(std::is_standard_layout_v<node_type>);
 
         // this will test reallocations inside heap_push() and the use of a non primitive type as the stored type in heap
-        TEST(HEAP, PUSH_AND_POP) { // cannot use HeapFixture here because we need a custom compare function
+        TEST(HEAP, STRESS_TEST) { // cannot use HeapFixture here because we need a custom compare function
             huffman::heap_t heap {};
             huffman::heap_init(&heap, ::nodecomp<node_type>);
 

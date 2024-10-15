@@ -1,8 +1,5 @@
 #define __VERBOSE_TEST_IO__
 
-#include <cstdlib>
-#include <cstring>
-
 // clang-format off
 #include <gtest/gtest.h>
 // clang-format on
