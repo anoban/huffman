@@ -274,7 +274,7 @@ static inline bool __cdecl heap_pop(_Inout_ heap_t* const restrict heap, _Inout_
     // {25, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
     // give up the node at the top (root node)
     *popped                     = heap->tree[0];
-    heap->tree[0]               = NULL;
+    // heap->tree[0]               = NULL;
     // {NULL, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
 
     /* now the tree looks like this:

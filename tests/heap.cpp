@@ -88,6 +88,7 @@ namespace heap {
 
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             EXPECT_TRUE(huffman::heap_push(&heap, ptrs[i]));
+            // heap_push() works okay
             EXPECT_EQ(*reinterpret_cast<::node_pointer>(heap.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
         }
 

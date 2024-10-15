@@ -5,8 +5,7 @@
 
 #include <gtest/gtest.h>
 
-static constexpr auto  N_RANDNUMS { 1LLU << 7 };    // redefinition
-static constexpr auto  N_EXTRANDOMS { 4LLU << 10 }; // redefinition
+static constexpr auto  N_RANDNUMS { 1LLU << 7 }, N_EXTRANDOMS { 4LLU << 10 }; // redefinitions
 static constexpr float RAND_LLIMIT { -25.0 }, RAND_ULIMIT { 25.0 };
 
 std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
@@ -22,7 +21,7 @@ int wmain() {
     assert(randoms_extra.get());
     assert(sorted_randoms_extra.get());
 
-    std::mt19937_64                       rndeng { std::random_device()() };
+    std::mt19937_64                       rndeng { std::random_device {}() };
     std::uniform_real_distribution<float> urdist { RAND_LLIMIT, RAND_ULIMIT };
 
     std::generate(randoms_extra.get(), randoms_extra.get() + N_EXTRANDOMS, [&rndeng, &urdist]() noexcept -> float {
