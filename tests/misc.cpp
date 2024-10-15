@@ -1,18 +1,7 @@
 #define __VERBOSE_TEST_IO__
 
-#include <array>
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
-#include <numeric>
-#include <random>
-#include <type_traits>
-
-// the problem with namspacing <huffman.h> prior to including <gtest/gtest.h> is that all the symbols from headers directly and
-// indirecty included in <huffman.h> get scoped inside the namespace, won't be available in the global namespace
-// this includes symbols from __STDC__ headers :(
-// but the header guards will prevent these headers from being reincluded in gtest.h, hence we run in to a slew of errors
-// so we move the gtest include before the namespacing of <huffman.h> included symbols
 
 // clang-format off
 #include <gtest/gtest.h>
@@ -30,17 +19,8 @@ namespace huffman {
 
 } // namespace huffman
 
-#pragma region TEST_DATA
-
 static constexpr auto BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
 static constexpr auto BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bits
-static constexpr auto N_RANDNUMS { 1LLU << 7 };
-static constexpr auto N_EXTRANDOMS { 4LLU << 10 };
-
-std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
-std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
-std::array<unsigned short, N_RANDNUMS>                 randoms;
-std::array<unsigned short, N_RANDNUMS>                 sorted_randoms;
 
 static constexpr unsigned char const bitstream[BITSTREAM_BYTE_COUNT] = {
     0b00110110, 0b10011110, 0b11101111, 0b10010011, 0b01110100, 0b10100011, 0b01001011, 0b00110110, 0b00110010, 0b01000100, 0b01111101,
@@ -136,7 +116,6 @@ static constexpr unsigned char const bitstream[BITSTREAM_BYTE_COUNT] = {
     0b00011000, 0b01110101, 0b01000110, 0b00010100, 0b01110011, 0b11001001, 0b01010010, 0b10001001, 0b11011010, 0b00000010
 };
 
-// $str.Replace("'", "").Replace("0b", "").Replace(",", "").Replace(" ", "")
 static constexpr char binstr[BITSTREAM_BIT_COUNT + 1 /* + 1 for the NULL terminator */] = // string representation of bitstream
     "00110110100111101110111110010011011101001010001101001011001101100011001001000100011111011101101111100001001110101101110011000010111010"
     "11001010101101101111111100010000011011001010000110000001000101110101100100110101000100010110110110011111000010001111110011100000110001"
@@ -295,35 +274,6 @@ static constexpr unsigned char xorbitstream[BITSTREAM_BYTE_COUNT] = {
     0b00101110, 0b01000110, 0b01111110, 0b00110100, 0b00011111, 0b01000010, 0b10011001, 0b01100010, 0b10001101, 0b01101110
 };
 
-#pragma endregion
-
-using node_type             = unsigned short; // for testing using fixtures
-using node_pointer          = node_type*;
-using constant_node_pointer = const node_type*;
-
-// return true when a swap is needed, i.e when the child is heavier than the parent
-[[nodiscard]] static __declspec(noinline) bool __stdcall comp(_In_ const void* const child, _In_ const void* const parent) noexcept {
-    return *reinterpret_cast<constant_node_pointer>(child) > *reinterpret_cast<constant_node_pointer>(parent);
-}
-
-// argument typedef int (__cdecl* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*)
-[[nodiscard]] static __declspec(noinline) int __cdecl ptrcompare( // to be used with qsort_s()
-    _In_opt_ [[maybe_unused]] void* const context,                // we do not need this for our tests
-    _In_ constant_node_pointer* const     current,                // cannot use long double here directly
-    _In_ constant_node_pointer* const     next
-) noexcept {
-    assert(reinterpret_cast<uintptr_t>(*current) & reinterpret_cast<uintptr_t>(*next));
-    return (**current == **next) ? 0 : (**current > **next) ? 1 : -1;
-}
-
-template<typename _TyNode>
-[[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
-    requires requires(const _TyNode& _left, const _TyNode& _right) { _left.operator>(_right); }
-{ // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this template type constraint
-    return (reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(child))
-        ->operator>(*reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(parent));
-}
-
 namespace bitops {
 
     TEST(BITOPS, GETBIT) {
@@ -418,231 +368,3 @@ namespace position {
     }
 
 } // namespace position
-
-namespace heap {
-
-    struct HeapFixture : public testing::Test {
-            huffman::heap_t heap {};
-
-            inline virtual void SetUp() noexcept override { ASSERT_TRUE(huffman::heap_init(&heap, ::comp)); }
-
-            inline virtual void TearDown() noexcept override { huffman::heap_clean(&heap); }
-    };
-
-    TEST_F(HeapFixture, INIT) {
-        // in google test, EXPECT_XXX family of macros dispactch their call to class template EqHelper where type deduction happens
-        // so comp and &comp have different types in the context of template type deduction, hence the use of std::addressof (a simple & will also work)
-
-        EXPECT_FALSE(heap.count);
-        EXPECT_EQ(heap.capacity, DEFAULT_HEAP_CAPACITY);
-        EXPECT_EQ(heap.predptr, std::addressof(::comp));
-        EXPECT_TRUE(heap.tree);
-    }
-
-    TEST_F(HeapFixture, PUSH) {
-        ::node_pointer ptrs[N_RANDNUMS] { nullptr }; // pointers to heap allocated random numbers
-
-        for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
-            // ptrs[i] = ptrs_sorted[i] = new (std::nothrow) T; // bad idea because heap_clean will call free() on memory allocated with new
-            ASSERT_TRUE(ptrs[i]);
-            *ptrs[i] = randoms[i];
-        }
-
-        for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            EXPECT_TRUE(huffman::heap_push(&heap, ptrs[i]));
-            EXPECT_EQ(*reinterpret_cast<::node_pointer>(heap.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
-        }
-
-        EXPECT_EQ(heap.count, N_RANDNUMS);
-        EXPECT_EQ(heap.capacity, DEFAULT_HEAP_CAPACITY);
-        EXPECT_EQ(heap.predptr, std::addressof(::comp));
-        EXPECT_TRUE(heap.tree);
-    }
-
-    TEST_F(HeapFixture, POP) {
-        ::node_pointer ptrs[N_RANDNUMS] { nullptr };
-
-        for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
-            ASSERT_TRUE(ptrs[i]);
-            *ptrs[i] = randoms[i];
-            EXPECT_TRUE(huffman::heap_push(&heap, ptrs[i]));
-        }
-
-        EXPECT_EQ(heap.count, N_RANDNUMS);
-        EXPECT_EQ(heap.capacity, DEFAULT_HEAP_CAPACITY);
-        EXPECT_EQ(heap.predptr, std::addressof(::comp));
-        EXPECT_TRUE(heap.tree);
-
-        ::node_pointer popped {};
-        for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            EXPECT_TRUE(huffman::heap_pop(&heap, reinterpret_cast<void**>(&popped)));
-            EXPECT_EQ(*popped, sorted_randoms[i]);
-        }
-    }
-
-    namespace heap_stress_test { // pushing the implementation to extremes
-
-        struct tsignal final { // a dummy aggregate type representing a thermal/heat signal
-                unsigned  observatory_id;
-                float     temperature;
-                float     coord_x, coord_y;
-                struct tm time;
-
-                constexpr bool operator>(_In_ const tsignal& other) const noexcept { return temperature > other.temperature; }
-        };
-
-        using node_type    = tsignal; // shadows the global aliases
-        using node_pointer = tsignal*;
-
-        static_assert(sizeof(node_type) == 52);
-        static_assert(std::is_standard_layout_v<node_type>);
-
-        // this will test reallocations inside heap_push() and the use of a non primitive type as the stored type in heap
-        TEST(HEAP, PUSH_AND_POP) { // cannot use HeapFixture here because we need a custom compare function
-            huffman::heap_t heap {};
-            huffman::heap_init(&heap, ::nodecomp<node_type>);
-
-            node_pointer _ptr {};
-
-            for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
-                _ptr = reinterpret_cast<node_pointer>(malloc(sizeof(node_type)));
-                ASSERT_TRUE(_ptr);
-                _ptr->observatory_id = i;
-                _ptr->temperature    = randoms_extra[i];
-
-                EXPECT_TRUE(huffman::heap_push(&heap, _ptr)); // expecting reallocations
-                EXPECT_EQ(
-                    reinterpret_cast<node_pointer>(heap.tree[0])->temperature,
-                    *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
-                );
-            }
-
-            for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
-                huffman::heap_pop(&heap, reinterpret_cast<void**>(&_ptr));
-                // wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_extra[i]);
-                // wprintf_s(L"%5zu :: %.5f\n", i, reinterpret_cast<node_pointer>(heap.tree[0])->temperature);  // !!!!!SEHs ahead
-                EXPECT_EQ(_ptr->temperature, sorted_randoms_extra[i]);
-            }
-
-            huffman::heap_clean(&heap);
-        }
-
-    } // namespace heap_stress_test
-
-} // namespace heap
-
-namespace pqueue {
-
-    struct PQueueFixture : public testing::Test {
-            huffman::PQueue pqueue {};
-
-            inline virtual void SetUp() noexcept override { ASSERT_TRUE(huffman::PQueueInit(&pqueue, ::comp)); }
-
-            inline virtual void TearDown() noexcept override { huffman::PQueueClean(&pqueue); }
-    };
-
-    TEST_F(PQueueFixture, INIT) {
-        // in google test, EXPECT_XXX family of macros dispactch their call to class template EqHelper where type deduction happens
-        // so comp and &comp have different types in the context of template type deduction, hence the use of std::addressof (a simple & will also work)
-
-        EXPECT_FALSE(pqueue.count);
-        EXPECT_EQ(pqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
-        EXPECT_EQ(pqueue.predptr, std::addressof(::comp));
-        EXPECT_TRUE(pqueue.tree);
-    }
-
-    TEST_F(PQueueFixture, PUSH) {
-        ::node_pointer ptrs[N_RANDNUMS] { nullptr }; // pointers to heap allocated random numbers
-
-        for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
-            ASSERT_TRUE(ptrs[i]);
-            *ptrs[i] = randoms[i];
-        }
-
-        for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            EXPECT_TRUE(huffman::PQueuePush(&pqueue, ptrs[i]));
-            EXPECT_EQ(*reinterpret_cast<::node_pointer>(pqueue.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
-        }
-
-        EXPECT_EQ(pqueue.count, N_RANDNUMS);
-        EXPECT_EQ(pqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
-        EXPECT_EQ(pqueue.predptr, std::addressof(::comp));
-        EXPECT_TRUE(pqueue.tree);
-
-        EXPECT_EQ(*reinterpret_cast<::node_pointer>(pqueue.tree[0]), sorted_randoms[0]);
-    }
-
-    TEST_F(PQueueFixture, POP) {
-        ::node_pointer ptrs[N_RANDNUMS] { nullptr };
-
-        for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
-            ASSERT_TRUE(ptrs[i]);
-            *ptrs[i] = randoms[i];
-            EXPECT_TRUE(huffman::PQueuePush(&pqueue, ptrs[i]));
-        }
-
-        EXPECT_EQ(pqueue.count, N_RANDNUMS);
-        EXPECT_EQ(pqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
-        EXPECT_EQ(pqueue.predptr, std::addressof(::comp));
-        EXPECT_TRUE(pqueue.tree);
-
-        ::node_pointer popped {};
-        for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            EXPECT_TRUE(huffman::PQueuePop(&pqueue, reinterpret_cast<void**>(&popped)));
-            EXPECT_EQ(*popped, sorted_randoms[i]);
-        }
-    }
-
-    namespace pqueue_stress_test {
-
-        struct record final {
-                unsigned id;  // record id
-                unsigned yor; // year of release
-                float    unit_price;
-                unsigned _padding;
-                double   sales;
-
-                constexpr bool operator>(_In_ const record& other) const noexcept { return unit_price > other.unit_price; }
-        };
-
-        using node_type    = record;
-        using node_pointer = record*;
-
-        static_assert(sizeof(node_type) == 24);
-        static_assert(std::is_standard_layout_v<node_type>);
-
-        TEST(PQUEUE, PUSH_AND_POP) {
-            huffman::PQueue pqueue {};
-            huffman::PQueueInit(&pqueue, ::nodecomp<node_type>);
-
-            node_pointer _ptr {};
-
-            for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
-                _ptr = reinterpret_cast<node_pointer>(malloc(sizeof(node_type)));
-                ASSERT_TRUE(_ptr);
-                _ptr->id         = i;
-                _ptr->unit_price = randoms_extra[i];
-
-                EXPECT_TRUE(huffman::PQueuePush(&pqueue, _ptr));
-                EXPECT_EQ(
-                    reinterpret_cast<node_pointer>(pqueue.tree[0])->unit_price,
-                    *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
-                );
-            }
-
-            for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
-                huffman::PQueuePop(&pqueue, reinterpret_cast<void**>(&_ptr));
-                // wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_extra[i]);
-                EXPECT_EQ(_ptr->unit_price, sorted_randoms_extra[i]);
-            }
-
-            huffman::PQueueClean(&pqueue);
-        }
-
-    } // namespace pqueue_stress_test
-
-} // namespace pqueue

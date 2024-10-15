@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <array>
-#include <numeric>
+#include <memory>
 #include <random>
 
 #include <gtest/gtest.h>
@@ -9,11 +9,11 @@ static constexpr auto  N_RANDNUMS { 1LLU << 7 };    // redefinition
 static constexpr auto  N_EXTRANDOMS { 4LLU << 10 }; // redefinition
 static constexpr float RAND_LLIMIT { -25.0 }, RAND_ULIMIT { 25.0 };
 
-extern std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
-extern std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
+std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
+std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
 
-extern std::array<unsigned short, N_RANDNUMS> randoms;
-extern std::array<unsigned short, N_RANDNUMS> sorted_randoms;
+std::array<unsigned short, N_RANDNUMS> randoms;
+std::array<unsigned short, N_RANDNUMS> sorted_randoms;
 
 int wmain() {
     randoms_extra        = std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS); // could've just used std::vector

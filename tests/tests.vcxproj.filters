@@ -45,10 +45,16 @@
     <ClCompile Include="googletest\src\gtest-typed-test.cc">
       <Filter>Source Files\gtest</Filter>
     </ClCompile>
-    <ClCompile Include="test.cpp">
+    <ClCompile Include="pqueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="misc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="heap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
