@@ -3,10 +3,7 @@
 #include <memory>
 #include <random>
 
-#include <gtest/gtest.h>
-
-static constexpr auto  N_RANDNUMS { 1LLU << 7 }, N_EXTRANDOMS { 4LLU << 10 }; // redefinitions
-static constexpr float RAND_LLIMIT { -25.0 }, RAND_ULIMIT { 25.0 };
+#include <test.hpp>
 
 std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
 std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
@@ -14,7 +11,7 @@ std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
 std::array<unsigned short, N_RANDNUMS> randoms;
 std::array<unsigned short, N_RANDNUMS> sorted_randoms;
 
-int wmain() {
+auto main() -> int {
     randoms_extra        = std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS); // could've just used std::vector
     sorted_randoms_extra = std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS);
 

@@ -1,23 +1,8 @@
 #define __VERBOSE_TEST_IO__
+#include <test.hpp>
 
-// clang-format off
-#include <gtest/gtest.h>
-// clang-format on
-
-namespace huffman {
-
-#define restrict
-#define register
-    extern "C" {
-#include <huffman.h>
-    }
-#undef restrict
-#undef register
-
-} // namespace huffman
-
-static constexpr auto BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
-static constexpr auto BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bits
+static constexpr unsigned long long BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
+static constexpr unsigned long long BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bits
 
 static constexpr unsigned char const bitstream[BITSTREAM_BYTE_COUNT] = {
     0b00110110, 0b10011110, 0b11101111, 0b10010011, 0b01110100, 0b10100011, 0b01001011, 0b00110110, 0b00110010, 0b01000100, 0b01111101,

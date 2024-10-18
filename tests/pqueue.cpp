@@ -3,46 +3,13 @@
 #include <algorithm>
 #include <array>
 #include <memory>
-#include <type_traits>
 
-// clang-format off
-#include <gtest/gtest.h>
-// clang-format on
-
-namespace huffman {
-
-#define restrict
-#define register
-    extern "C" {
-#include <huffman.h>
-    }
-#undef restrict
-#undef register
-
-} // namespace huffman
-
-static constexpr auto N_RANDNUMS { 1LLU << 7 };
-static constexpr auto N_EXTRANDOMS { 4LLU << 10 };
+#include <test.hpp>
 
 extern std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
 extern std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
 extern std::array<unsigned short, N_RANDNUMS>                 randoms;
 extern std::array<unsigned short, N_RANDNUMS>                 sorted_randoms;
-
-using node_type             = unsigned short;
-using node_pointer          = node_type*;
-using constant_node_pointer = const node_type*;
-
-[[nodiscard]] static __declspec(noinline) bool __stdcall comp(_In_ const void* const child, _In_ const void* const parent) noexcept {
-    return *reinterpret_cast<constant_node_pointer>(child) > *reinterpret_cast<constant_node_pointer>(parent);
-}
-
-template<typename _TyNode>
-[[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
-    requires requires(const _TyNode& _left, const _TyNode& _right) { _left.operator>(_right); } {
-    return (reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(child))
-        ->operator>(*reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(parent));
-}
 
 namespace pqueue {
 
@@ -147,7 +114,6 @@ namespace pqueue {
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
                 huffman::PQueuePop(&pqueue, reinterpret_cast<void**>(&_ptr));
-                // wprintf_s(L"%zu :: %.5f, %.5f\n", i, _ptr->temperature, sorted_randoms_extra[i]);
                 EXPECT_EQ(_ptr->unit_price, sorted_randoms_extra[i]);
             }
 

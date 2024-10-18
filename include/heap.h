@@ -319,20 +319,19 @@ static inline bool __cdecl heap_pop(_Inout_ heap_t* const restrict heap, _Inout_
     */
     // {10, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18}
 
-    assert(!_parentpos);
-    while (true) { // rearrange the tree
-        // at the onset of iteration, parentpos = 0; currently points to the root node.
+    assert(!_parentpos); // at the begininng of the while loop, _parentpos must be 0
+    while (true) {       // rearrange the tree
         _leftchildpos  = lchild_position(_parentpos);
         _rightchildpos = rchild_position(_parentpos);
 
         // unless we are at the end of the array and the weight of the left child is greater than that of the parent
-        _pos = (_leftchildpos < (heap->count - 1)) && (*heap->predptr)(heap->tree[_leftchildpos], heap->tree[_parentpos]) ? _leftchildpos :
-                                                                                                                            _parentpos;
+        _pos = (_leftchildpos <= (heap->count - 1)) && (*heap->predptr)(heap->tree[_leftchildpos], heap->tree[_parentpos]) ? _leftchildpos :
+                                                                                                                             _parentpos;
         // choose to traverse down the left arm of the node, otherwise hold the caret at the parent.
         // in our example, this block will choose the left arm.
 
         // unless we are at the end of the array and if the weight of the right child is greater than that of the parent OR the left child (CONTEXT DEPENDENT)
-        if ((_rightchildpos < (heap->count - 1)) && (*heap->predptr)(heap->tree[_rightchildpos], heap->tree[_pos])) _pos = _rightchildpos;
+        if ((_rightchildpos <= (heap->count - 1)) && (*heap->predptr)(heap->tree[_rightchildpos], heap->tree[_pos])) _pos = _rightchildpos;
         // choose to traverse down the right arm
         // in our example this conditional will choose the right arm, because 24 > 10.
 

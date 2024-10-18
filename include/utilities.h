@@ -17,10 +17,13 @@
     #define gtstwprinf_s(...)
 #endif
 
+// retruns the offset of the parent node
 static __forceinline size_t __stdcall parent_position(_In_ register const size_t child) {
     return !child ? 0 : (child - 1) / 2 /* deliberate truncating division. */;
 }
 
+// retruns the offset of the left child node
 static __forceinline size_t __stdcall lchild_position(_In_ register const size_t parent) { return parent * 2 + 1; }
 
+// retruns the offset of the left right node
 static __forceinline size_t __stdcall rchild_position(_In_ register const size_t parent) { return parent * 2 + 2; }

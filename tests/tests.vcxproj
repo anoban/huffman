@@ -77,14 +77,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)bin\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)include;$(ProjectDir)googletest;$(ProjectDir)googletest\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir)include;$(ProjectDir)googletest;$(ProjectDir)googletest\include;$(IncludePath)</IncludePath>
     <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
     <LibraryPath>$(VC_LibraryPath_VC_x64_Desktop);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)bin\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)include;$(ProjectDir)googletest;$(ProjectDir)googletest\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir)include;$(ProjectDir)googletest;$(ProjectDir)googletest\include;$(IncludePath)</IncludePath>
     <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
     <LibraryPath>$(VC_LibraryPath_VC_x64_Desktop);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -186,6 +186,9 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="pqueue.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="test.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

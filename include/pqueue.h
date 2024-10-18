@@ -124,11 +124,11 @@ static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void*
         _leftchildpos  = lchild_position(_parentpos);
         _rightchildpos = rchild_position(_parentpos);
 
-        _pos = (_leftchildpos < (pqueue->count - 1)) && (*pqueue->predptr)(pqueue->tree[_leftchildpos], pqueue->tree[_parentpos]) ?
+        _pos = (_leftchildpos <= (pqueue->count - 1)) && (*pqueue->predptr)(pqueue->tree[_leftchildpos], pqueue->tree[_parentpos]) ?
                    _leftchildpos :
                    _parentpos;
 
-        if ((_rightchildpos < (pqueue->count - 1)) && (*pqueue->predptr)(pqueue->tree[_rightchildpos], pqueue->tree[_pos]))
+        if ((_rightchildpos <= (pqueue->count - 1)) && (*pqueue->predptr)(pqueue->tree[_rightchildpos], pqueue->tree[_pos]))
             _pos = _rightchildpos;
         if (_pos == _parentpos) break;
 
