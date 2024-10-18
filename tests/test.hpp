@@ -1,5 +1,9 @@
 #pragma once
-#include <type_traits>
+#ifndef __TEST_HPP__
+    #define __TEST_HPP__
+
+    #define __VERBOSE_TEST_IO__
+    #include <type_traits>
 
 // clang-format off
 #include <gtest/gtest.h>
@@ -12,16 +16,16 @@
 // so we move the gtest include before the namespacing of <huffman.h> included symbols
 
 namespace huffman {
-#define restrict
-#define register
+    #define restrict
+    #define register
     extern "C" {
-#include <huffman.h>
+    #include <huffman.h>
     }
-#undef restrict
-#undef register
+    #undef restrict
+    #undef register
 } // namespace huffman
 
-static constexpr unsigned long long N_RANDNUMS { 1 << 7 }, N_EXTRANDOMS { 4 << 10 }; // explicit external linkage
+static constexpr unsigned long long N_RANDNUMS { 1 << 8 }, N_EXTRANDOMS { 5 << 10 }; // explicit external linkage
 static constexpr float              RAND_LLIMIT { -25.0 }, RAND_ULIMIT { 25.0 };
 
 using node_type             = unsigned short; // for testing using fixtures
@@ -50,3 +54,5 @@ template<typename _TyNode>
     return (reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(child))
         ->operator>(*reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(parent));
 }
+
+#endif // !__TEST_HPP__

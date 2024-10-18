@@ -1,4 +1,3 @@
-#define __VERBOSE_TEST_IO__
 #include <test.hpp>
 
 static constexpr unsigned long long BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
