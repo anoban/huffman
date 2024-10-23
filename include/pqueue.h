@@ -1,14 +1,5 @@
 #pragma once
-#include <assert.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-// clang-format off
 #include <utilities.h>
-// clang-format on
 
 #define DEFAULT_PQUEUE_CAPACITY       1024LLU
 #define DEFAULT_PQUEUE_CAPACITY_BYTES (DEFAULT_PQUEUE_CAPACITY * sizeof(uintptr_t))
@@ -57,7 +48,7 @@ static inline void __cdecl PQueueClean(_Inout_ PQueue* const pqueue) {
 }
 
 // enqueue
-static inline bool __cdecl PQueuePush(_Inout_ PQueue* const pqueue, _In_ const void* const data) {
+static inline bool __cdecl PQueuePush(_Inout_ PQueue* const pqueue, _In_ void* const data) {
     assert(pqueue);
     assert(data);
 
@@ -94,7 +85,7 @@ static inline bool __cdecl PQueuePush(_Inout_ PQueue* const pqueue, _In_ const v
 }
 
 // dequeue
-static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void** data) {
+static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void** const data) {
     assert(pqueue);
     assert(data);
 

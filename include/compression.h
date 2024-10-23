@@ -1,9 +1,5 @@
 #pragma once
-#include <assert.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include <utilities.h>
 
 typedef union _symbol {
         uint8_t byte; // only applicable to leaf nodes

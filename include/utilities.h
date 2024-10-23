@@ -1,10 +1,16 @@
 #pragma once
+#include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef __cplusplus // for C++ compatibility
     #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (reinterpret_cast<type>((identifier)))
     #define _CXX_COMPAT_CONST_CAST(type, identifier)       (const_cast<type>((identifier)))
     #define _CXX_COMPAT_CONLY_KEYWORD_GUARD(keyword)
+    #define typeof(...) decltype(__VA_ARGS__)
 #else
     #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (identifier)
     #define _CXX_COMPAT_CONST_CAST(type, identifier)       (identifier)

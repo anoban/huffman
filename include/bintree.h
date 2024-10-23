@@ -1,7 +1,5 @@
 #pragma once
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include <utilities.h>
 
 // binary tree is a hierarchical arrangement of nodes, with each node having a parent node and (optionally - a pair of) child nodes
 // each node usually has 3 members, one data members and two pointers, for left and right child nodes
@@ -33,7 +31,14 @@ static_assert(offsetof(BnTree, node_count) == 0);
 static_assert(offsetof(BnTree, root) == 8);
 static_assert(offsetof(BnTree, predptr) == 16);
 
-static inline bool BnTreeInsertLeft() {
+static inline bool InsertLeft(
+    _Inout_ BnTree* const bintree,
+    _Inout_ BtNode* const dest, // the node of the binary tree where we want the `data` to be linked to
+    _In_ void* const      data  // the raw data that needs to be connected
+) {
+    assert(bintree);
+    assert(data);
+
     malloc(sizeof(BtNode));
     //
 }
