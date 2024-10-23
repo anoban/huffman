@@ -73,7 +73,7 @@
 
 typedef struct _pqueue {   // priority queue
         uint32_t count;    // number of nodes.
-        uint32_t capacity; // number of nodes the heap can hold before requiring a reallocation.
+        uint32_t capacity; // number of nodes the pqueue can hold before requiring a reallocation.
         bool (*predptr)(_In_ const void* const, _In_ const void* const);
         void** tree; // a heap allocated array containing pointers to heap allocated nodes. use malloc to allocate the tree and the nodes.
 } PQueue;
@@ -122,7 +122,7 @@ static inline void __cdecl PQueueClean(_Inout_ PQueue* const pqueue) {
 
 // enqueue
 static inline bool __cdecl PQueuePush(
-    _Inout_ PQueue* const pqueue, _In_ void* const data /* expects a heap allocated memory block to push into the heap */
+    _Inout_ PQueue* const pqueue, _In_ void* const data /* expects a pqueue allocated memory block to push into the pqueue */
 ) {
     assert(pqueue);
     assert(data);
@@ -130,9 +130,8 @@ static inline bool __cdecl PQueuePush(
     void * _temp_node = NULL, **_temp_tree = NULL; // NOLINT(readability-isolate-declaration)
     size_t _childpos = 0, _parentpos = 0;          // NOLINT(readability-isolate-declaration)
 
+    // if the current buffer doesn't have space for another pointer, ask for an additional DEFAULT_PQUEUE_CAPACITY_BYTES bytes.
     if (pqueue->count + 1 > pqueue->capacity) {
-        // ask for an additional DEFAULT_PQUEUE_CAPACITY_BYTES bytes.
-
         // NOLINTNEXTLINE(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
         if (!(_temp_tree = _CXX_COMPAT_REINTERPRET_CAST(
                   void**,
@@ -142,9 +141,10 @@ static inline bool __cdecl PQueuePush(
                   )
               ))) {
             fwprintf_s(stderr, L"realloc failed inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
-            // at this point, heap->tree is still valid and points to the old buffer
+            // at this point, pqueue->tree is still valid and points to the old buffer
             return false; // return false if reallocation fails.
         }
+
         pqueue->tree      = _temp_tree;              // if reallocation was successful, reassign the new memory block to tree.
         pqueue->capacity += DEFAULT_PQUEUE_CAPACITY; // update the capacity
     }
@@ -217,44 +217,47 @@ static inline bool __cdecl PQueuePush(
     // {25, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
     // perfecto :)))
 
-    pqueue->count++;
-    pqueue->tree[pqueue->count - 1] = _CXX_COMPAT_CONST_CAST(void*, data);
-    _childpos                       = pqueue->count - 1;
-    _parentpos                      = parent_position(_childpos);
+    pqueue->count++;                                              // increment the node count
+    pqueue->tree[pqueue->count - 1] = data;                       // hook in the new node
+    _childpos                       = pqueue->count - 1;          // offset of the newly inserted node.
+    _parentpos                      = parent_position(_childpos); // offset of the new node's parent.
 
-    while ((_childpos > 0) && (*pqueue->predptr)(pqueue->tree[_childpos], pqueue->tree[_parentpos])) {
-        _temp_node               = pqueue->tree[_childpos];
-        pqueue->tree[_childpos]  = pqueue->tree[_parentpos];
-        pqueue->tree[_parentpos] = _temp_node;
-        _temp_tree               = NULL;
-        _childpos                = _parentpos;
-        _parentpos               = parent_position(_childpos);
+    while ((_childpos > 0) // as long as we haven't reached the root node at offset 0
+           &&              // and the weight of the child is greater than that of the parent
+           (*pqueue->predptr)(pqueue->tree[_childpos], pqueue->tree[_parentpos])) { // keep rearranging the pqueue
+        _temp_node               = pqueue->tree[_childpos];                         // child node to be pushed up
+        pqueue->tree[_childpos]  = pqueue->tree[_parentpos];                        // push the parent node down
+        pqueue->tree[_parentpos] = _temp_node;                                      // push the child node up
+
+        // prepare for the next swap in anticipation that the new positioning of the inserted node also needs a swap.
+        _childpos                = _parentpos;                 // after the swap, parent's offset becomes child's offset.
+        _parentpos               = parent_position(_childpos); // find the parent of the current child's offset.
     }
 
     return true;
 }
 
 // dequeue
-static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void** const data) {
+static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void** const popped /* popped out pointer */) {
     assert(pqueue);
-    assert(data);
+    assert(popped);
 
-    size_t _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
-    void*  _temp = NULL;
-
-    if (!pqueue->count) {
-        *data = NULL;
+    if (!pqueue->count) { // if the pqueue is empty
+        *popped = NULL;
         return false;
     }
 
-    if (pqueue->count == 1) {
-        *data         = pqueue->tree[0];
+    if (pqueue->count == 1) { // if the pqueue has only one node
+        *popped       = pqueue->tree[0];
         pqueue->count = 0;
-        PQueueClean(pqueue);
+        PQueueClean(pqueue); // since pqueue->count is 0, the looped free()s inside PQueueClean() won't be executed.
         return true;
     }
 
-    *data                           = pqueue->tree[0];
+    size_t _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
+    void*  _temp                    = NULL;
+
+    *popped                         = pqueue->tree[0];
 
     pqueue->tree[0]                 = pqueue->tree[pqueue->count - 1];
     pqueue->tree[pqueue->count - 1] = NULL;
