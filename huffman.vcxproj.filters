@@ -21,9 +21,6 @@
     <ClInclude Include="include\bitops.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\heap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\pqueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>

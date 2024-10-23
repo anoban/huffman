@@ -257,30 +257,138 @@ static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void*
     size_t _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
     void*  _temp                    = NULL;
 
-    *popped                         = pqueue->tree[0];
+    // {25, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
+    *popped                         = pqueue->tree[0]; // give up the node at the top (root node)
+    // {NULL, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
 
-    pqueue->tree[0]                 = pqueue->tree[pqueue->count - 1];
+    /* now the tree looks like this:
+
+                             (NULL)                <--- 3rd (Root/Top)
+                             /     \
+                            /       \
+                           /         \
+                          /           \
+                         /             \
+                        /               \
+                      (20)              (24)       <--- 2nd
+                     /    \             /  \
+                    /      \           /    \
+                  (17)     (19)      (22)  (12)    <--- 1st
+                  /  \     /  \      /
+                 /    \   /    \    /
+               (15)   (7)(9)  (18)(10)             <--- 0th (Bottom)
+    */
+
+    pqueue->tree[0]                 = pqueue->tree[pqueue->count - 1]; // move the last node in the array to the root's position, offset 0.
     pqueue->tree[pqueue->count - 1] = NULL;
-    pqueue->count--;
+    pqueue->count--; // register the loss of a node
 
-    assert(!_parentpos);
+    /* now the tree looks like this:
+
+                               (10)                <--- 3rd (Root/Top)
+                             /     \
+                            /       \
+                           /         \
+                          /           \
+                         /             \
+                        /               \
+                      (20)              (24)       <--- 2nd
+                     /    \             /  \
+                    /      \           /    \
+                  (17)     (19)      (22)  (12)    <--- 1st
+                  /  \     /  \
+                 /    \   /    \
+               (15)   (7)(9)  (18)                 <--- 0th (Bottom)
+    */
+    // {10, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18}
+
     while (true) {
         _leftchildpos  = lchild_position(_parentpos);
         _rightchildpos = rchild_position(_parentpos);
 
+        // unless we are at the end of the array and the weight of the left child is greater than that of the parent
         _pos = (_leftchildpos <= (pqueue->count - 1)) && (*pqueue->predptr)(pqueue->tree[_leftchildpos], pqueue->tree[_parentpos]) ?
                    _leftchildpos :
                    _parentpos;
+        // choose to traverse down the left arm of the node, otherwise hold the caret at the parent.
+        // in our example, this block will choose the left arm.
 
+        // unless we are at the end of the array and if the weight of the right child is greater than that of the parent OR the left child (CONTEXT DEPENDENT)
         if ((_rightchildpos <= (pqueue->count - 1)) && (*pqueue->predptr)(pqueue->tree[_rightchildpos], pqueue->tree[_pos]))
             _pos = _rightchildpos;
+        // choose to traverse down the right arm
+        // in our example this conditional will choose the right arm, because 24 > 10.
+
+        // in our example, both conditionals at line 315 and 321 will evaluate to true.
+        // since the expressions predicted on the conditional at line 321 will be evaluated finally,
+        // it is the right child that will be swapped with the parent first.
+
+        // if the root is heavier than both the left and right children, no need to rearrange the heap.
         if (_pos == _parentpos) break;
 
         _temp                    = pqueue->tree[_parentpos];
         pqueue->tree[_parentpos] = pqueue->tree[_pos];
         pqueue->tree[_pos]       = _temp;
-        _parentpos               = _pos;
+
+        /* now the tree looks like this:
+
+                          (24)                <--- 3rd (Root/Top)
+                        /     \
+                       /       \
+                      /         \
+                     /           \
+                    /             \
+                   /               \
+                 (20)              (10)       <--- 2nd
+                /    \             /  \
+               /      \           /    \
+             (17)     (19)      (22)  (12)    <--- 1st
+             /  \     /  \
+            /    \   /    \
+          (15)   (7)(9)  (18)                 <--- 0th (Bottom)
+       */
+
+        _parentpos               = _pos; // traverse down. i.e the current right child becomes the parent node for the next iteration.
     }
+
+    /* at the start of second iteration, the tree looks like this:
+
+                           (24)                <--- 3rd (Root/Top)
+                         /     \
+                        /       \
+                       /         \
+                      /           \
+                     /             \
+                    /               \
+                  (20)              (10)       <--- 2nd
+                 /    \             /  \
+                /      \           /    \
+              (17)     (19)      (22)  (12)    <--- 1st
+              /  \     /  \
+             /    \   /    \
+           (15)   (7)(9)  (18)                 <--- 0th (Bottom)
+    */
+    // again the first conditional will pick the left arm for swapping as 22 > 10.
+    // second conditional won't execute as 22 < 12, finally the left arm will be selected for swapping.
+
+    /* at the end of second iteration, the tree looks like this:
+
+                           (24)                <--- 3rd (Root/Top)
+                         /     \
+                        /       \
+                       /         \
+                      /           \
+                     /             \
+                    /               \
+                  (20)              (22)       <--- 2nd
+                 /    \             /  \
+                /      \           /    \
+              (17)     (19)      (12)  (10)    <--- 1st
+              /  \     /  \
+             /    \   /    \
+           (15)   (7)(9)  (18)                 <--- 0th (Bottom)
+     */
+    // no rearrangements needed anymore.
 
     return true;
 }
