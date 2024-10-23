@@ -19,8 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\bintree.h" />
     <ClInclude Include="include\bitops.h" />
-    <ClInclude Include="include\compdcomp.h" />
+    <ClInclude Include="include\compression.h" />
     <ClInclude Include="include\fileio.h" />
     <ClInclude Include="include\heap.h" />
     <ClInclude Include="include\huffman.h" />

@@ -47,7 +47,7 @@
     *nbytes               = 0;
     const HANDLE64 hFile  = CreateFileW(filepath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
     uint8_t*       buffer = NULL; // DO NOT REFACTOR THIS AS AN SINGLE INLINE DEFINITION AT LINE 63
-    // C++ DOES NOT ALLOW goto'S TO JUMP OVER UNINITIALIZED VARIABLES
+    // C++ DOES NOT ALLOW goto TO JUMP OVER UNINITIALIZED VARIABLES!!!
 
     if (hFile == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"Error %lu in CreateFileW while opening %s\n", GetLastError(), filepath);

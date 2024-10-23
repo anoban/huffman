@@ -33,7 +33,10 @@
     <ClInclude Include="include\utilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\compdcomp.h">
+    <ClInclude Include="include\compression.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\bintree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

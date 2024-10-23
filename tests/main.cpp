@@ -5,14 +5,14 @@
 
 #include <test.hpp>
 
+// all these globals are used in the cpp files for tests
 std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
 std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
-
-std::array<unsigned short, N_RANDNUMS> randoms;
-std::array<unsigned short, N_RANDNUMS> sorted_randoms;
+std::array<unsigned short, N_RANDNUMS>                 randoms;
+std::array<unsigned short, N_RANDNUMS>                 sorted_randoms;
 
 auto main() -> int {
-    randoms_extra        = std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS); // could've just used std::vector
+    randoms_extra        = std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS); // could've just used std::vector but hey
     sorted_randoms_extra = std::make_unique_for_overwrite<float[]>(N_EXTRANDOMS);
 
     assert(randoms_extra.get());

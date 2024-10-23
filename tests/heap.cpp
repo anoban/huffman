@@ -42,7 +42,7 @@ namespace heap {
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             EXPECT_TRUE(huffman::heap_push(&heap, ptrs[i]));
             // heap_push() works okay
-            // EXPECT_EQ(*reinterpret_cast<::node_pointer>(heap.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
+            EXPECT_EQ(*reinterpret_cast<::node_pointer>(heap.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
         }
 
         EXPECT_EQ(heap.count, N_RANDNUMS);
@@ -60,7 +60,7 @@ namespace heap {
             *ptrs[i] = randoms[i];
 
             EXPECT_TRUE(huffman::heap_push(&heap, ptrs[i])); // heap_push() works okay
-            // EXPECT_EQ(*reinterpret_cast<::node_pointer>(heap.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
+            EXPECT_EQ(*reinterpret_cast<::node_pointer>(heap.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
         }
 
         EXPECT_EQ(heap.count, N_RANDNUMS);
@@ -89,27 +89,27 @@ namespace heap {
         using node_type    = tsignal; // shadows the global aliases
         using node_pointer = tsignal*;
 
-        static_assert(sizeof(node_type) == 52);
-        static_assert(std::is_standard_layout_v<node_type>);
+        static_assert(sizeof(stress_test::node_type) == 52);
+        static_assert(std::is_standard_layout_v<stress_test::node_type>);
 
         // this will test reallocations inside heap_push() and the use of a non primitive type as the stored type in heap
         TEST(HEAP, STRESS_TEST) { // cannot use HeapFixture here because we need a custom compare function
             huffman::heap_t heap {};
-            huffman::heap_init(&heap, ::nodecomp<node_type>);
+            huffman::heap_init(&heap, ::nodecomp<stress_test::node_type>);
 
-            node_pointer _ptr {};
+            stress_test::node_pointer _ptr {};
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
-                _ptr = reinterpret_cast<node_pointer>(malloc(sizeof(node_type)));
+                _ptr = reinterpret_cast<stress_test::node_pointer>(malloc(sizeof(stress_test::node_type)));
                 ASSERT_TRUE(_ptr);
                 _ptr->observatory_id = i;
                 _ptr->temperature    = randoms_extra[i];
 
-                EXPECT_TRUE(huffman::heap_push(&heap, _ptr)); // expecting reallocations
-                // EXPECT_EQ(
-                //     reinterpret_cast<node_pointer>(heap.tree[0])->temperature,
-                //     *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
-                // );
+                EXPECT_TRUE(huffman::heap_push(&heap, _ptr)); // expecting reallocations here
+                EXPECT_EQ(
+                    reinterpret_cast<stress_test::node_pointer>(heap.tree[0])->temperature,
+                    *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
+                );
             }
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {

@@ -1,7 +1,6 @@
 #pragma once
 #ifndef __TEST_HPP__
     #define __TEST_HPP__
-
     #define __VERBOSE_TEST_IO__
     #include <type_traits>
 
@@ -33,14 +32,15 @@ using node_pointer          = node_type*;
 using constant_node_pointer = const node_type*;
 
 // return true when a swap is needed, i.e when the child is heavier than the parent
-[[nodiscard]] static __declspec(noinline) bool __stdcall comp(_In_ const void* const child, _In_ const void* const parent) noexcept {
+extern "C" [[nodiscard]] static
+    __declspec(noinline) bool __stdcall comp(_In_ const void* const child, _In_ const void* const parent) noexcept {
     return *reinterpret_cast<constant_node_pointer>(child) > *reinterpret_cast<constant_node_pointer>(parent);
 }
 
 // argument typedef int (__cdecl* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*)
-[[nodiscard]] static __declspec(noinline) int __cdecl ptrcompare( // to be used with qsort_s()
-    _In_opt_ [[maybe_unused]] void* const context,                // we do not need this for our tests
-    _In_ constant_node_pointer* const     current,                // cannot use long double here directly
+extern "C" [[nodiscard]] static __declspec(noinline) int __cdecl ptrcompare( // to be used with qsort_s()
+    _In_opt_ [[maybe_unused]] void* const context,                           // we do not need this for our tests
+    _In_ constant_node_pointer* const     current,                           // cannot use long double here directly
     _In_ constant_node_pointer* const     next
 ) noexcept {
     assert(reinterpret_cast<uintptr_t>(*current) & reinterpret_cast<uintptr_t>(*next));
@@ -50,9 +50,9 @@ using constant_node_pointer = const node_type*;
 template<typename _TyNode>
 [[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
     requires requires(const _TyNode& _left, const _TyNode& _right) { _left.operator>(_right); }
-{ // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this template type constraint
-    return (reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(child))
-        ->operator>(*reinterpret_cast<typename std::add_pointer_t<std::add_const_t<_TyNode>>>(parent));
+{ // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this type constraint
+    return (reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(child))
+        ->operator>(*reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(parent));
 }
 
 #endif // !__TEST_HPP__

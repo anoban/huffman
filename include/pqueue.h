@@ -141,4 +141,4 @@ static inline bool __cdecl PQueuePop(_Inout_ PQueue* const pqueue, _Inout_ void*
     return true;
 }
 
-static inline void* __stdcall PQueuePeek(_In_ const PQueue* const pqueue) { return !pqueue->tree ? NULL : pqueue->tree[0]; }
+static inline void* __stdcall PQueuePeek(_In_ const PQueue* const pqueue) { return pqueue->tree ? pqueue->tree[0] : NULL; }

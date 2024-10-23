@@ -20,9 +20,6 @@ namespace pqueue {
     };
 
     TEST_F(PQueueFixture, INIT) {
-        // in google test, EXPECT_XXX family of macros dispatch their call to class template EqHelper where type deduction happens
-        // so comp and &comp have different types in the context of template type deduction, hence the use of std::addressof (a simple & will also work)
-
         EXPECT_FALSE(pqueue.count);
         EXPECT_EQ(pqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
         EXPECT_EQ(pqueue.predptr, std::addressof(::comp));
@@ -40,7 +37,7 @@ namespace pqueue {
 
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             EXPECT_TRUE(huffman::PQueuePush(&pqueue, ptrs[i]));
-            // EXPECT_EQ(*reinterpret_cast<::node_pointer>(pqueue.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
+            EXPECT_EQ(*reinterpret_cast<::node_pointer>(pqueue.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
         }
 
         EXPECT_EQ(pqueue.count, N_RANDNUMS);
@@ -88,26 +85,26 @@ namespace pqueue {
         using node_type    = record;
         using node_pointer = record*;
 
-        static_assert(sizeof(node_type) == 24);
-        static_assert(std::is_standard_layout_v<node_type>);
+        static_assert(sizeof(stress_test::node_type) == 24);
+        static_assert(std::is_standard_layout_v<stress_test::node_type>);
 
         TEST(PQUEUE, STRESS_TEST) {
             huffman::PQueue pqueue {};
-            huffman::PQueueInit(&pqueue, ::nodecomp<node_type>);
+            huffman::PQueueInit(&pqueue, ::nodecomp<stress_test::node_type>);
 
-            node_pointer _ptr {};
+            stress_test::node_pointer _ptr {};
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
-                _ptr = reinterpret_cast<node_pointer>(malloc(sizeof(node_type)));
+                _ptr = reinterpret_cast<stress_test::node_pointer>(malloc(sizeof(stress_test::node_type)));
                 ASSERT_TRUE(_ptr);
                 _ptr->id         = i;
                 _ptr->unit_price = randoms_extra[i];
 
                 EXPECT_TRUE(huffman::PQueuePush(&pqueue, _ptr));
-                // EXPECT_EQ(
-                //     reinterpret_cast<node_pointer>(pqueue.tree[0])->unit_price,
-                //     *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
-                // );
+                EXPECT_EQ(
+                    reinterpret_cast<node_pointer>(pqueue.tree[0])->unit_price,
+                    *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
+                );
             }
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
