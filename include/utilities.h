@@ -7,7 +7,6 @@
 #include <string.h>
 
 #ifdef __cplusplus // for C++ compatibility
-    #include <type_traits>
     #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (reinterpret_cast<type>((identifier)))
     #define _CXX_COMPAT_CONST_CAST(type, identifier)       (const_cast<type>((identifier)))
     #define _CXX_COMPAT_CONLY_KEYWORD_GUARD(keyword)
