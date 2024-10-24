@@ -56,7 +56,7 @@ static __forceinline bool __cdecl EnumerateBytes(
     _Inout_count_(BYTEFREQARRAY_SIZE) size_t* const restrict frequencies, // could be a stack based or heap allocated array
     _In_ const size_t size
 ) {
-    assert(buffer);
+    assert(inbuffer);
     assert(size);
     // assumes `frequencies` to be a zeroed out array
     memset(frequencies, 0U, sizeof(size_t) * (BYTEFREQARRAY_SIZE));

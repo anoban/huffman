@@ -173,6 +173,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bintree.cpp" />
     <ClCompile Include="googletest\src\gtest-assertion-result.cc" />
     <ClCompile Include="googletest\src\gtest-death-test.cc" />
     <ClCompile Include="googletest\src\gtest-filepath.cc" />

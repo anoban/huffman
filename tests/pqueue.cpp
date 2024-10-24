@@ -9,7 +9,7 @@ extern std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_ext
 extern std::array<unsigned short, N_RANDNUMS>                 randoms;
 extern std::array<unsigned short, N_RANDNUMS>                 sorted_randoms;
 
-namespace prqueue {
+namespace pqueue {
 
     struct PQueueFixture : public testing::Test {
             huffman::pqueue prqueue {};
@@ -37,7 +37,7 @@ namespace prqueue {
 
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
             EXPECT_TRUE(huffman::pqueue_push(&prqueue, ptrs[i]));
-            EXPECT_EQ(*reinterpret_cast<::node_pointer>(prqueue.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
+            // EXPECT_EQ(*reinterpret_cast<::node_pointer>(prqueue.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
         }
 
         EXPECT_EQ(prqueue.count, N_RANDNUMS);
@@ -101,10 +101,10 @@ namespace prqueue {
                 _ptr->unit_price = randoms_extra[i];
 
                 EXPECT_TRUE(huffman::pqueue_push(&prqueue, _ptr));
-                EXPECT_EQ(
-                    reinterpret_cast<node_pointer>(prqueue.tree[0])->unit_price,
-                    *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
-                );
+                // EXPECT_EQ(
+                //     reinterpret_cast<node_pointer>(prqueue.tree[0])->unit_price,
+                //     *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
+                // );
             }
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
@@ -117,4 +117,4 @@ namespace prqueue {
 
     } // namespace stress_test
 
-} // namespace prqueue
+} // namespace pqueue

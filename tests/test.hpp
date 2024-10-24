@@ -16,12 +16,18 @@
 
 namespace huffman {
     #define restrict
-    #define register
+
     extern "C" {
-    #include <huffman.h>
+    #include <bintree.h>
+    #include <bitops.h>
+    #include <compression.h>
+    #include <fileio.h>
+    #include <pqueue.h>
+    #include <utilities.h>
     }
+
     #undef restrict
-    #undef register
+
 } // namespace huffman
 
 static constexpr unsigned long long N_RANDNUMS { 1 << 8 }, N_EXTRANDOMS { 5 << 10 }; // explicit external linkage

@@ -14,7 +14,7 @@
 
 // returns the nth bit in the buffer (which is an array of bytes that is viewed as a contiguous stream of bits)
 [[nodiscard]] static __forceinline bool __stdcall getbit(
-    _In_ register const uint8_t* const restrict bitstream, _In_ register const size_t offset /* nth bit */
+    _In_ const uint8_t* const restrict bitstream, _In_ const size_t offset /* nth bit */
 ) {
     // const uint8_t byte   = bitstream[offset / 8 /* deliberate integer division */]; // first find the byte that contains the asked bit.
     // const size_t  bit    = offset % 8;                                              // offset of the asked bit within the byte.
@@ -27,7 +27,7 @@
 
 // toggles a select bit on or off.
 static __forceinline void __stdcall setbit(
-    _Inout_ register uint8_t* const restrict bitstream, _In_ const size_t offset, _In_ register const bool flag /* on or off */
+    _Inout_ uint8_t* const restrict bitstream, _In_ const size_t offset, _In_ const bool flag /* on or off */
 ) {
     // const size_t bit    = offset % 8;
     // uint8_t      mask   = 0b1000'0000;
@@ -42,10 +42,10 @@ static __forceinline void __stdcall setbit(
 
 // computes the bitwise xor of the passed buffers, and stores the result in the output buffer.
 static __forceinline void __stdcall xorbit( // the result will be false only if both of the bits are identical
-    _In_ register const uint8_t* const restrict inbuff_a,
-    _In_ register const uint8_t* const restrict inbuff_b,
-    _Inout_ register uint8_t* const restrict outbuff,
-    _In_ register const size_t offset
+    _In_ const uint8_t* const restrict inbuff_a,
+    _In_ const uint8_t* const restrict inbuff_b,
+    _Inout_ uint8_t* const restrict outbuff,
+    _In_ const size_t offset
 ) {
     assert(inbuff_a);
     assert(inbuff_b);

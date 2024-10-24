@@ -98,7 +98,7 @@ static inline bool __cdecl pqueue_init(
     assert(predicate);
 
     // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
-    prqueue->tree = _CXX_COMPAT_REINTERPRET_CAST(void**, malloc(DEFAULT_PQUEUE_CAPACITY_BYTES));
+    prqueue->tree = (void**) malloc(DEFAULT_PQUEUE_CAPACITY_BYTES);
     // will allocate memory to store DEFAULT_PQUEUE_CAPACITY number of pointers in the tree.
 
     if (!prqueue->tree) {
@@ -132,12 +132,9 @@ static inline bool __cdecl pqueue_push(
     // if the current buffer doesn't have space for another pointer, ask for an additional DEFAULT_PQUEUE_CAPACITY_BYTES bytes.
     if (prqueue->count + 1 > prqueue->capacity) {
         // NOLINTNEXTLINE(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
-        if (!(_temp_tree = _CXX_COMPAT_REINTERPRET_CAST(
-                  void**,
-                  realloc(
-                      prqueue->tree,
-                      (prqueue->capacity * sizeof(uintptr_t)) /* size of the existing buffer in bytes */ + DEFAULT_PQUEUE_CAPACITY_BYTES
-                  )
+        if (!(_temp_tree = (void**) realloc(
+                  prqueue->tree,
+                  (prqueue->capacity * sizeof(uintptr_t)) /* size of the existing buffer in bytes */ + DEFAULT_PQUEUE_CAPACITY_BYTES
               ))) {
             fwprintf_s(stderr, L"realloc failed inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
             // at this point, prqueue->tree is still valid and points to the old buffer
