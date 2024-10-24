@@ -49,17 +49,17 @@ static_assert(offsetof(hcode_t, code) == 2);
 // = 14.2646625064904
 // again, in theory all the 'C' characters in the above string can be represented by a total of 14.2646625064904 bits
 
-#define FREQ_ARRAY_SIZE 256LLU
+#define BYTEFREQARRAY_SIZE 256LLU
 
 static __forceinline bool __cdecl EnumerateBytes(
     _In_ const uint8_t* const restrict inbuffer,
-    _Inout_count_(FREQ_ARRAY_SIZE) size_t* const restrict frequencies, // could be a stack based or heap allocated array
+    _Inout_count_(BYTEFREQARRAY_SIZE) size_t* const restrict frequencies, // could be a stack based or heap allocated array
     _In_ const size_t size
 ) {
     assert(buffer);
     assert(size);
     // assumes `frequencies` to be a zeroed out array
-    memset(frequencies, 0U, sizeof(typeof(*frequencies)) * (FREQ_ARRAY_SIZE));
+    memset(frequencies, 0U, sizeof(size_t) * (BYTEFREQARRAY_SIZE));
     for (size_t i = 0; i < size; ++i) frequencies[inbuffer[i]]++;
 }
 
