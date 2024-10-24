@@ -81,7 +81,7 @@ PREMATURE_RETURN:
 }
 
 [[nodiscard]] static inline bool __cdecl _TRIPLE_UNDERSCORE_PREFIX(write)(
-    _In_ const wchar_t* const restrict filepath, _In_ const uint8_t* const restrict buffer, _In_ const unsigned long size
+    _In_ const wchar_t* const restrict filepath, _In_reads_(size) const uint8_t* const restrict buffer, _In_ const unsigned long size
 ) {
     assert(filepath);
     assert(buffer);
