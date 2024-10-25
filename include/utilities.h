@@ -23,6 +23,9 @@
     #define gtstwprinf_s(...)
 #endif
 
+#define HELPER(expression) #expression
+#define STR(expression)    HELPER(expression)
+
 // retruns the offset of the parent node
 static __forceinline size_t __stdcall parent_position(_In_ const size_t child) {
     return !child ? 0 : (child - 1) / 2 /* deliberate truncating division. */;

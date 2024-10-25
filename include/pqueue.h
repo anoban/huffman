@@ -102,7 +102,7 @@ static inline bool __cdecl pqueue_init(
     // will allocate memory to store DEFAULT_PQUEUE_CAPACITY number of pointers in the tree.
 
     if (!prqueue->tree) {
-        fwprintf_s(stderr, L"malloc failed inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
+        fputws(L"Error:: malloc failed inside " __FUNCTIONW__ "\n", stderr);
         return false;
     }
 
@@ -131,12 +131,13 @@ static inline bool __cdecl pqueue_push(
 
     // if the current buffer doesn't have space for another pointer, ask for an additional DEFAULT_PQUEUE_CAPACITY_BYTES bytes.
     if (prqueue->count + 1 > prqueue->capacity) {
-        // NOLINTNEXTLINE(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
+        // NOLINTBEGIN(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
         if (!(_temp_tree = (void**) realloc(
                   prqueue->tree,
                   (prqueue->capacity * sizeof(uintptr_t)) /* size of the existing buffer in bytes */ + DEFAULT_PQUEUE_CAPACITY_BYTES
               ))) {
-            fwprintf_s(stderr, L"realloc failed inside %s @LINE: %d\n", __FUNCTIONW__, __LINE__);
+            // NOLINTEND(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
+            fputws(L"Error:: realloc failed inside " __FUNCTIONW__ "\n", stderr);
             // at this point, prqueue->tree is still valid and points to the old buffer
             return false; // return false if reallocation fails.
         }

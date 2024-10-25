@@ -1,8 +1,6 @@
 #pragma once
-#ifndef __TEST_HPP__
-    #define __TEST_HPP__
-    #define __VERBOSE_TEST_IO__
-    #include <type_traits>
+#define __VERBOSE_TEST_IO__
+#include <type_traits>
 
 // clang-format off
 #include <gtest/gtest.h>
@@ -15,18 +13,18 @@
 // so we move the gtest include before the namespacing of <huffman.h> included symbols
 
 namespace huffman {
-    #define restrict
+#define restrict
 
     extern "C" {
-    #include <bintree.h>
-    #include <bitops.h>
-    #include <compression.h>
-    #include <fileio.h>
-    #include <pqueue.h>
-    #include <utilities.h>
+#include <bintree.h>
+#include <bitops.h>
+#include <compression.h>
+#include <fileio.h>
+#include <pqueue.h>
+#include <utilities.h>
     }
 
-    #undef restrict
+#undef restrict
 
 } // namespace huffman
 
@@ -60,5 +58,3 @@ template<typename _TyNode>
     return (reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(child))
         ->operator>(*reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(parent));
 }
-
-#endif // !__TEST_HPP__

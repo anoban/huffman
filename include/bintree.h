@@ -50,7 +50,7 @@ static inline bool __cdecl bntree_insert(
     if (!parent) {
         // but we cannot change the root if the root node already has a non NULL data pointer as this would violate the tree structure
         if (!tree->node_count) {
-            fwprintf_s(stderr, L"");
+            fputws(L"Error:: " __FUNCTIONW__ " does not allow insertions into a non NULL root nodes!\n", stderr);
             return false;
         }
         target = &tree->root; // register root node as the target node
@@ -58,8 +58,8 @@ static inline bool __cdecl bntree_insert(
         switch (where) {
             case LEFT :
                 {
-                    if (parent->left) { // if the left pointer of the destination node is not NULL we cannot modify it
-                        fwprintf(stderr, L"");
+                    if (parent->left) { // if the left pointer of the destination node is not NULL we cannot update it
+                        fputws(L"Error:: " __FUNCTIONW__ " does not allow insertions into a non NULL child nodes!\n", stderr);
                         return false;
                     }
                     target = &parent->left; // register the target node is the left child of the destination node
@@ -67,8 +67,8 @@ static inline bool __cdecl bntree_insert(
                 }
             case RIGHT :
                 {
-                    if (parent->right) { // if the left pointer of the destination node is not NULL we cannot modify it
-                        fwprintf(stderr, L"");
+                    if (parent->right) { // if the left pointer of the destination node is not NULL we cannot update it
+                        fputws(L"Error:: " __FUNCTIONW__ " does not allow insertions into a non NULL child nodes!\n", stderr);
                         return false;
                     }
                     target = &parent->right; // register the target node is the right child of the destination node
@@ -78,8 +78,8 @@ static inline bool __cdecl bntree_insert(
         }
     }
 
-    if (!(temp = (btnode*) malloc(sizeof(btnode)))) { // if the allocation fails
-        fwprintf_s(stderr, L"");
+    if (!(temp = (btnode*) malloc(sizeof(btnode)))) { // NOLINT(bugprone-assignment-in-if-condition) if the allocation fails
+        fputws(L"Error:: malloc failed inside " __FUNCTIONW__ "\n", stderr);
         return false;
     }
 
@@ -87,17 +87,19 @@ static inline bool __cdecl bntree_insert(
     temp->left = temp->right = NULL; // make the left and right arms of new node NULL
     *target                  = temp; // hook the new node into the binary tree
     tree->node_count++;              // account for the annexure
+
     return true;
 }
 
-static inline bool __cdecl bntree_remove(
-    _Inout_ bntree* const restrict tree, _Inout_ btnode* const restrict parent, _In_ const NODE_ARM where
+static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
+    _Inout_ bntree* const restrict tree,
+    _Inout_ btnode* const restrict parent,
+    _In_ const NODE_ARM where
 ) {
     assert(tree);
 
-    // handle the posibility that the tree is empty
-    if (!tree->node_count) {
-        fwprintf_s(stderr, L"");
+    if (!tree->node_count) { // handle the posibility that the tree is empty
+        fputws(L"Error:: " __FUNCTIONW__ " cannot remove nodes from an empty binary tree\n", stderr);
         return false;
     }
 

@@ -3,3 +3,5 @@
 #include <memory>
 
 #include <test.hpp>
+
+struct BinaryTreeFixture : public testing::Test { };
