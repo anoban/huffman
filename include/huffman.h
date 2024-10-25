@@ -2,7 +2,7 @@
 #include <utilities.h>
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-// the problem with the data structures in the headers inside ./include/ is that they liberally rely on type erasure for the sake of supporting arbitraty user defined types
+// the problem with the data structures in the other headers inside ./include/ is that they liberally rely on type erasure for the sake of supporting arbitraty user defined types
 // we lose a lot of type safety and performance because this requires storing type erased heap allocated pointers instead of directly storing the values
 // as this would make these data structures tightly coupled to a single type, hence losing their "library" status
 
@@ -11,31 +11,66 @@
 // type erasure, gratuitous heap allocations and maximize stack usage
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 
+#pragma region __STRUCT_DEFINITIONS
+
+typedef union _symbol {
+        uint8_t byte; // only applicable to leaf nodes
+        // could use a smaller type for marker but the member freq inside hnode_t will warrant padding, so why not use that here
+        size_t  marker; // a value (UINT32_MAX) registering a non-leaf node
+} symbol_t;
+
+static_assert(sizeof(symbol_t) == 8);
+static_assert(!offsetof(symbol_t, byte));
+static_assert(!offsetof(symbol_t, marker));
+
+typedef struct _hnode {  // represents a Huffman node.
+        symbol_t symbol; // byte for a leaf node, UINT32_MAX for internodes
+        size_t   freq;
+} hnode_t;
+
+static_assert(sizeof(hnode_t) == 16);
+static_assert(!offsetof(hnode_t, symbol));
+static_assert(offsetof(hnode_t, freq) == 8);
+
+typedef struct _hcode { // represents a Huffman code
+        bool     is_used;
+        uint8_t  length;
+        uint16_t code;
+} hcode_t; // no padding yeehaw :)
+
+static_assert(sizeof(hcode_t) == 4);
+static_assert(!offsetof(hcode_t, is_used));
+static_assert(offsetof(hcode_t, length) == 1);
+static_assert(offsetof(hcode_t, code) == 2);
+
+#pragma endregion
+
 #pragma region __TAILOR_MADE_PQUEUE
 
-#define DEFAULT_PQUEUE_CAPACITY 1024LLU
+#define DEFAULT_PQUEUE_CAPACITY       (1024LLU)
+// we are storing the actual structs instead of pointers pointers here
+#define DEFAULT_PQUEUE_CAPACITY_BYTES (DEFAULT_PQUEUE_CAPACITY * sizeof(hnode_t))
 
 typedef struct _pqueue {
         uint32_t count;
         uint32_t capacity;
-        bool (*predptr)(_In_ const void* const, _In_ const void* const);
-        void** tree;
+        hnode_t* tree;
 } pqueue;
 
-static_assert(sizeof(pqueue) == 24);
+static_assert(sizeof(pqueue) == 16);
 static_assert(offsetof(pqueue, count) == 0);
 static_assert(offsetof(pqueue, capacity) == 4);
-static_assert(offsetof(pqueue, predptr) == 8);
-static_assert(offsetof(pqueue, tree) == 16);
+static_assert(offsetof(pqueue, tree) == 8);
 
-static inline bool __cdecl pqueue_init(
-    _Inout_ pqueue* const prqueue, _In_ bool (*const predicate)(_In_ const void* const child, _In_ const void* const parent)
-) {
+[[nodiscard]] static inline bool __stdcall compare_hnode(_In_ const hnode_t child, _In_ const hnode_t parent) {
+    // TODO
+}
+
+[[nodiscard]] static inline bool __cdecl pqueue_init(_Inout_ pqueue* const restrict prqueue) {
     assert(prqueue);
-    assert(predicate);
 
     // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
-    prqueue->tree = (void**) malloc(DEFAULT_PQUEUE_CAPACITY_BYTES);
+    prqueue->tree = (hnode_t*) malloc(DEFAULT_PQUEUE_CAPACITY_BYTES);
 
     if (!prqueue->tree) {
         fputws(L"Error:: malloc failed inside " __FUNCTIONW__ "\n", stderr);
@@ -44,27 +79,25 @@ static inline bool __cdecl pqueue_init(
 
     prqueue->count    = 0;
     prqueue->capacity = DEFAULT_PQUEUE_CAPACITY;
-    prqueue->predptr  = predicate;
     memset(prqueue->tree, 0U, DEFAULT_PQUEUE_CAPACITY_BYTES); // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
     return true;
 }
 
-static inline void __cdecl pqueue_clean(_Inout_ pqueue* const prqueue) {
-    for (size_t i = 0; i < prqueue->count; ++i) free(prqueue->tree[i]);
+static inline void __cdecl pqueue_clean(_Inout_ pqueue* const restrict prqueue) {
+    assert(prqueue);
     free(prqueue->tree); // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
     memset(prqueue, 0U, sizeof(pqueue));
 }
 
-static inline bool __cdecl pqueue_push(_Inout_ pqueue* const prqueue, _In_ void* const data) {
+[[nodiscard]] static inline bool __cdecl pqueue_push(_Inout_ pqueue* const prqueue, _In_ const hnode_t data) {
     assert(prqueue);
-    assert(data);
 
-    void * _temp_node = NULL, **_temp_tree = NULL; // NOLINT(readability-isolate-declaration)
-    size_t _childpos = 0, _parentpos = 0;          // NOLINT(readability-isolate-declaration)
+    hnode_t _temp_node = { .symbol.marker = 0, .freq = 0 }, *_temp_tree = NULL; // NOLINT(readability-isolate-declaration)
+    size_t  _childpos = 0, _parentpos = 0;                                      // NOLINT(readability-isolate-declaration)
 
     if (prqueue->count + 1 > prqueue->capacity) {
         // NOLINTBEGIN(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
-        if (!(_temp_tree = (void**) realloc(prqueue->tree, (prqueue->capacity * sizeof(uintptr_t)) + DEFAULT_PQUEUE_CAPACITY_BYTES))) {
+        if (!(_temp_tree = (hnode_t*) realloc(prqueue->tree, (prqueue->capacity * sizeof(hnode_t)) + DEFAULT_PQUEUE_CAPACITY_BYTES))) {
             // NOLINTEND(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
             fputws(L"Error:: realloc failed inside " __FUNCTIONW__ "\n", stderr);
             return false;
@@ -79,7 +112,7 @@ static inline bool __cdecl pqueue_push(_Inout_ pqueue* const prqueue, _In_ void*
     _childpos                         = prqueue->count - 1;
     _parentpos                        = parent_position(_childpos);
 
-    while ((_childpos > 0) && (*prqueue->predptr)(prqueue->tree[_childpos], prqueue->tree[_parentpos])) {
+    while ((_childpos > 0) && compare_hnode(prqueue->tree[_childpos], prqueue->tree[_parentpos])) {
         _temp_node                = prqueue->tree[_childpos];
         prqueue->tree[_childpos]  = prqueue->tree[_parentpos];
         prqueue->tree[_parentpos] = _temp_node;
@@ -91,12 +124,12 @@ static inline bool __cdecl pqueue_push(_Inout_ pqueue* const prqueue, _In_ void*
     return true;
 }
 
-static inline bool __cdecl pqueue_pop(_Inout_ pqueue* const prqueue, _Inout_ void** const popped) {
+[[nodiscard]] static inline bool __cdecl pqueue_pop(_Inout_ pqueue* const restrict prqueue, _Inout_ hnode_t* const restrict popped) {
     assert(prqueue);
     assert(popped);
 
     if (!prqueue->count) {
-        *popped = NULL;
+        *popped = (hnode_t) { .symbol.marker = 0, .freq = 0 };
         return false;
     }
 
@@ -107,23 +140,23 @@ static inline bool __cdecl pqueue_pop(_Inout_ pqueue* const prqueue, _Inout_ voi
         return true;
     }
 
-    size_t _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0;
-    void*  _temp                      = NULL;
+    size_t  _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
+    hnode_t _temp                     = { .symbol.marker = 0, .freq = 0 };
 
     *popped                           = prqueue->tree[0];
 
     prqueue->tree[0]                  = prqueue->tree[prqueue->count - 1];
-    prqueue->tree[prqueue->count - 1] = NULL;
+    prqueue->tree[prqueue->count - 1] = (hnode_t) { .symbol.marker = 0, .freq = 0 };
     prqueue->count--;
 
     while (true) {
         _leftchildpos  = lchild_position(_parentpos);
         _rightchildpos = rchild_position(_parentpos);
 
-        _pos = (_leftchildpos <= (prqueue->count - 1)) && (*prqueue->predptr)(prqueue->tree[_leftchildpos], prqueue->tree[_parentpos]) ?
-                   _leftchildpos :
-                   _parentpos;
-        if ((_rightchildpos <= (prqueue->count - 1)) && (*prqueue->predptr)(prqueue->tree[_rightchildpos], prqueue->tree[_pos]))
+        _pos           = (_leftchildpos <= (prqueue->count - 1)) && compare_hnode(prqueue->tree[_leftchildpos], prqueue->tree[_parentpos]) ?
+                             _leftchildpos :
+                             _parentpos;
+        if ((_rightchildpos <= (prqueue->count - 1)) && compare_hnode(prqueue->tree[_rightchildpos], prqueue->tree[_pos]))
             _pos = _rightchildpos;
         if (_pos == _parentpos) break;
 
@@ -137,7 +170,9 @@ static inline bool __cdecl pqueue_pop(_Inout_ pqueue* const prqueue, _Inout_ voi
     return true;
 }
 
-static inline void* __stdcall pqueue_peek(_In_ const pqueue* const prqueue) { return prqueue->tree ? prqueue->tree[0] : NULL; }
+static inline hnode_t __stdcall pqueue_peek(_In_ const pqueue* const restrict prqueue) {
+    return prqueue->tree ? prqueue->tree[0] : (hnode_t) { .symbol.marker = 0, .freq = 0 };
+}
 
 #pragma endregion
 
@@ -282,36 +317,6 @@ static inline bntree __cdecl bntree_merge(
 
 #pragma endregion
 
-typedef union _symbol {
-        uint8_t byte; // only applicable to leaf nodes
-        // could use a smaller type for marker but the member freq inside hnode_t will warrant padding, so why not use that here
-        size_t  marker; // a value (UINT32_MAX) registering a non-leaf node
-} symbol_t;
-
-static_assert(sizeof(symbol_t) == 8);
-static_assert(!offsetof(symbol_t, byte));
-static_assert(!offsetof(symbol_t, marker));
-
-typedef struct _hnode {  // represents a Huffman node.
-        symbol_t symbol; // byte for a leaf node, UINT32_MAX for internodes
-        size_t   freq;
-} hnode_t;
-
-static_assert(sizeof(hnode_t) == 16);
-static_assert(!offsetof(hnode_t, symbol));
-static_assert(offsetof(hnode_t, freq) == 8);
-
-typedef struct _hcode { // represents a Huffman code
-        bool     is_used;
-        uint8_t  length;
-        uint16_t code;
-} hcode_t; // no padding yeehaw :)
-
-static_assert(sizeof(hcode_t) == 4);
-static_assert(!offsetof(hcode_t, is_used));
-static_assert(offsetof(hcode_t, length) == 1);
-static_assert(offsetof(hcode_t, code) == 2);
-
 // the goal of Huffman encoding is to represent symbols that occur more frequently with fewer bits than the symbols that occur less
 // frequently - a concept known as minimum entropy coding
 // the "symbol" here can be anything but is usually a byte!
@@ -330,17 +335,17 @@ static_assert(offsetof(hcode_t, code) == 2);
 // = 14.2646625064904
 // again, in theory all the 'C' characters in the above string can be represented by a total of 14.2646625064904 bits
 
-#define BYTEFREQARRAY_SIZE 256LLU
+#define BYTEFREQ_ARRAY_SIZE 256LLU
 
 static __forceinline bool __cdecl EnumerateBytes(
     _In_ const uint8_t* const restrict inbuffer,
-    _Inout_count_(BYTEFREQARRAY_SIZE) size_t* const restrict frequencies, // could be a stack based or heap allocated array
+    _Inout_count_(BYTEFREQ_ARRAY_SIZE) size_t* const restrict frequencies, // could be a stack based or heap allocated array
     _In_ const size_t size
 ) {
     assert(inbuffer);
     assert(size);
     // assumes `frequencies` to be a zeroed out array
-    memset(frequencies, 0U, sizeof(size_t) * (BYTEFREQARRAY_SIZE));
+    memset(frequencies, 0U, sizeof(size_t) * (BYTEFREQ_ARRAY_SIZE));
     for (size_t i = 0; i < size; ++i) frequencies[inbuffer[i]]++;
 }
 
