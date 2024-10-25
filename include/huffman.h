@@ -48,7 +48,7 @@ static_assert(offsetof(hcode_t, code) == 2);
 #pragma region __TAILOR_MADE_PQUEUE
 
 #define DEFAULT_PQUEUE_CAPACITY       (1024LLU)
-// we are storing the actual structs instead of pointers pointers here
+// we are storing the actual structs instead of pointers here
 #define DEFAULT_PQUEUE_CAPACITY_BYTES (DEFAULT_PQUEUE_CAPACITY * sizeof(hnode_t))
 
 typedef struct _pqueue {
@@ -70,7 +70,7 @@ static_assert(offsetof(pqueue, tree) == 8);
     assert(prqueue);
 
     // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
-    prqueue->tree = (hnode_t*) malloc(DEFAULT_PQUEUE_CAPACITY_BYTES);
+    prqueue->tree = (hnode_t*) malloc(DEFAULT_PQUEUE_CAPACITY_BYTES); // why don't we convert this to a static stack based array
 
     if (!prqueue->tree) {
         fputws(L"Error:: malloc failed inside " __FUNCTIONW__ "\n", stderr);
@@ -89,7 +89,7 @@ static inline void __cdecl pqueue_clean(_Inout_ pqueue* const restrict prqueue) 
     memset(prqueue, 0U, sizeof(pqueue));
 }
 
-[[nodiscard]] static inline bool __cdecl pqueue_push(_Inout_ pqueue* const prqueue, _In_ const hnode_t data) {
+[[nodiscard]] static inline bool __cdecl pqueue_push(_Inout_ pqueue* const restrict prqueue, _In_ const hnode_t data) {
     assert(prqueue);
 
     hnode_t _temp_node = { .symbol.marker = 0, .freq = 0 }, *_temp_tree = NULL; // NOLINT(readability-isolate-declaration)
@@ -181,10 +181,10 @@ static inline hnode_t __stdcall pqueue_peek(_In_ const pqueue* const restrict pr
 typedef struct _btnode {
         struct _btnode* left;
         struct _btnode* right;
-        void*           data;
+        hnode_t         data;
 } btnode;
 
-static_assert(sizeof(btnode) == 24);
+static_assert(sizeof(btnode) == 16 + sizeof(hnode_t));
 static_assert(offsetof(btnode, left) == 0);
 static_assert(offsetof(btnode, right) == 8);
 static_assert(offsetof(btnode, data) == 16);
