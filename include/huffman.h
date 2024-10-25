@@ -47,10 +47,6 @@ static_assert(offsetof(hcode_t, code) == 2);
 
 #pragma region __TAILOR_MADE_PQUEUE
 
-#define DEFAULT_PQUEUE_CAPACITY       (1024LLU)
-// we are storing the actual structs instead of pointers here
-#define DEFAULT_PQUEUE_CAPACITY_BYTES (DEFAULT_PQUEUE_CAPACITY * sizeof(hnode_t))
-
 typedef struct _pqueue {
         uint32_t count;
         uint32_t capacity;
@@ -62,6 +58,11 @@ static_assert(offsetof(pqueue, count) == 0);
 static_assert(offsetof(pqueue, capacity) == 4);
 static_assert(offsetof(pqueue, tree) == 8);
 
+#define DEFAULT_PQUEUE_CAPACITY       (3LLU << 10)
+// we are storing the actual structs instead of pointers here
+#define DEFAULT_PQUEUE_CAPACITY_BYTES (DEFAULT_PQUEUE_CAPACITY * sizeof(hnode_t)) // around 48 kilobytes
+static hnode_t __PQUEUE_GLOBAL_BUFFER[DEFAULT_PQUEUE_CAPACITY] = { 0 };
+
 [[nodiscard]] static inline bool __stdcall compare_hnode(_In_ const hnode_t child, _In_ const hnode_t parent) {
     // TODO
 }
@@ -69,42 +70,28 @@ static_assert(offsetof(pqueue, tree) == 8);
 [[nodiscard]] static inline bool __cdecl pqueue_init(_Inout_ pqueue* const restrict prqueue) {
     assert(prqueue);
 
-    // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
-    prqueue->tree = (hnode_t*) malloc(DEFAULT_PQUEUE_CAPACITY_BYTES); // why don't we convert this to a static stack based array
-
-    if (!prqueue->tree) {
-        fputws(L"Error:: malloc failed inside " __FUNCTIONW__ "\n", stderr);
-        return false;
-    }
-
+    prqueue->tree     = __PQUEUE_GLOBAL_BUFFER;
     prqueue->count    = 0;
     prqueue->capacity = DEFAULT_PQUEUE_CAPACITY;
-    memset(prqueue->tree, 0U, DEFAULT_PQUEUE_CAPACITY_BYTES); // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
+    memset(prqueue->tree, 0U, sizeof(__PQUEUE_GLOBAL_BUFFER));
     return true;
 }
 
 static inline void __cdecl pqueue_clean(_Inout_ pqueue* const restrict prqueue) {
     assert(prqueue);
-    free(prqueue->tree); // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
+    memset(prqueue->tree, 0U, sizeof(__PQUEUE_GLOBAL_BUFFER)); // zero out the global buffer
     memset(prqueue, 0U, sizeof(pqueue));
 }
 
 [[nodiscard]] static inline bool __cdecl pqueue_push(_Inout_ pqueue* const restrict prqueue, _In_ const hnode_t data) {
     assert(prqueue);
 
-    hnode_t _temp_node = { .symbol.marker = 0, .freq = 0 }, *_temp_tree = NULL; // NOLINT(readability-isolate-declaration)
-    size_t  _childpos = 0, _parentpos = 0;                                      // NOLINT(readability-isolate-declaration)
+    hnode_t _temp_node = { .symbol.marker = 0, .freq = 0 }; // NOLINT(readability-isolate-declaration)
+    size_t  _childpos = 0, _parentpos = 0;                  // NOLINT(readability-isolate-declaration)
 
     if (prqueue->count + 1 > prqueue->capacity) {
-        // NOLINTBEGIN(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
-        if (!(_temp_tree = (hnode_t*) realloc(prqueue->tree, (prqueue->capacity * sizeof(hnode_t)) + DEFAULT_PQUEUE_CAPACITY_BYTES))) {
-            // NOLINTEND(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
-            fputws(L"Error:: realloc failed inside " __FUNCTIONW__ "\n", stderr);
-            return false;
-        }
-
-        prqueue->tree      = _temp_tree;
-        prqueue->capacity += DEFAULT_PQUEUE_CAPACITY;
+        fputws(L"Error:: " __FUNCTIONW__ " failed because there's no more space in the static pqueue buffer\n", stderr);
+        return false; // exit(A_SPECIFIC_ERROR_CODE) ????
     }
 
     prqueue->count++;
