@@ -57,7 +57,7 @@
     <ClCompile Include="bintree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="huffman.cpp">
+    <ClCompile Include="custom.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\huffman.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\bitops.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -31,6 +28,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\bintree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\custom.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

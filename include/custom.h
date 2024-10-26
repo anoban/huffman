@@ -1,4 +1,6 @@
 #pragma once
+#include <fileio.h>
+#include <stdint.h>
 #include <utilities.h>
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -43,209 +45,183 @@ static_assert(!offsetof(hcode_t, is_used));
 static_assert(offsetof(hcode_t, length) == 1);
 static_assert(offsetof(hcode_t, code) == 2);
 
+typedef struct _btnode {
+        struct _btnode* left;
+        struct _btnode* right;
+        hnode_t         data;
+} btnode_t;
+
+static_assert(sizeof(btnode_t) == 16 + sizeof(hnode_t));
+static_assert(offsetof(btnode_t, left) == 0);
+static_assert(offsetof(btnode_t, right) == 8);
+static_assert(offsetof(btnode_t, data) == 16);
+
+typedef struct _bintree {
+        size_t    node_count;
+        btnode_t* root;
+} bntree_t;
+
+static_assert(sizeof(bntree_t) == 16);
+static_assert(offsetof(bntree_t, node_count) == 0);
+static_assert(offsetof(bntree_t, root) == 8);
+
+typedef struct _pqueue {
+        uint32_t  count;
+        uint32_t  capacity;
+        bntree_t* tree;
+} pqueue_t;
+
+static_assert(sizeof(pqueue_t) == 16);
+static_assert(offsetof(pqueue_t, count) == 0);
+static_assert(offsetof(pqueue_t, capacity) == 4);
+static_assert(offsetof(pqueue_t, tree) == 8);
+
 #pragma endregion
 
 #pragma region __TAILOR_MADE_PQUEUE
 
-typedef struct _pqueue {
-        uint32_t count;
-        uint32_t capacity;
-        hnode_t* tree;
-} pqueue;
+#define _PQUEUE_FIXEDCAPACITY       (2LLU << 10)
+#define _PQUEUE_FIXEDCAPACITY_BYTES (_PQUEUE_FIXEDCAPACITY * sizeof(hnode_t))
 
-static_assert(sizeof(pqueue) == 16);
-static_assert(offsetof(pqueue, count) == 0);
-static_assert(offsetof(pqueue, capacity) == 4);
-static_assert(offsetof(pqueue, tree) == 8);
+static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
 
-#define DEFAULT_PQUEUE_CAPACITY       (3LLU << 10)
-// we are storing the actual structs instead of pointers here
-#define DEFAULT_PQUEUE_CAPACITY_BYTES (DEFAULT_PQUEUE_CAPACITY * sizeof(hnode_t)) // around 48 kilobytes
-static hnode_t __PQUEUE_GLOBAL_BUFFER[DEFAULT_PQUEUE_CAPACITY] = { 0 };
+[[nodiscard]] static inline int __stdcall compare_hnode(_In_ const bntree_t child, _In_ const bntree_t parent) { }
 
-[[nodiscard]] static inline bool __stdcall compare_hnode(_In_ const hnode_t child, _In_ const hnode_t parent) {
-    // TODO
-}
-
-[[nodiscard]] static inline bool __cdecl pqueue_init(_Inout_ pqueue* const restrict prqueue) {
+[[nodiscard]] static inline bool __cdecl pqueue_init(
+    _Inout_ pqueue_t* const restrict prqueue, _In_count_(size) bntree_t* const restrict buffer, _In_ const size_t size
+) {
     assert(prqueue);
-
-    prqueue->tree     = __PQUEUE_GLOBAL_BUFFER;
+    prqueue->tree     = buffer;
     prqueue->count    = 0;
-    prqueue->capacity = DEFAULT_PQUEUE_CAPACITY;
-    memset(prqueue->tree, 0U, sizeof(__PQUEUE_GLOBAL_BUFFER));
+    prqueue->capacity = size;
+    memset(prqueue->tree, 0U, sizeof(bntree_t) * size);
     return true;
 }
 
-static inline void __cdecl pqueue_clean(_Inout_ pqueue* const restrict prqueue) {
+static inline void __cdecl pqueue_clean(_Inout_ pqueue_t* const restrict prqueue) {
     assert(prqueue);
-    memset(prqueue->tree, 0U, sizeof(__PQUEUE_GLOBAL_BUFFER)); // zero out the global buffer
-    memset(prqueue, 0U, sizeof(pqueue));
+    memset(prqueue->tree, 0U, sizeof(bntree_t) * prqueue->capacity);
+    memset(prqueue, 0U, sizeof(pqueue_t));
 }
 
-[[nodiscard]] static inline bool __cdecl pqueue_push(_Inout_ pqueue* const restrict prqueue, _In_ const hnode_t data) {
+[[nodiscard]] static inline bool __cdecl pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const bntree_t data) {
     assert(prqueue);
-
-    hnode_t _temp_node = { .symbol.marker = 0, .freq = 0 }; // NOLINT(readability-isolate-declaration)
-    size_t  _childpos = 0, _parentpos = 0;                  // NOLINT(readability-isolate-declaration)
-
+    bntree_t _temp     = { .node_count = 0, .root = NULL }; // NOLINT(readability-isolate-declaration)
+    size_t   _childpos = 0, _parentpos = 0;                 // NOLINT(readability-isolate-declaration)
     if (prqueue->count + 1 > prqueue->capacity) {
-        fputws(L"Error:: " __FUNCTIONW__ " failed because there's no more space in the static pqueue buffer\n", stderr);
+        fputws(L"Error:: " __FUNCTIONW__ " failed because there's no more space in the pqueue_t buffer\n", stderr);
         return false; // exit(A_SPECIFIC_ERROR_CODE) ????
     }
-
     prqueue->count++;
     prqueue->tree[prqueue->count - 1] = data;
     _childpos                         = prqueue->count - 1;
     _parentpos                        = parent_position(_childpos);
-
     while ((_childpos > 0) && compare_hnode(prqueue->tree[_childpos], prqueue->tree[_parentpos])) {
-        _temp_node                = prqueue->tree[_childpos];
+        _temp                     = prqueue->tree[_childpos];
         prqueue->tree[_childpos]  = prqueue->tree[_parentpos];
-        prqueue->tree[_parentpos] = _temp_node;
+        prqueue->tree[_parentpos] = _temp;
 
         _childpos                 = _parentpos;
         _parentpos                = parent_position(_childpos);
     }
-
     return true;
 }
 
-[[nodiscard]] static inline bool __cdecl pqueue_pop(_Inout_ pqueue* const restrict prqueue, _Inout_ hnode_t* const restrict popped) {
+[[nodiscard]] static inline bool __cdecl pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, _Inout_ bntree_t* const restrict popped) {
     assert(prqueue);
     assert(popped);
+    const bntree_t _placeholder = { .node_count = 0, .root = NULL };
 
     if (!prqueue->count) {
-        *popped = (hnode_t) { .symbol.marker = 0, .freq = 0 };
+        *popped = _placeholder;
         return false;
     }
-
     if (prqueue->count == 1) {
         *popped        = prqueue->tree[0];
         prqueue->count = 0;
         pqueue_clean(prqueue);
         return true;
     }
-
-    size_t  _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
-    hnode_t _temp                     = { .symbol.marker = 0, .freq = 0 };
-
+    size_t   _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
+    bntree_t _temp                    = { .node_count = 0, .root = NULL };
     *popped                           = prqueue->tree[0];
-
     prqueue->tree[0]                  = prqueue->tree[prqueue->count - 1];
-    prqueue->tree[prqueue->count - 1] = (hnode_t) { .symbol.marker = 0, .freq = 0 };
+    prqueue->tree[prqueue->count - 1] = _placeholder;
     prqueue->count--;
-
     while (true) {
         _leftchildpos  = lchild_position(_parentpos);
         _rightchildpos = rchild_position(_parentpos);
-
         _pos           = (_leftchildpos <= (prqueue->count - 1)) && compare_hnode(prqueue->tree[_leftchildpos], prqueue->tree[_parentpos]) ?
                              _leftchildpos :
                              _parentpos;
         if ((_rightchildpos <= (prqueue->count - 1)) && compare_hnode(prqueue->tree[_rightchildpos], prqueue->tree[_pos]))
             _pos = _rightchildpos;
         if (_pos == _parentpos) break;
-
         _temp                     = prqueue->tree[_parentpos];
         prqueue->tree[_parentpos] = prqueue->tree[_pos];
         prqueue->tree[_pos]       = _temp;
-
         _parentpos                = _pos;
     }
-
     return true;
 }
 
-static inline hnode_t __stdcall pqueue_peek(_In_ const pqueue* const restrict prqueue) {
-    return prqueue->tree ? prqueue->tree[0] : (hnode_t) { .symbol.marker = 0, .freq = 0 };
+[[nodiscard]] static inline bntree_t __stdcall pqueue_peek(_In_ const pqueue_t* const restrict prqueue) {
+    assert(prqueue);
+    const bntree_t _placeholder = { .node_count = 0, .root = NULL };
+    return prqueue->tree ? prqueue->tree[0] : _placeholder;
 }
 
 #pragma endregion
 
 #pragma region __TAILOR_MADE_BINARYTREE
 
-typedef struct _btnode {
-        struct _btnode* left;
-        struct _btnode* right;
-        hnode_t         data;
-} btnode;
-
-static_assert(sizeof(btnode) == 16 + sizeof(hnode_t));
-static_assert(offsetof(btnode, left) == 0);
-static_assert(offsetof(btnode, right) == 8);
-static_assert(offsetof(btnode, data) == 16);
-
-typedef struct _bintree {
-        size_t  node_count;
-        btnode* root;
-} bntree;
-
-static_assert(sizeof(bntree) == 16);
-static_assert(offsetof(bntree, node_count) == 0);
-static_assert(offsetof(bntree, root) == 8);
-
 typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xFF << 0x03 } child_kind; // arms of a node
 
 static inline bool __cdecl bntree_insert(
-    _Inout_ bntree* const restrict tree,
-    _Inout_opt_ btnode* const restrict parent,
-    _In_ const child_kind which,
-    _In_ void* const restrict data
+    _Inout_ bntree_t* const restrict tree, _Inout_opt_ btnode_t* const restrict parent, _In_ const child_kind which, _In_ const hnode_t data
 ) {
     assert(tree);
-    assert(data);
-
-    btnode** restrict target = NULL;
-    btnode* restrict temp    = NULL;
-
+    btnode_t** restrict target = NULL;
+    btnode_t* restrict temp    = NULL;
     if (!parent) {
         if (tree->node_count) {
             fputws(L"Error:: " __FUNCTIONW__ " does not allow insertions into a non NULL root nodes!\n", stderr);
             return false;
         }
         target = &tree->root;
-
     } else {
         switch (which) {
             case LEFT :
-                {
-                    if (parent->left) {
-                        fputws(L"Error:: " __FUNCTIONW__ " does not allow insertions into a non NULL child nodes!\n", stderr);
-                        return false;
-                    }
-                    target = &parent->left;
-                    break;
+                if (parent->left) {
+                    fputws(L"Error:: " __FUNCTIONW__ " does not allow insertions into a non NULL child nodes!\n", stderr);
+                    return false;
                 }
+                target = &parent->left;
+                break;
             case RIGHT :
-                {
-                    if (parent->right) {
-                        fputws(L"Error:: " __FUNCTIONW__ " does not allow insertions into a non NULL child nodes!\n", stderr);
-                        return false;
-                    }
-                    target = &parent->right;
-                    break;
+                if (parent->right) {
+                    fputws(L"Error:: " __FUNCTIONW__ " does not allow insertions into a non NULL child nodes!\n", stderr);
+                    return false;
                 }
+                target = &parent->right;
+                break;
             default : break;
         }
     }
-
-    if (!(temp = (btnode*) malloc(sizeof(btnode)))) { // NOLINT(bugprone-assignment-in-if-condition) if the allocation fails
+    if (!(temp = (btnode_t*) malloc(sizeof(btnode_t)))) { // NOLINT(bugprone-assignment-in-if-condition) if the allocation fails
         fputws(L"Error:: malloc failed inside " __FUNCTIONW__ "\n", stderr);
         return false;
     }
-
     temp->data = data;
     temp->left = temp->right = NULL;
     *target                  = temp;
     tree->node_count++;
-
     return true;
 }
 
 static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
-    _Inout_ bntree* const restrict tree,
-    _Inout_opt_ btnode* const restrict parent,
+    _Inout_ bntree_t* const restrict tree,
+    _Inout_opt_ btnode_t* const restrict parent,
     _In_ const child_kind which
 ) {
     assert(tree);
@@ -255,7 +231,7 @@ static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
         return false;
     }
 
-    btnode** restrict target = NULL;
+    btnode_t** restrict target = NULL;
 
     if (!parent)
         target = &tree->root;
@@ -279,14 +255,13 @@ static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
     return true;
 }
 
-static inline bntree __cdecl bntree_merge(
-    _In_ bntree* const restrict left, _In_ bntree* const restrict right, _In_ void* const restrict data
+static inline bntree_t __cdecl bntree_merge(
+    _In_ bntree_t* const restrict left, _In_ bntree_t* const restrict right, _In_ const hnode_t data
 ) {
     assert(left);
     assert(right);
-    assert(data);
 
-    bntree merged = { .node_count = 0, .root = NULL };
+    bntree_t merged = { .node_count = 0, .root = NULL };
     if (!bntree_insert(&merged, NULL, ROOT, data)) {
         fputws(L"Error:: ", stderr);
         return merged;
@@ -322,27 +297,29 @@ static inline bntree __cdecl bntree_merge(
 // = 14.2646625064904
 // again, in theory all the 'C' characters in the above string can be represented by a total of 14.2646625064904 bits
 
-#define BYTEFREQ_ARRAY_SIZE 256LLU
+#define _BYTEFREQ_LEN_FIXED 256LLU
 
-static __forceinline bool __cdecl EnumerateBytes(
+// the first step in Huffman encoding is the determination of symbol frequencies
+static __forceinline void __cdecl calculate_byte_frequencies(
     _In_ const uint8_t* const restrict inbuffer,
-    _Inout_count_(BYTEFREQ_ARRAY_SIZE) size_t* const restrict frequencies, // could be a stack based or heap allocated array
-    _In_ const size_t size
+    _In_ const size_t size,
+    _Inout_count_(_BYTEFREQ_LEN_FIXED) size_t* const restrict frequencies // could be a stack based or heap allocated array
 ) {
     assert(inbuffer);
     assert(size);
-    // assumes `frequencies` to be a zeroed out array
-    memset(frequencies, 0U, sizeof(size_t) * (BYTEFREQ_ARRAY_SIZE));
+    memset(frequencies, 0U, sizeof(size_t) * (_BYTEFREQ_LEN_FIXED));
     for (size_t i = 0; i < size; ++i) frequencies[inbuffer[i]]++;
 }
 
-static inline int64_t __cdecl Compress(
+static inline bntree_t __cdecl build_huffman_tree() { }
+
+static inline int64_t __cdecl compress(
     _In_ const uint8_t* const restrict inbuffer, _Inout_ uint8_t* const restrict outbuffer, _In_ const size_t size
 ) {
     //
 }
 
-static inline int64_t __cdecl Decompress(
+static inline int64_t __cdecl decompress(
     _In_ const uint8_t* const restrict inbuffer, _Inout_ uint8_t* const restrict outbuffer, _In_ const size_t size
 ) {
     //
