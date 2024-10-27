@@ -91,7 +91,7 @@ static inline bool __cdecl predicate(const void* const  child, const void* const
 }
 */
 
-static inline bool __cdecl pqueue_init(
+[[nodiscard, msvc::flatten]] static inline bool __cdecl pqueue_init(
     _Inout_ pqueue* const restrict prqueue,
     _In_ bool (*const predicate)(_In_ const void* const restrict child, _In_ const void* const restrict parent)
 ) {
@@ -114,7 +114,7 @@ static inline bool __cdecl pqueue_init(
     return true;
 }
 
-static inline void __cdecl pqueue_clean(_Inout_ pqueue* const restrict prqueue) {
+[[msvc::forceinline]] static inline void __cdecl pqueue_clean(_Inout_ pqueue* const restrict prqueue) {
     for (size_t i = 0; i < prqueue->count; ++i) free(prqueue->tree[i]); // free the heap allocated nodes.
     free(prqueue->tree);                                                // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
     memset(prqueue, 0U, sizeof(pqueue));                                // zero out the struct

@@ -38,7 +38,7 @@
 
 // corecrt_io.h also has open & write functions defined as deprecated POSIX extensions inside an #ifdef __cplusplus block,
 // which leads to name collision when compiled as C++ for testing, hence the conditional prefixing
-[[nodiscard]] static inline uint8_t* __cdecl _TRIPLE_UNDERSCORE_PREFIX(open)(
+[[nodiscard, msvc::flatten]] static inline uint8_t* __cdecl _TRIPLE_UNDERSCORE_PREFIX(open)(
     _In_ const wchar_t* const restrict filepath, _Inout_ unsigned long* const restrict nbytes
 ) {
     assert(filepath);
@@ -80,7 +80,7 @@ PREMATURE_RETURN:
     return NULL;
 }
 
-[[nodiscard]] static inline bool __cdecl _TRIPLE_UNDERSCORE_PREFIX(write)(
+[[nodiscard, msvc::flatten]] static inline bool __cdecl _TRIPLE_UNDERSCORE_PREFIX(write)(
     _In_ const wchar_t* const restrict filepath, _In_reads_(size) const uint8_t* const restrict buffer, _In_ const unsigned long size
 ) {
     assert(filepath);

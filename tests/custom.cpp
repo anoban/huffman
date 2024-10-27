@@ -1,9 +1,7 @@
 #include <random>
 #include <vector>
 
-#include <gtest/gtest.h>
-// testing the data structures and algorithms tailor made for Huffman coding
-
+#include <test.hpp>
 extern "C" {
 #define restrict
 #include <custom.h>

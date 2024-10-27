@@ -9,23 +9,8 @@
 // the problem with namspacing <huffman.h> prior to including <gtest/gtest.h> is that all the symbols from headers directly and
 // indirecty included in <huffman.h> get scoped inside the namespace, won't be available in the global namespace
 // this includes symbols from __STDC__ headers :(
-// but the header guards will prevent these headers from being reincluded in gtest.h, hence we run in to a slew of errors
+// but the header guards copied into our TUs will prevent these headers from being reincluded in gtest.h, hence we run in to a slew of errors
 // so we move the gtest include before the namespacing of <huffman.h> included symbols
-
-namespace huffman {
-#define restrict
-
-    extern "C" {
-#include <bintree.h>
-#include <bitops.h>
-#include <fileio.h>
-#include <pqueue.h>
-#include <utilities.h>
-    }
-
-#undef restrict
-
-} // namespace huffman
 
 static constexpr unsigned long long N_RANDNUMS { 1 << 8 }, N_EXTRANDOMS { 5 << 10 }; // explicit external linkage
 static constexpr float              RAND_LLIMIT { -25.0 }, RAND_ULIMIT { 25.0 };

@@ -36,7 +36,7 @@ static_assert(offsetof(bntree, root) == 8);
 typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xFF << 0x03 } child_kind; // arms of a node
 
 // create a node with the data provided and insert it into the binary tree as the child of the specified parent node
-static inline bool __cdecl bntree_insert(
+[[nodiscard, msvc::flatten]] static inline bool __cdecl bntree_insert(
     _Inout_ bntree* const restrict tree,
     _Inout_opt_ btnode* const restrict parent, // the parent node in the binary tree where we want new node to be linked to
     _In_ const child_kind which,               // which arm of the parent node the data needs to be connected to
@@ -96,7 +96,7 @@ static inline bool __cdecl bntree_insert(
 }
 
 // remove the child of the specified parent node from the given binary tree
-static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
+[[nodiscard, msvc::flatten]] static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
     _Inout_ bntree* const restrict tree,
     _Inout_opt_ btnode* const restrict parent,
     _In_ const child_kind which
@@ -122,8 +122,10 @@ static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
     }
 
     if (*target) { // if the chosen target node is not already NULL, remove its children before removing it
-        bntree_remove(tree, *target, LEFT);
-        bntree_remove(tree, *target, RIGHT);
+        [[msvc::forceinline_calls]] {
+            bntree_remove(tree, *target, LEFT);
+            bntree_remove(tree, *target, RIGHT);
+        }
 
         free(*target);
         *target = NULL;
@@ -136,7 +138,7 @@ static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
 }
 
 // merge two binary trees into one
-static inline bntree __cdecl bntree_merge(
+[[nodiscard, msvc::forceinline]] static inline bntree __cdecl bntree_merge(
     _In_ bntree* const restrict left,  // to be merged
     _In_ bntree* const restrict right, // to be merged
     _In_ void* const restrict data     // data for the new root node
@@ -146,12 +148,12 @@ static inline bntree __cdecl bntree_merge(
     assert(data);
 
     bntree merged = { .node_count = 0, .root = NULL };
-    if (!bntree_insert(
-            &merged,
-            NULL,
-            ROOT, // this is just a placeholder here because since the parent is NULL our target becomes the root node, the control flow won't even reach the switch block
-            data
-        )) { // if the insertion failed
+    [[msvc::forceinline_calls]] if (!bntree_insert(
+                                        &merged,
+                                        NULL,
+                                        ROOT, // this is just a placeholder here because since the parent is NULL our target becomes the root node, the control flow won't even reach the switch block
+                                        data
+                                    )) { // if the insertion failed
         fputws(L"Error:: ", stderr);
         return merged;
     }

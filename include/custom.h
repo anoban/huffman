@@ -85,7 +85,9 @@ static_assert(offsetof(pqueue_t, tree) == 8);
 
 static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
 
-[[nodiscard]] static inline int __stdcall compare_hnode(_In_ const bntree_t child, _In_ const bntree_t parent) { }
+[[nodiscard]] static inline int __stdcall compare_trees(_In_ const bntree_t child, _In_ const bntree_t parent) {
+    if (child.root->data.freq > parent.root->data.freq) return -1;
+}
 
 [[nodiscard]] static inline bool __cdecl pqueue_init(
     _Inout_ pqueue_t* const restrict prqueue, _In_count_(size) bntree_t* const restrict buffer, _In_ const size_t size
@@ -98,13 +100,13 @@ static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
     return true;
 }
 
-static inline void __cdecl pqueue_clean(_Inout_ pqueue_t* const restrict prqueue) {
+[[msvc::forceinline]] static inline void __cdecl pqueue_clean(_Inout_ pqueue_t* const restrict prqueue) {
     assert(prqueue);
     memset(prqueue->tree, 0U, sizeof(bntree_t) * prqueue->capacity);
     memset(prqueue, 0U, sizeof(pqueue_t));
 }
 
-[[nodiscard]] static inline bool __cdecl pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const bntree_t data) {
+[[nodiscard, msvc::flatten]] static inline bool __cdecl pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const bntree_t data) {
     assert(prqueue);
     bntree_t _temp     = { .node_count = 0, .root = NULL }; // NOLINT(readability-isolate-declaration)
     size_t   _childpos = 0, _parentpos = 0;                 // NOLINT(readability-isolate-declaration)
@@ -116,7 +118,7 @@ static inline void __cdecl pqueue_clean(_Inout_ pqueue_t* const restrict prqueue
     prqueue->tree[prqueue->count - 1] = data;
     _childpos                         = prqueue->count - 1;
     _parentpos                        = parent_position(_childpos);
-    while ((_childpos > 0) && compare_hnode(prqueue->tree[_childpos], prqueue->tree[_parentpos])) {
+    while ((_childpos > 0) && compare_trees(prqueue->tree[_childpos], prqueue->tree[_parentpos])) {
         _temp                     = prqueue->tree[_childpos];
         prqueue->tree[_childpos]  = prqueue->tree[_parentpos];
         prqueue->tree[_parentpos] = _temp;
@@ -127,7 +129,8 @@ static inline void __cdecl pqueue_clean(_Inout_ pqueue_t* const restrict prqueue
     return true;
 }
 
-[[nodiscard]] static inline bool __cdecl pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, _Inout_ bntree_t* const restrict popped) {
+[[nodiscard,
+  msvc::flatten]] static inline bool __cdecl pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, _Inout_ bntree_t* const restrict popped) {
     assert(prqueue);
     assert(popped);
     const bntree_t _placeholder = { .node_count = 0, .root = NULL };
@@ -151,10 +154,10 @@ static inline void __cdecl pqueue_clean(_Inout_ pqueue_t* const restrict prqueue
     while (true) {
         _leftchildpos  = lchild_position(_parentpos);
         _rightchildpos = rchild_position(_parentpos);
-        _pos           = (_leftchildpos <= (prqueue->count - 1)) && compare_hnode(prqueue->tree[_leftchildpos], prqueue->tree[_parentpos]) ?
+        _pos           = (_leftchildpos <= (prqueue->count - 1)) && compare_trees(prqueue->tree[_leftchildpos], prqueue->tree[_parentpos]) ?
                              _leftchildpos :
                              _parentpos;
-        if ((_rightchildpos <= (prqueue->count - 1)) && compare_hnode(prqueue->tree[_rightchildpos], prqueue->tree[_pos]))
+        if ((_rightchildpos <= (prqueue->count - 1)) && compare_trees(prqueue->tree[_rightchildpos], prqueue->tree[_pos]))
             _pos = _rightchildpos;
         if (_pos == _parentpos) break;
         _temp                     = prqueue->tree[_parentpos];

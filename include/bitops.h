@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // returns the nth bit in the buffer (which is an array of bytes that is viewed as a contiguous stream of bits)
-[[nodiscard]] static __forceinline bool __stdcall getbit(
+[[nodiscard, msvc::forceinline]] static __forceinline bool __stdcall getbit(
     _In_ const uint8_t* const restrict bitstream, _In_ const size_t offset /* nth bit */
 ) {
     // const uint8_t byte   = bitstream[offset / 8 /* deliberate integer division */]; // first find the byte that contains the asked bit.
@@ -26,7 +26,7 @@
 }
 
 // toggles a select bit on or off.
-static __forceinline void __stdcall setbit(
+[[msvc::forceinline]] static __forceinline void __stdcall setbit(
     _Inout_ uint8_t* const restrict bitstream, _In_ const size_t offset, _In_ const bool flag /* on or off */
 ) {
     // const size_t bit    = offset % 8;
@@ -50,5 +50,6 @@ static __forceinline void __stdcall xorbit( // the result will be false only if 
     assert(inbuff_a);
     assert(inbuff_b);
     assert(outbuff);
-    getbit(inbuff_a, offset) == getbit(inbuff_b, offset) ? setbit(outbuff, offset, false) : setbit(outbuff, offset, true);
+    [[msvc::forceinline_calls]] getbit(inbuff_a, offset) == getbit(inbuff_b, offset) ? setbit(outbuff, offset, false) :
+                                                                                       setbit(outbuff, offset, true);
 }

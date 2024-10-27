@@ -3,20 +3,25 @@
 #include <memory>
 
 #include <test.hpp>
+extern "C" {
+#define restrict
+#include <pqueue.h>
+#undef restrict
+}
 
 extern std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
 extern std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
 extern std::array<unsigned short, N_RANDNUMS>                 randoms;
 extern std::array<unsigned short, N_RANDNUMS>                 sorted_randoms;
 
-namespace pqueue {
+namespace priority_queue {
 
     struct PQueueFixture : public testing::Test {
-            huffman::pqueue prqueue {};
+            ::pqueue prqueue {};
 
-            inline virtual void SetUp() noexcept override { ASSERT_TRUE(huffman::pqueue_init(&prqueue, ::comp)); }
+            inline virtual void SetUp() noexcept override { ASSERT_TRUE(::pqueue_init(&prqueue, ::comp)); }
 
-            inline virtual void TearDown() noexcept override { huffman::pqueue_clean(&prqueue); }
+            inline virtual void TearDown() noexcept override { ::pqueue_clean(&prqueue); }
     };
 
     TEST_F(PQueueFixture, INIT) {
@@ -35,10 +40,7 @@ namespace pqueue {
             *ptrs[i] = randoms[i];
         }
 
-        for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            EXPECT_TRUE(huffman::pqueue_push(&prqueue, ptrs[i]));
-            // EXPECT_EQ(*reinterpret_cast<::node_pointer>(prqueue.tree[0]), *std::max_element(randoms.cbegin(), randoms.cbegin() + i + 1));
-        }
+        for (size_t i = 0; i < N_RANDNUMS; ++i) EXPECT_TRUE(::pqueue_push(&prqueue, ptrs[i]));
 
         EXPECT_EQ(prqueue.count, N_RANDNUMS);
         EXPECT_EQ(prqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
@@ -55,7 +57,7 @@ namespace pqueue {
             ptrs[i] = reinterpret_cast<::node_pointer>(::malloc(sizeof(::node_type)));
             ASSERT_TRUE(ptrs[i]);
             *ptrs[i] = randoms[i];
-            EXPECT_TRUE(huffman::pqueue_push(&prqueue, ptrs[i]));
+            EXPECT_TRUE(::pqueue_push(&prqueue, ptrs[i]));
         }
 
         EXPECT_EQ(prqueue.count, N_RANDNUMS);
@@ -65,7 +67,7 @@ namespace pqueue {
 
         ::node_pointer popped {};
         for (size_t i = 0; i < N_RANDNUMS; ++i) {
-            EXPECT_TRUE(huffman::pqueue_pop(&prqueue, reinterpret_cast<void**>(&popped)));
+            EXPECT_TRUE(::pqueue_pop(&prqueue, reinterpret_cast<void**>(&popped)));
             EXPECT_EQ(*popped, sorted_randoms[i]);
         }
     }
@@ -89,8 +91,8 @@ namespace pqueue {
         static_assert(std::is_standard_layout_v<stress_test::node_type>);
 
         TEST(PQUEUE, STRESS_TEST) {
-            huffman::pqueue prqueue {};
-            huffman::pqueue_init(&prqueue, ::nodecomp<stress_test::node_type>);
+            ::pqueue prqueue {};
+            ::pqueue_init(&prqueue, ::nodecomp<stress_test::node_type>);
 
             stress_test::node_pointer _ptr {};
 
@@ -100,21 +102,17 @@ namespace pqueue {
                 _ptr->id         = i;
                 _ptr->unit_price = randoms_extra[i];
 
-                EXPECT_TRUE(huffman::pqueue_push(&prqueue, _ptr));
-                // EXPECT_EQ(
-                //     reinterpret_cast<node_pointer>(prqueue.tree[0])->unit_price,
-                //     *std::max_element(randoms_extra.get(), randoms_extra.get() + i + 1)
-                // );
+                EXPECT_TRUE(::pqueue_push(&prqueue, _ptr));
             }
 
             for (size_t i = 0; i < N_EXTRANDOMS; ++i) {
-                huffman::pqueue_pop(&prqueue, reinterpret_cast<void**>(&_ptr));
+                ::pqueue_pop(&prqueue, reinterpret_cast<void**>(&_ptr));
                 EXPECT_EQ(_ptr->unit_price, sorted_randoms_extra[i]);
             }
 
-            huffman::pqueue_clean(&prqueue);
+            ::pqueue_clean(&prqueue);
         }
 
     } // namespace stress_test
 
-} // namespace pqueue
+} // namespace priority_queue
