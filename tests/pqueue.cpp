@@ -9,10 +9,10 @@ extern "C" {
 #undef restrict
 }
 
-extern std::unique_ptr<float[], std::default_delete<float[]>> randoms_extra;
-extern std::unique_ptr<float[], std::default_delete<float[]>> sorted_randoms_extra;
-extern std::array<unsigned short, N_RANDNUMS>                 randoms;
-extern std::array<unsigned short, N_RANDNUMS>                 sorted_randoms;
+extern std::vector<float>                     randoms_extra;
+extern std::vector<float>                     sorted_randoms_extra;
+extern std::array<unsigned short, N_RANDNUMS> randoms;
+extern std::array<unsigned short, N_RANDNUMS> sorted_randoms;
 
 namespace priority_queue {
 
@@ -87,8 +87,8 @@ namespace priority_queue {
         using node_type    = record;
         using node_pointer = record*;
 
-        static_assert(sizeof(stress_test::node_type) == 24);
-        static_assert(std::is_standard_layout_v<stress_test::node_type>);
+        static_assert(sizeof(stress_test::node_type) == 24, "");
+        static_assert(std::is_standard_layout_v<stress_test::node_type>, "");
 
         TEST(PQUEUE, STRESS_TEST) {
             ::pqueue prqueue {};

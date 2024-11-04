@@ -108,8 +108,8 @@ static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
 
 [[nodiscard, msvc::flatten]] static inline bool __cdecl pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const bntree_t data) {
     assert(prqueue);
-    bntree_t _temp     = { .node_count = 0, .root = NULL }; // NOLINT(readability-isolate-declaration)
-    size_t   _childpos = 0, _parentpos = 0;                 // NOLINT(readability-isolate-declaration)
+    bntree_t _temp     = { 0, NULL };       // NOLINT(readability-isolate-declaration)
+    size_t   _childpos = 0, _parentpos = 0; // NOLINT(readability-isolate-declaration)
     if (prqueue->count + 1 > prqueue->capacity) {
         fputws(L"Error:: " __FUNCTIONW__ " failed because there's no more space in the pqueue_t buffer\n", stderr);
         return false; // exit(A_SPECIFIC_ERROR_CODE) ????
@@ -133,7 +133,7 @@ static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
   msvc::flatten]] static inline bool __cdecl pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, _Inout_ bntree_t* const restrict popped) {
     assert(prqueue);
     assert(popped);
-    const bntree_t _placeholder = { .node_count = 0, .root = NULL };
+    const bntree_t _placeholder = { 0, NULL };
 
     if (!prqueue->count) {
         *popped = _placeholder;
@@ -146,7 +146,7 @@ static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
         return true;
     }
     size_t   _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
-    bntree_t _temp                    = { .node_count = 0, .root = NULL };
+    bntree_t _temp                    = { 0, NULL };
     *popped                           = prqueue->tree[0];
     prqueue->tree[0]                  = prqueue->tree[prqueue->count - 1];
     prqueue->tree[prqueue->count - 1] = _placeholder;
@@ -170,7 +170,7 @@ static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
 
 [[nodiscard]] static inline bntree_t __stdcall pqueue_peek(_In_ const pqueue_t* const restrict prqueue) {
     assert(prqueue);
-    const bntree_t _placeholder = { .node_count = 0, .root = NULL };
+    const bntree_t _placeholder = { 0, NULL };
     return prqueue->tree ? prqueue->tree[0] : _placeholder;
 }
 
@@ -264,7 +264,7 @@ static inline bntree_t __cdecl bntree_merge(
     assert(left);
     assert(right);
 
-    bntree_t merged = { .node_count = 0, .root = NULL };
+    bntree_t merged = { 0, NULL };
     if (!bntree_insert(&merged, NULL, ROOT, data)) {
         fputws(L"Error:: ", stderr);
         return merged;

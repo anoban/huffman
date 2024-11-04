@@ -27,9 +27,9 @@ extern "C" [[nodiscard]] static
 
 // argument typedef int (__cdecl* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*)
 extern "C" [[nodiscard]] static __declspec(noinline) int __cdecl ptrcompare( // to be used with qsort_s()
-    _In_opt_ [[maybe_unused]] void* const context,                           // we do not need this for our tests
-    _In_ constant_node_pointer* const     current,                           // cannot use long double here directly
-    _In_ constant_node_pointer* const     next
+    _In_opt_ void* const              context,                               // we do not need this for our tests
+    _In_ constant_node_pointer* const current,                               // cannot use long double here directly
+    _In_ constant_node_pointer* const next
 ) noexcept {
     assert(reinterpret_cast<uintptr_t>(*current) & reinterpret_cast<uintptr_t>(*next));
     return (**current == **next) ? 0 : (**current > **next) ? 1 : -1;
@@ -37,7 +37,7 @@ extern "C" [[nodiscard]] static __declspec(noinline) int __cdecl ptrcompare( // 
 
 template<typename _TyNode>
 [[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
-    requires requires(const _TyNode& _left, const _TyNode& _right) { _left.operator>(_right); }
+// requires requires(const _TyNode& _left, const _TyNode& _right) { _left.operator>(_right); }
 { // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this type constraint
     return (reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(child))
         ->operator>(*reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(parent));

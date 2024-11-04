@@ -2,6 +2,4 @@
 
 - All routines are implemented purely in C `(C23)` as static functions in headers inside `/include/`.    
 
-- Testing uses Google's `GoogleTest 1.15.2` (included in `/tests/googletest/`), hence requires a C++ compiler, ideally one with support for `C++20` or modern standards,
-`C++14` and `C++17` standards can be made to work with minor refactors (the designated initializers (`C++20`) 
-and terse `static_asserts` (`C++17`) will have to go.
+- Testing uses Google's `GoogleTest 1.15.2` (included in `/tests/googletest/`), hence requires a C++ compiler, ideally one with support for `C++14` or modern standards.

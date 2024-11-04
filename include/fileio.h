@@ -54,7 +54,7 @@
         return NULL;
     }
 
-    LARGE_INTEGER fsize = { .QuadPart = 0 };
+    LARGE_INTEGER fsize = { 0 };
     if (!GetFileSizeEx(hFile, &fsize)) {
         fwprintf_s(stderr, L"Error %lu in GetFileSizeEx while opening %s\n", GetLastError(), filepath);
         goto PREMATURE_RETURN;
