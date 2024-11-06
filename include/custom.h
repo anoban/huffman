@@ -16,18 +16,18 @@
 #pragma region __STRUCT_DEFINITIONS
 
 typedef union _symbol {
-        uint8_t byte; // only applicable to leaf nodes
+        unsigned char      byte; // only applicable to leaf nodes
         // could use a smaller type for marker but the member freq inside hnode_t will warrant padding, so why not use that here
-        size_t  marker; // a value (UINT32_MAX) registering a non-leaf node
+        unsigned long long marker; // a value (UINT32_MAX) registering a non-leaf node
 } symbol_t;
 
 static_assert(sizeof(symbol_t) == 8);
 static_assert(!offsetof(symbol_t, byte));
 static_assert(!offsetof(symbol_t, marker));
 
-typedef struct _hnode {  // represents a Huffman node.
-        symbol_t symbol; // byte for a leaf node, UINT32_MAX for internodes
-        size_t   freq;
+typedef struct _hnode {            // represents a Huffman node.
+        symbol_t           symbol; // byte for a leaf node, UINT32_MAX for internodes
+        unsigned long long freq;
 } hnode_t;
 
 static_assert(sizeof(hnode_t) == 16);
@@ -35,9 +35,9 @@ static_assert(!offsetof(hnode_t, symbol));
 static_assert(offsetof(hnode_t, freq) == 8);
 
 typedef struct _hcode { // represents a Huffman code
-        bool     is_used;
-        uint8_t  length;
-        uint16_t code;
+        bool           is_used;
+        unsigned char  length;
+        unsigned short code;
 } hcode_t; // no padding yeehaw :)
 
 static_assert(sizeof(hcode_t) == 4);
@@ -57,8 +57,8 @@ static_assert(offsetof(btnode_t, right) == 8);
 static_assert(offsetof(btnode_t, data) == 16);
 
 typedef struct _bintree {
-        size_t    node_count;
-        btnode_t* root;
+        unsigned long long node_count;
+        btnode_t*          root;
 } bntree_t;
 
 static_assert(sizeof(bntree_t) == 16);
@@ -66,8 +66,8 @@ static_assert(offsetof(bntree_t, node_count) == 0);
 static_assert(offsetof(bntree_t, root) == 8);
 
 typedef struct _pqueue {
-        uint32_t  count;
-        uint32_t  capacity;
+        unsigned  count;
+        unsigned  capacity;
         bntree_t* tree;
 } pqueue_t;
 
@@ -83,14 +83,14 @@ static_assert(offsetof(pqueue_t, tree) == 8);
 #define _PQUEUE_FIXEDCAPACITY       (2LLU << 10)
 #define _PQUEUE_FIXEDCAPACITY_BYTES (_PQUEUE_FIXEDCAPACITY * sizeof(hnode_t))
 
-static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
+static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { 0 };
 
-[[nodiscard]] static inline int __stdcall compare_trees(_In_ const bntree_t child, _In_ const bntree_t parent) {
+static inline int __stdcall compare_trees(_In_ const bntree_t child, _In_ const bntree_t parent) {
     if (child.root->data.freq > parent.root->data.freq) return -1;
 }
 
-[[nodiscard]] static inline bool __cdecl pqueue_init(
-    _Inout_ pqueue_t* const restrict prqueue, _In_count_(size) bntree_t* const restrict buffer, _In_ const size_t size
+static inline bool __cdecl pqueue_init(
+    _Inout_ pqueue_t* const restrict prqueue, _In_count_(size) bntree_t* const restrict buffer, _In_ const unsigned long long size
 ) {
     assert(prqueue);
     prqueue->tree     = buffer;
@@ -100,16 +100,16 @@ static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
     return true;
 }
 
-[[msvc::forceinline]] static inline void __cdecl pqueue_clean(_Inout_ pqueue_t* const restrict prqueue) {
+static inline void __cdecl pqueue_clean(_Inout_ pqueue_t* const restrict prqueue) {
     assert(prqueue);
     memset(prqueue->tree, 0U, sizeof(bntree_t) * prqueue->capacity);
     memset(prqueue, 0U, sizeof(pqueue_t));
 }
 
-[[nodiscard, msvc::flatten]] static inline bool __cdecl pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const bntree_t data) {
+static inline bool __cdecl pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const bntree_t data) {
     assert(prqueue);
-    bntree_t _temp     = { 0, NULL };       // NOLINT(readability-isolate-declaration)
-    size_t   _childpos = 0, _parentpos = 0; // NOLINT(readability-isolate-declaration)
+    bntree_t           _temp     = { 0, NULL };       // NOLINT(readability-isolate-declaration)
+    unsigned long long _childpos = 0, _parentpos = 0; // NOLINT(readability-isolate-declaration)
     if (prqueue->count + 1 > prqueue->capacity) {
         fputws(L"Error:: " __FUNCTIONW__ " failed because there's no more space in the pqueue_t buffer\n", stderr);
         return false; // exit(A_SPECIFIC_ERROR_CODE) ????
@@ -129,8 +129,7 @@ static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
     return true;
 }
 
-[[nodiscard,
-  msvc::flatten]] static inline bool __cdecl pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, _Inout_ bntree_t* const restrict popped) {
+static inline bool __cdecl pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, _Inout_ bntree_t* const restrict popped) {
     assert(prqueue);
     assert(popped);
     const bntree_t _placeholder = { 0, NULL };
@@ -145,8 +144,8 @@ static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
         pqueue_clean(prqueue);
         return true;
     }
-    size_t   _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
-    bntree_t _temp                    = { 0, NULL };
+    unsigned long long _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
+    bntree_t           _temp          = { 0, NULL };
     *popped                           = prqueue->tree[0];
     prqueue->tree[0]                  = prqueue->tree[prqueue->count - 1];
     prqueue->tree[prqueue->count - 1] = _placeholder;
@@ -168,7 +167,7 @@ static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { { 0 } };
     return true;
 }
 
-[[nodiscard]] static inline bntree_t __stdcall pqueue_peek(_In_ const pqueue_t* const restrict prqueue) {
+static inline bntree_t __stdcall pqueue_peek(_In_ const pqueue_t* const restrict prqueue) {
     assert(prqueue);
     const bntree_t _placeholder = { 0, NULL };
     return prqueue->tree ? prqueue->tree[0] : _placeholder;
@@ -303,27 +302,27 @@ static inline bntree_t __cdecl bntree_merge(
 #define _BYTEFREQ_LEN_FIXED 256LLU
 
 // the first step in Huffman encoding is the determination of symbol frequencies
-static __forceinline void __cdecl calculate_byte_frequencies(
-    _In_ const uint8_t* const restrict inbuffer,
-    _In_ const size_t size,
-    _Inout_count_(_BYTEFREQ_LEN_FIXED) size_t* const restrict frequencies // could be a stack based or heap allocated array
+static inline void __cdecl calculate_byte_frequencies(
+    _In_ const unsigned char* const restrict inbuffer,
+    _In_ const unsigned long long size,
+    _Inout_count_(_BYTEFREQ_LEN_FIXED) unsigned long long* const restrict frequencies // could be a stack based or heap allocated array
 ) {
     assert(inbuffer);
     assert(size);
-    memset(frequencies, 0U, sizeof(size_t) * (_BYTEFREQ_LEN_FIXED));
-    for (size_t i = 0; i < size; ++i) frequencies[inbuffer[i]]++;
+    memset(frequencies, 0U, sizeof(unsigned long long) * (_BYTEFREQ_LEN_FIXED));
+    for (unsigned long long i = 0; i < size; ++i) frequencies[inbuffer[i]]++;
 }
 
 static inline bntree_t __cdecl build_huffman_tree() { }
 
 static inline int64_t __cdecl compress(
-    _In_ const uint8_t* const restrict inbuffer, _Inout_ uint8_t* const restrict outbuffer, _In_ const size_t size
+    _In_ const unsigned char* const restrict inbuffer, _Inout_ unsigned char* const restrict outbuffer, _In_ const unsigned long long size
 ) {
     //
 }
 
 static inline int64_t __cdecl decompress(
-    _In_ const uint8_t* const restrict inbuffer, _Inout_ uint8_t* const restrict outbuffer, _In_ const size_t size
+    _In_ const unsigned char* const restrict inbuffer, _Inout_ unsigned char* const restrict outbuffer, _In_ const unsigned long long size
 ) {
     //
 }

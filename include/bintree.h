@@ -25,8 +25,8 @@ static_assert(offsetof(btnode, data) == 16);
 
 // a binary tree
 typedef struct _bintree {
-        size_t  node_count; // number of nodes in the binary tree
-        btnode* root;       // root node of the binary tree
+        unsigned long long node_count; // number of nodes in the binary tree
+        btnode*            root;       // root node of the binary tree
 } bntree;
 
 static_assert(sizeof(bntree) == 16);
@@ -36,7 +36,7 @@ static_assert(offsetof(bntree, root) == 8);
 typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xFF << 0x03 } child_kind; // arms of a node
 
 // create a node with the data provided and insert it into the binary tree as the child of the specified parent node
-[[nodiscard, msvc::flatten]] static inline bool __cdecl bntree_insert(
+static inline bool __cdecl bntree_insert(
     _Inout_ bntree* const restrict tree,
     _Inout_opt_ btnode* const restrict parent, // the parent node in the binary tree where we want new node to be linked to
     _In_ const child_kind which,               // which arm of the parent node the data needs to be connected to
@@ -96,7 +96,7 @@ typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xF
 }
 
 // remove the child of the specified parent node from the given binary tree
-[[nodiscard, msvc::flatten]] static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
+static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
     _Inout_ bntree* const restrict tree,
     _Inout_opt_ btnode* const restrict parent,
     _In_ const child_kind which
@@ -122,10 +122,9 @@ typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xF
     }
 
     if (*target) { // if the chosen target node is not already NULL, remove its children before removing it
-        [[msvc::forceinline_calls]] {
-            bntree_remove(tree, *target, LEFT);
-            bntree_remove(tree, *target, RIGHT);
-        }
+
+        bntree_remove(tree, *target, LEFT);
+        bntree_remove(tree, *target, RIGHT);
 
         free(*target);
         *target = NULL;
@@ -138,7 +137,7 @@ typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xF
 }
 
 // merge two binary trees into one
-[[nodiscard, msvc::forceinline]] static inline bntree __cdecl bntree_merge(
+static inline bntree __cdecl bntree_merge(
     _In_ bntree* const restrict left,  // to be merged
     _In_ bntree* const restrict right, // to be merged
     _In_ void* const restrict data     // data for the new root node
@@ -147,13 +146,13 @@ typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xF
     assert(right);
     assert(data);
 
-    bntree merged = { .node_count = 0, .root = NULL };
-    [[msvc::forceinline_calls]] if (!bntree_insert(
-                                        &merged,
-                                        NULL,
-                                        ROOT, // this is just a placeholder here because since the parent is NULL our target becomes the root node, the control flow won't even reach the switch block
-                                        data
-                                    )) { // if the insertion failed
+    bntree merged = { 0, NULL };
+    if (!bntree_insert(
+            &merged,
+            NULL,
+            ROOT, // this is just a placeholder here because since the parent is NULL our target becomes the root node, the control flow won't even reach the switch block
+            data
+        )) { // if the insertion failed
         fputws(L"Error:: ", stderr);
         return merged;
     }

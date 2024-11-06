@@ -38,7 +38,7 @@
 
 // corecrt_io.h also has open & write functions defined as deprecated POSIX extensions inside an #ifdef __cplusplus block,
 // which leads to name collision when compiled as C++ for testing, hence the conditional prefixing
-[[nodiscard, msvc::flatten]] static inline uint8_t* __cdecl _TRIPLE_UNDERSCORE_PREFIX(open)(
+static inline unsigned char* __cdecl _TRIPLE_UNDERSCORE_PREFIX(open)(
     _In_ const wchar_t* const restrict filepath, _Inout_ unsigned long* const restrict nbytes
 ) {
     assert(filepath);
@@ -46,7 +46,7 @@
 
     *nbytes               = 0;
     const HANDLE64 hFile  = CreateFileW(filepath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
-    uint8_t*       buffer = NULL; // DO NOT REFACTOR THIS AS AN SINGLE INLINE DEFINITION AT LINE 63
+    unsigned char* buffer = NULL; // DO NOT REFACTOR THIS AS AN SINGLE INLINE DEFINITION AT LINE 63
     // C++ DOES NOT ALLOW goto TO JUMP OVER UNINITIALIZED VARIABLES!!!
 
     if (hFile == INVALID_HANDLE_VALUE) {
@@ -60,7 +60,7 @@
         goto PREMATURE_RETURN;
     }
 
-    buffer = (uint8_t*) malloc(fsize.QuadPart); // caller is responsible for freeing this buffer.
+    buffer = (unsigned char*) malloc(fsize.QuadPart); // caller is responsible for freeing this buffer.
     if (!buffer) {
         fputws(L"Memory allocation error: malloc returned NULL", stderr);
         goto PREMATURE_RETURN;
@@ -80,10 +80,10 @@ PREMATURE_RETURN:
     return NULL;
 }
 
-[[nodiscard, msvc::flatten]] static inline bool __cdecl _TRIPLE_UNDERSCORE_PREFIX(write)(
-    _In_ const wchar_t* const restrict filepath, _In_reads_(size) const uint8_t* const restrict buffer, _In_ const unsigned long size
+static inline bool __cdecl _TRIPLE_UNDERSCORE_PREFIX(write)(
+    _In_ const wchar_t* const restrict filepath, _In_reads_(size) const unsigned char* const restrict buffer, _In_ const unsigned long size
 ) {
-    assert(filepath);
+    assert(filepath); // ??
     assert(buffer);
 
     // this is void* const
@@ -94,7 +94,7 @@ PREMATURE_RETURN:
         return false;
     }
 
-    DWORD nbyteswritten = 0;
+    unsigned long nbyteswritten = 0;
     if (!WriteFile(hfile, buffer, size, &nbyteswritten, NULL)) {
         fwprintf_s(stderr, L"Error %lu in WriteFile while creating %s\n", GetLastError(), filepath);
         CloseHandle(hfile);

@@ -27,12 +27,12 @@
 #define STR(expression)    HELPER(expression)
 
 // retruns the offset of the parent node
-static __forceinline size_t __stdcall parent_position(_In_ const size_t child) {
+static inline unsigned long long __stdcall parent_position(_In_ const unsigned long long child) {
     return !child ? 0 : (child - 1) / 2 /* deliberate truncating division. */;
 }
 
 // retruns the offset of the left child node
-static __forceinline size_t __stdcall lchild_position(_In_ const size_t parent) { return parent * 2 + 1; }
+static inline unsigned long long __stdcall lchild_position(_In_ const unsigned long long parent) { return parent * 2 + 1; }
 
 // retruns the offset of the left right node
-static __forceinline size_t __stdcall rchild_position(_In_ const size_t parent) { return parent * 2 + 2; }
+static inline unsigned long long __stdcall rchild_position(_In_ const unsigned long long parent) { return parent * 2 + 2; }
