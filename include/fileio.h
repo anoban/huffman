@@ -11,8 +11,7 @@
     #define NOMINMAX     // it seems that only <Windows.h> has the internal header guards receptive to NOMINMAX
     // if we include system headers directly without relying on <Windows.h> for transient includes, #define NOMINMAX offers no help! YIKES!
 
-    #include <windef.h>
-    #include <errhandlingapi.h>
+        #include <errhandlingapi.h>
     #include <fileapi.h>
     #include <handleapi.h>
     #include <sal.h>
@@ -21,8 +20,10 @@
 #include <assert.h>
 #include <malloc.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
+#include <basetsd.h>
+#include <minwindef.h>
+#include <winnt.h>
 
 // static_assert(max(10, 0), "see max is reachable here!");
 #if defined(min) && defined(max)

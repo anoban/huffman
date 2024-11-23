@@ -1,10 +1,5 @@
 #pragma once
-#include <assert.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <sal.h>
 
 // these helpers make the codebase ugly, so opting for plain C style casts
 #ifdef __cplusplus // for the sake of C++ compatibility
@@ -18,13 +13,13 @@
 #endif // __cplusplus
 
 #if defined(__TEST__) && defined(__VERBOSE_TEST_IO__)
-    #define gtstwprinf_s(...) wprintf_s(__VA_ARGS__)
+    #define dbgwprinf_s(...) fwprintf_s(stderr, __VA_ARGS__)
 #else
-    #define gtstwprinf_s(...)
+    #define dbgwprinf_s(...)
 #endif
 
 #define HELPER(expression) #expression
-#define STR(expression)    HELPER(expression)
+#define TO_STR(expression) HELPER(expression)
 
 // retruns the offset of the parent node
 static inline unsigned long long __stdcall parent_position(_In_ const unsigned long long child) {

@@ -1,16 +1,17 @@
 #pragma once
 #define __VERBOSE_TEST_IO__
-#include <type_traits>
 
-// clang-format off
-#include <gtest/gtest.h>
-// clang-format on
+#include <cassert>
 
 // the problem with namspacing <huffman.h> prior to including <gtest/gtest.h> is that all the symbols from headers directly and
-// indirecty included in <huffman.h> get scoped inside the namespace, won't be available in the global namespace
-// this includes symbols from __STDC__ headers :(
+
+// indirecty included in <huffman.h> get scoped inside the namespace, won't be available in the global namespace this includes symbols from __STDC__ headers :(
+#include <type_traits>
+
+#include <sal.h>
+#include <vadefs.h>
 // but the header guards copied into our TUs will prevent these headers from being reincluded in gtest.h, hence we run in to a slew of errors
-// so we move the gtest include before the namespacing of <huffman.h> included symbols
+// hence, avoiding this approach
 
 static constexpr unsigned long long N_RANDNUMS { 1 << 8 }, N_EXTRANDOMS { 5 << 10 }; // explicit external linkage
 static constexpr float              RAND_LLIMIT { -25.0 }, RAND_ULIMIT { 25.0 };
@@ -37,8 +38,10 @@ extern "C" [[nodiscard]] static __declspec(noinline) int __cdecl ptrcompare( // 
 
 template<typename _TyNode>
 [[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
-// requires requires(const _TyNode& _left, const _TyNode& _right) { _left.operator>(_right); }
-{ // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this type constraint
+    requires requires(const _TyNode& _left, const _TyNode& _right) {
+        // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this type constraint
+        _left.operator>(_right);
+    } {
     return (reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(child))
         ->operator>(*reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(parent));
 }
