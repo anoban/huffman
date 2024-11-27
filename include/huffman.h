@@ -13,8 +13,6 @@
 // type erasure, gratuitous heap allocations and maximize stack usage
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 
-#pragma region __STRUCT_DEFINITIONS
-
 typedef union _symbol {
         unsigned char      byte; // only applicable to leaf nodes
         // could use a smaller type for marker but the member freq inside hnode_t will warrant padding, so why not use that here
@@ -75,10 +73,6 @@ static_assert(sizeof(pqueue_t) == 16);
 static_assert(offsetof(pqueue_t, count) == 0);
 static_assert(offsetof(pqueue_t, capacity) == 4);
 static_assert(offsetof(pqueue_t, tree) == 8);
-
-#pragma endregion
-
-#pragma region __TAILOR_MADE_PQUEUE
 
 #define _PQUEUE_FIXEDCAPACITY       (2LLU << 10)
 #define _PQUEUE_FIXEDCAPACITY_BYTES (_PQUEUE_FIXEDCAPACITY * sizeof(hnode_t))
@@ -172,10 +166,6 @@ static inline bntree_t __stdcall pqueue_peek(_In_ const pqueue_t* const restrict
     const bntree_t _placeholder = { 0, NULL };
     return prqueue->tree ? prqueue->tree[0] : _placeholder;
 }
-
-#pragma endregion
-
-#pragma region __TAILOR_MADE_BINARYTREE
 
 typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xFF << 0x03 } child_kind; // arms of a node
 
@@ -278,8 +268,6 @@ static inline bntree_t __cdecl bntree_merge(
 
     return merged;
 }
-
-#pragma endregion
 
 // the goal of Huffman encoding is to represent symbols that occur more frequently with fewer bits than the symbols that occur less
 // frequently - a concept known as minimum entropy coding

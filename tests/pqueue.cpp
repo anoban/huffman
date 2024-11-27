@@ -19,7 +19,7 @@ extern "C" [[nodiscard]] static
 
 // argument typedef int (__cdecl* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*)
 extern "C" [[nodiscard, deprecated]] static __declspec(noinline) int __cdecl ptrcomp( // to be used with qsort_s()
-    _In_opt_ void* const context,                                                     // we do not need this for our tests
+    _In_opt_ [[maybe_unused]] void* const context,                                    // we do not need this for our tests
     _In_ pqueue_test::constant_node_pointer* const current,                           // cannot use long double here directly
     _In_ pqueue_test::constant_node_pointer* const next
 ) noexcept {
