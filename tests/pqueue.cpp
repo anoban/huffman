@@ -99,14 +99,39 @@ TEST_F(PQueueFixture, POP) {
         EXPECT_EQ(*popped, randoms_sorted[i]);
     }
 
+    // once pqueue_pop() has given up the last node, it will call pqueue_clean() so ....
     EXPECT_FALSE(prqueue.count);
-    EXPECT_EQ(prqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
-    EXPECT_EQ(prqueue.predptr, std::addressof(::comp));
-    EXPECT_TRUE(prqueue.tree);
+    EXPECT_FALSE(prqueue.capacity);
+    EXPECT_FALSE(prqueue.predptr);
+    EXPECT_FALSE(prqueue.tree);
 }
 
 TEST_F(PQueueFixture, PEEK) {
-    //
+    pqueue_test::node_pointer temp {};
+
+    for (size_t i = 0; i < ELEMENT_COUNT_WITHOUT_REALLOCATION; ++i) {
+        temp = reinterpret_cast<pqueue_test::node_pointer>(::malloc(sizeof(pqueue_test::node_type)));
+        EXPECT_TRUE(temp);
+        *temp = randoms[i];
+        EXPECT_TRUE(::pqueue_push(&prqueue, temp));
+    }
+
+    EXPECT_EQ(prqueue.count, ELEMENT_COUNT_WITHOUT_REALLOCATION);
+    EXPECT_EQ(prqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
+    EXPECT_EQ(prqueue.predptr, std::addressof(::comp));
+    EXPECT_TRUE(prqueue.tree);
+
+    pqueue_test::node_pointer popped {}, peek {};
+    for (size_t i = 0; i < ELEMENT_COUNT_WITHOUT_REALLOCATION; ++i) {
+        peek = reinterpret_cast<pqueue_test::node_pointer>(::pqueue_peek(&prqueue));
+        EXPECT_EQ(*peek, randoms_sorted[i]);
+        EXPECT_TRUE(::pqueue_pop(&prqueue, reinterpret_cast<void**>(&popped)));
+    }
+
+    EXPECT_FALSE(prqueue.count);
+    EXPECT_FALSE(prqueue.capacity);
+    EXPECT_FALSE(prqueue.predptr);
+    EXPECT_FALSE(prqueue.tree);
 }
 
 TEST(PQUEUE, STRESS_TEST) {
@@ -123,8 +148,7 @@ TEST(PQUEUE, STRESS_TEST) {
     for (unsigned i = 0; i < ELEMENT_COUNT_WITH_REALLOCATION; ++i) {
         nodeptr = reinterpret_cast<pqueue_stress_test::node_pointer>(::malloc(sizeof(pqueue_stress_test::node_type)));
         ASSERT_TRUE(nodeptr);
-        nodeptr->id         = i;
-        nodeptr->unit_price = stress_test_randoms[i];
+        *nodeptr = stress_test_randoms[i];
         EXPECT_TRUE(::pqueue_push(&prqueue, nodeptr));
     }
 
@@ -135,15 +159,8 @@ TEST(PQUEUE, STRESS_TEST) {
 
     for (size_t i = 0; i < ELEMENT_COUNT_WITH_REALLOCATION; ++i) {
         EXPECT_TRUE(::pqueue_pop(&prqueue, reinterpret_cast<void**>(&nodeptr)));
-        EXPECT_EQ(nodeptr->unit_price, stress_test_randoms_sorted[i]);
+        EXPECT_EQ(nodeptr->unit_price, stress_test_randoms_sorted[i].unit_price);
     }
-
-    EXPECT_FALSE(prqueue.count);
-    EXPECT_EQ(prqueue.capacity, ELEMENT_COUNT_WITH_REALLOCATION);
-    EXPECT_EQ(prqueue.predptr, std::addressof(::nodecomp<pqueue_stress_test::node_type>));
-    EXPECT_TRUE(prqueue.tree);
-
-    ::pqueue_clean(&prqueue);
 
     EXPECT_FALSE(prqueue.count);
     EXPECT_FALSE(prqueue.capacity);
