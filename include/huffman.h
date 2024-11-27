@@ -274,31 +274,28 @@ static inline bntree_t __cdecl bntree_merge(
 // the "symbol" here can be anything but is usually a byte!
 
 // entropy E of a symbol S is defined as E(S) = -log2(P(S))
-// where P is the probability of the select symbol being found in the given buffer
-// e.g. "ABCBCBCJKUGRFCCCSYJIOIHICCC"
-// frequency of the character 'C' in the above string is 9
-// total number of characters in that string is 27
+// where P(S) is the probability of the symbol S in the given buffer e.g. "ABCBCBCJKUGRFCCCSYJIOIHICCC"
+// frequency of the character 'C' in the above string is 9, total number of characters is 27
 // P('C') = 9/27
 // E('C') = -log2(P(9/27))
-//        = 1.58496250072116    - this is the entropy of the character 'C' in the given string
+//        = 1.58496250072116 - this is the entropy of one character 'C' in the given string
+
 // in theory, we can respresent 'C' in this string using 1.58496250072116 bits instead of the conventional 8 bits
-// since the character 'C' occurs 9 times, the its cumulative contribution to the string's entropy is
+// since the character 'C' occurs 9 times, the its cumulative entropy in the string is
 // = 9 x 1.58496250072116
 // = 14.2646625064904
 // again, in theory all the 'C' characters in the above string can be represented by a total of 14.2646625064904 bits
 
-#define _BYTEFREQ_LEN_FIXED 256LLU
-
 // the first step in Huffman encoding is the determination of symbol frequencies
-static inline void __cdecl calculate_byte_frequencies(
-    _In_ const unsigned char* const restrict inbuffer,
+static inline void __cdecl scan_frequencies(
+    _In_bytecount_(size) const unsigned char* const restrict buffer,
     _In_ const unsigned long long size,
-    _Inout_count_(_BYTEFREQ_LEN_FIXED) unsigned long long* const restrict frequencies // could be a stack based or heap allocated array
+    _Inout_count_(256) unsigned long long* const restrict frequencies // could be a stack based or heap allocated array
 ) {
-    assert(inbuffer);
+    assert(buffer);
     assert(size);
-    memset(frequencies, 0U, sizeof(unsigned long long) * (_BYTEFREQ_LEN_FIXED));
-    for (unsigned long long i = 0; i < size; ++i) frequencies[inbuffer[i]]++;
+    memset(frequencies, 0U, sizeof(unsigned long long) * 256);
+    for (unsigned long long i = 0; i < size; ++i) frequencies[buffer[i]]++;
 }
 
 static inline bntree_t __cdecl build_huffman_tree() { }
