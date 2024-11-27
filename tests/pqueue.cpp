@@ -27,6 +27,7 @@ extern "C" {
         return (**current == **next) ? 0 : (**current > **next) ? 1 : -1;
     }
 }
+
 template<typename _TyNode>
 [[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
     requires requires(const _TyNode& _left, const _TyNode& _right) {
@@ -134,6 +135,8 @@ TEST_F(PQueueFixture, PEEK) {
     EXPECT_FALSE(prqueue.tree);
 }
 
+// STRESS TEST INVOLVE REALLOCATIONS INSIDE THE PRIORITY QUEUE
+
 TEST(PQUEUE, STRESS_TEST) {
     ::pqueue prqueue {};
     ::pqueue_init(&prqueue, ::nodecomp<pqueue_stress_test::node_type>);
@@ -149,7 +152,7 @@ TEST(PQUEUE, STRESS_TEST) {
         nodeptr = reinterpret_cast<pqueue_stress_test::node_pointer>(::malloc(sizeof(pqueue_stress_test::node_type)));
         ASSERT_TRUE(nodeptr);
         *nodeptr = stress_test_randoms[i];
-        EXPECT_TRUE(::pqueue_push(&prqueue, nodeptr));
+        EXPECT_TRUE(::pqueue_push(&prqueue, nodeptr)); // expect about 5 reallocations
     }
 
     EXPECT_EQ(prqueue.count, ELEMENT_COUNT_WITH_REALLOCATION);

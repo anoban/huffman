@@ -15,7 +15,7 @@
 
 typedef union _symbol {
         unsigned char      byte; // only applicable to leaf nodes
-        // could use a smaller type for marker but the member freq inside hnode_t will warrant padding, so why not use that here
+        // could use a smaller type for marker but the member freq inside hnode_t will warrant padding, so why not use that apace here??
         unsigned long long marker; // a value (UINT32_MAX) registering a non-leaf node
 } symbol_t;
 
@@ -25,12 +25,12 @@ static_assert(offsetof(symbol_t, marker) == 0);
 
 typedef struct _hnode {            // represents a Huffman node.
         symbol_t           symbol; // byte for a leaf node, UINT32_MAX for internodes
-        unsigned long long freq;
+        unsigned long long frequency;
 } hnode_t;
 
 static_assert(sizeof(hnode_t) == 16);
 static_assert(offsetof(hnode_t, symbol) == 0);
-static_assert(offsetof(hnode_t, freq) == 8);
+static_assert(offsetof(hnode_t, frequency) == 8);
 
 typedef struct _hcode { // represents a Huffman code
         bool           is_used;
@@ -80,7 +80,7 @@ static_assert(offsetof(pqueue_t, tree) == 8);
 static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { 0 };
 
 static inline int __stdcall compare_trees(_In_ const bntree_t child, _In_ const bntree_t parent) {
-    if (child.root->data.freq > parent.root->data.freq) return -1;
+    if (child.root->data.frequency > parent.root->data.frequency) return -1;
 }
 
 static inline bool __cdecl pqueue_init(
