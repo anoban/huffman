@@ -1,4 +1,4 @@
-#include <custom.h>
+#include <huffman.h>
 
 int wmain(_In_opt_ int argc, _In_opt_count_(argc) wchar_t* argv[]) {
     UNREFERENCED_PARAMETER(argc);

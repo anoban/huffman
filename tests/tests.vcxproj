@@ -185,7 +185,7 @@
     <ClCompile Include="googletest\src\gtest-test-part.cc" />
     <ClCompile Include="googletest\src\gtest-typed-test.cc" />
     <ClCompile Include="googletest\src\gtest.cc" />
-    <ClCompile Include="custom.cpp" />
+    <ClCompile Include="huffman.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="utilities.cpp" />
     <ClCompile Include="pqueue.cpp" />

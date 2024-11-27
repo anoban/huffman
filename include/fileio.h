@@ -10,20 +10,16 @@
     #define __STDC_WANT_SECURE_LIB__ 1
     #define NOMINMAX     // it seems that only <Windows.h> has the internal header guards receptive to NOMINMAX
     // if we include system headers directly without relying on <Windows.h> for transient includes, #define NOMINMAX offers no help! YIKES!
-
-        #include <errhandlingapi.h>
+    #include <windef.h>
+    #include <errhandlingapi.h>
     #include <fileapi.h>
     #include <handleapi.h>
-    #include <sal.h>
 // clang-format on
 
 #include <assert.h>
 #include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <basetsd.h>
-#include <minwindef.h>
-#include <winnt.h>
 
 // static_assert(max(10, 0), "see max is reachable here!");
 #if defined(min) && defined(max)
@@ -39,7 +35,7 @@
 
 // corecrt_io.h also has open & write functions defined as deprecated POSIX extensions inside an #ifdef __cplusplus block,
 // which leads to name collision when compiled as C++ for testing, hence the conditional prefixing
-static inline unsigned char* __cdecl _TRIPLE_UNDERSCORE_PREFIX(open)(
+[[nodiscard]] static inline unsigned char* __cdecl _TRIPLE_UNDERSCORE_PREFIX(open)(
     _In_ const wchar_t* const restrict filepath, _Inout_ unsigned long* const restrict nbytes
 ) {
     assert(filepath);
@@ -50,24 +46,24 @@ static inline unsigned char* __cdecl _TRIPLE_UNDERSCORE_PREFIX(open)(
     unsigned char* buffer = NULL; // DO NOT REFACTOR THIS AS AN SINGLE INLINE DEFINITION AT LINE 63
     // C++ DOES NOT ALLOW goto TO JUMP OVER UNINITIALIZED VARIABLES!!!
 
-    if (hFile == INVALID_HANDLE_VALUE) {
+    if (hFile == INVALID_HANDLE_VALUE) [[unlikely]] {
         fwprintf_s(stderr, L"Error %lu in CreateFileW while opening %s\n", GetLastError(), filepath);
         return NULL;
     }
 
     LARGE_INTEGER fsize = { 0 };
-    if (!GetFileSizeEx(hFile, &fsize)) {
+    if (!GetFileSizeEx(hFile, &fsize)) [[unlikely]] {
         fwprintf_s(stderr, L"Error %lu in GetFileSizeEx while opening %s\n", GetLastError(), filepath);
         goto PREMATURE_RETURN;
     }
 
     buffer = (unsigned char*) malloc(fsize.QuadPart); // caller is responsible for freeing this buffer.
-    if (!buffer) {
+    if (!buffer) [[unlikely]] {
         fputws(L"Memory allocation error: malloc returned NULL", stderr);
         goto PREMATURE_RETURN;
     }
 
-    if (!ReadFile(hFile, buffer, fsize.QuadPart, nbytes, NULL)) {
+    if (!ReadFile(hFile, buffer, fsize.QuadPart, nbytes, NULL)) [[unlikely]] {
         fwprintf_s(stderr, L"Error %lu in ReadFile while opening %s\n", GetLastError(), filepath);
         free(buffer);
         goto PREMATURE_RETURN;
@@ -90,13 +86,13 @@ static inline bool __cdecl _TRIPLE_UNDERSCORE_PREFIX(write)(
     // this is void* const
     const HANDLE64 hfile = CreateFileW(filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    if (hfile == INVALID_HANDLE_VALUE) {
+    if (hfile == INVALID_HANDLE_VALUE) [[unlikely]] {
         fwprintf_s(stderr, L"Error %lu in CreateFileW while creating %s\n", GetLastError(), filepath);
         return false;
     }
 
     unsigned long nbyteswritten = 0;
-    if (!WriteFile(hfile, buffer, size, &nbyteswritten, NULL)) {
+    if (!WriteFile(hfile, buffer, size, &nbyteswritten, NULL)) [[unlikely]] {
         fwprintf_s(stderr, L"Error %lu in WriteFile while creating %s\n", GetLastError(), filepath);
         CloseHandle(hfile);
         return false;

@@ -1,6 +1,6 @@
 #pragma once
 #include <fileio.h>
-#include <stdint.h>
+#include <stdlib.h>
 #include <utilities.h>
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -22,8 +22,8 @@ typedef union _symbol {
 } symbol_t;
 
 static_assert(sizeof(symbol_t) == 8);
-static_assert(!offsetof(symbol_t, byte));
-static_assert(!offsetof(symbol_t, marker));
+static_assert(offsetof(symbol_t, byte) == 0);
+static_assert(offsetof(symbol_t, marker) == 0);
 
 typedef struct _hnode {            // represents a Huffman node.
         symbol_t           symbol; // byte for a leaf node, UINT32_MAX for internodes
@@ -31,7 +31,7 @@ typedef struct _hnode {            // represents a Huffman node.
 } hnode_t;
 
 static_assert(sizeof(hnode_t) == 16);
-static_assert(!offsetof(hnode_t, symbol));
+static_assert(offsetof(hnode_t, symbol) == 0);
 static_assert(offsetof(hnode_t, freq) == 8);
 
 typedef struct _hcode { // represents a Huffman code
@@ -41,7 +41,7 @@ typedef struct _hcode { // represents a Huffman code
 } hcode_t; // no padding yeehaw :)
 
 static_assert(sizeof(hcode_t) == 4);
-static_assert(!offsetof(hcode_t, is_used));
+static_assert(offsetof(hcode_t, is_used) == 0);
 static_assert(offsetof(hcode_t, length) == 1);
 static_assert(offsetof(hcode_t, code) == 2);
 
@@ -315,13 +315,13 @@ static inline void __cdecl calculate_byte_frequencies(
 
 static inline bntree_t __cdecl build_huffman_tree() { }
 
-static inline int64_t __cdecl compress(
+static inline unsigned long long __cdecl compress(
     _In_ const unsigned char* const restrict inbuffer, _Inout_ unsigned char* const restrict outbuffer, _In_ const unsigned long long size
 ) {
     //
 }
 
-static inline int64_t __cdecl decompress(
+static inline unsigned long long __cdecl decompress(
     _In_ const unsigned char* const restrict inbuffer, _Inout_ unsigned char* const restrict outbuffer, _In_ const unsigned long long size
 ) {
     //

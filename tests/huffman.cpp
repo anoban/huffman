@@ -4,7 +4,7 @@
 #include <test.hpp>
 extern "C" {
 #define restrict
-#include <custom.h>
+#include <huffman.h>
 #undef restrict
 }
 

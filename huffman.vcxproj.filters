@@ -30,7 +30,7 @@
     <ClInclude Include="include\bintree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\custom.h">
+    <ClInclude Include="include\huffman.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

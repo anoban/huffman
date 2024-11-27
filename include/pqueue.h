@@ -1,4 +1,8 @@
 #pragma once
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <utilities.h>
 
 #define DEFAULT_PQUEUE_CAPACITY       1024LLU
@@ -72,8 +76,8 @@
 // leftmost node must be the heaviest, and we do not care about the ordering of other nodes in heaps & priority queues
 
 typedef struct _pqueue {   // priority queue
-        uint32_t count;    // number of nodes.
-        uint32_t capacity; // number of nodes the prqueue can hold before requiring a reallocation.
+        unsigned count;    // number of nodes.
+        unsigned capacity; // number of nodes the prqueue can hold before requiring a reallocation.
         bool (*predptr)(_In_ const void* const, _In_ const void* const);
         void** tree; // a heap allocated array containing pointers to heap allocated nodes. use malloc to allocate the tree and the nodes.
 } pqueue;
@@ -102,7 +106,7 @@ static inline bool __cdecl pqueue_init(
     prqueue->tree = (void**) malloc(DEFAULT_PQUEUE_CAPACITY_BYTES);
     // will allocate memory to store DEFAULT_PQUEUE_CAPACITY number of pointers in the tree.
 
-    if (!prqueue->tree) {
+    if (!prqueue->tree) [[unlikely]] {
         fputws(L"Error:: malloc failed inside " __FUNCTIONW__ "\n", stderr);
         return false;
     }
@@ -137,7 +141,7 @@ static inline bool __cdecl pqueue_push(
         if (!(_temp_tree = (void**) realloc(
                   prqueue->tree,
                   (prqueue->capacity * sizeof(uintptr_t)) /* size of the existing buffer in bytes */ + DEFAULT_PQUEUE_CAPACITY_BYTES
-              ))) {
+              ))) [[unlikely]] {
             // NOLINTEND(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
             fputws(L"Error:: realloc failed inside " __FUNCTIONW__ "\n", stderr);
             // at this point, prqueue->tree is still valid and points to the old buffer

@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClInclude Include="include\bintree.h" />
     <ClInclude Include="include\bitops.h" />
-    <ClInclude Include="include\custom.h" />
+    <ClInclude Include="include\huffman.h" />
     <ClInclude Include="include\fileio.h" />
     <ClInclude Include="include\utilities.h" />
     <ClInclude Include="include\pqueue.h" />
@@ -153,7 +153,7 @@
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <EnableParallelCodeGeneration>false</EnableParallelCodeGeneration>
-      <DisableSpecificWarnings>5045;4710;4711;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4505;5045;4710;4711</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <FloatingPointModel>Precise</FloatingPointModel>
@@ -191,7 +191,7 @@
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <EnableParallelCodeGeneration>false</EnableParallelCodeGeneration>
-      <DisableSpecificWarnings>4505;5045;4710;4711;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4505;5045;4710;4711</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FloatingPointModel>Precise</FloatingPointModel>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
