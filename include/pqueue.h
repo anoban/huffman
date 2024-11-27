@@ -78,11 +78,11 @@ typedef struct _pqueue {   // priority queue
         void** tree; // a heap allocated array containing pointers to heap allocated nodes. use malloc to allocate the tree and the nodes.
 } pqueue;
 
-static_assert(sizeof(pqueue) == 24, "");
-static_assert(offsetof(pqueue, count) == 0, "");
-static_assert(offsetof(pqueue, capacity) == 4, "");
-static_assert(offsetof(pqueue, predptr) == 8, "");
-static_assert(offsetof(pqueue, tree) == 16, "");
+static_assert(sizeof(pqueue) == 24);
+static_assert(offsetof(pqueue, count) == 0);
+static_assert(offsetof(pqueue, capacity) == 4);
+static_assert(offsetof(pqueue, predptr) == 8);
+static_assert(offsetof(pqueue, tree) == 16);
 
 /*
 // must return true whenever a swap is needed.

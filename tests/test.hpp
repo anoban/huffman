@@ -1,47 +1,40 @@
 #pragma once
 #define __VERBOSE_TEST_IO__
 
-#include <cassert>
+#include <gtest/gtest.h>
 
 // the problem with namspacing <huffman.h> prior to including <gtest/gtest.h> is that all the symbols from headers directly and
-
 // indirecty included in <huffman.h> get scoped inside the namespace, won't be available in the global namespace this includes symbols from __STDC__ headers :(
-#include <type_traits>
-
-#include <sal.h>
-#include <vadefs.h>
 // but the header guards copied into our TUs will prevent these headers from being reincluded in gtest.h, hence we run in to a slew of errors
 // hence, avoiding this approach
 
-static constexpr unsigned long long N_RANDNUMS { 1 << 8 }, N_EXTRANDOMS { 5 << 10 }; // explicit external linkage
-static constexpr float              RAND_LLIMIT { -25.0 }, RAND_ULIMIT { 25.0 };
+static constexpr unsigned long long ELEMENT_COUNT_WITHOUT_REALLOCATION { 5 << 7 };
+static constexpr unsigned long long ELEMENT_COUNT_WITH_REALLOCATION { 5 << 10 };
 
-using node_type             = unsigned short; // for testing using fixtures
-using node_pointer          = node_type*;
-using constant_node_pointer = const node_type*;
+namespace pqueue_test {
 
-// return true when a swap is needed, i.e when the child is heavier than the parent
-extern "C" [[nodiscard]] static
-    __declspec(noinline) bool __stdcall comp(_In_ const void* const child, _In_ const void* const parent) noexcept {
-    return *reinterpret_cast<constant_node_pointer>(child) > *reinterpret_cast<constant_node_pointer>(parent);
-}
+    using node_type             = unsigned long long; // for testing using fixtures
+    using node_pointer          = node_type*;
+    using constant_node_pointer = const node_type*;
 
-// argument typedef int (__cdecl* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*)
-extern "C" [[nodiscard]] static __declspec(noinline) int __cdecl ptrcompare( // to be used with qsort_s()
-    _In_opt_ void* const              context,                               // we do not need this for our tests
-    _In_ constant_node_pointer* const current,                               // cannot use long double here directly
-    _In_ constant_node_pointer* const next
-) noexcept {
-    assert(reinterpret_cast<uintptr_t>(*current) & reinterpret_cast<uintptr_t>(*next));
-    return (**current == **next) ? 0 : (**current > **next) ? 1 : -1;
-}
+} // namespace pqueue_test
 
-template<typename _TyNode>
-[[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
-    requires requires(const _TyNode& _left, const _TyNode& _right) {
-        // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this type constraint
-        _left.operator>(_right);
-    } {
-    return (reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(child))
-        ->operator>(*reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(parent));
-}
+namespace pqueue_stress_test {
+
+    struct record final {
+            unsigned id;  // record id
+            unsigned yor; // year of release
+            float    unit_price;
+            unsigned _padding;
+            double   sales;
+
+            constexpr bool operator>(_In_ const record& other) const noexcept { return unit_price > other.unit_price; }
+    };
+
+    using node_type    = record;
+    using node_pointer = record*;
+
+    static_assert(sizeof(pqueue_stress_test::node_type) == 24);
+    static_assert(std::is_standard_layout_v<pqueue_stress_test::node_type>);
+
+} // namespace pqueue_stress_test

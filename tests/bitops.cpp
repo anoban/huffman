@@ -3,8 +3,6 @@
 extern "C" {
 #define restrict
 #include <bitops.h>
-#include <fileio.h>
-#include <utilities.h>
 #undef restrict
 }
 
@@ -263,96 +261,21 @@ static constexpr unsigned char xorbitstream[BITSTREAM_BYTE_COUNT] = {
     0b00101110, 0b01000110, 0b01111110, 0b00110100, 0b00011111, 0b01000010, 0b10011001, 0b01100010, 0b10001101, 0b01101110
 };
 
-namespace bitops {
+TEST(BITOPS, GETBIT) {
+    for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) EXPECT_EQ(::getbit(bitstream, i), (binstr[i] - 48)); // '0' is 48 and '1' is 49
+}
 
-    TEST(BITOPS, GETBIT) {
-        for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) EXPECT_EQ(::getbit(bitstream, i), (binstr[i] - 48)); // '0' is 48 and '1' is 49
+TEST(BITOPS, SETBIT) {
+    for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) ::setbit(mutablestream, i, i % 2);
+    // set all odd bits true and even bits false, which will effectively make every byte in the stream equivalent to 0b0101'0101
+    for (size_t i = 0; i < BITSTREAM_BYTE_COUNT; ++i) EXPECT_EQ(mutablestream[i], 0b0101'0101);
+}
+
+TEST(BITOPS, XORBIT) {
+    ::memset(mutablestream, 0U, BITSTREAM_BYTE_COUNT); // cleanu up after the previous use
+
+    for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) {
+        ::xorbit(bitstream, xorbitstream, mutablestream, i);
+        EXPECT_EQ(::getbit(mutablestream, i), !(::getbit(bitstream, i) == ::getbit(xorbitstream, i)));
     }
-
-    TEST(BITOPS, SETBIT) {
-        for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) ::setbit(mutablestream, i, i % 2);
-        // set all odd bits true and even bits false, which will effectively make every byte in the stream equivalent to 0b0101'0101
-        for (size_t i = 0; i < BITSTREAM_BYTE_COUNT; ++i) EXPECT_EQ(mutablestream[i], 0b0101'0101);
-    }
-
-    TEST(BITOPS, XORBIT) {
-        ::memset(mutablestream, 0U, BITSTREAM_BYTE_COUNT); // cleanu up after the previous use
-
-        for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) {
-            ::xorbit(bitstream, xorbitstream, mutablestream, i);
-            EXPECT_EQ(::getbit(mutablestream, i), !(::getbit(bitstream, i) == ::getbit(xorbitstream, i)));
-        }
-    }
-
-} // namespace bitops
-
-namespace fileio {
-
-    TEST(FILEIO, OPEN) {
-        unsigned long size {};
-
-        const auto* buffer = ::___open(LR"(./../media/bronze.jpg)", &size); // an image file
-        EXPECT_TRUE(buffer);
-        ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
-        EXPECT_EQ(size, 589'001LLU);
-
-        buffer = ::___open(LR"(./../media/excerpt.txt)",
-                           &size); // a text file
-        EXPECT_TRUE(buffer);
-        ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
-        EXPECT_EQ(size, 999'530LLU);
-
-        buffer = ::___open(LR"(./../media/sqlite3.dll)", &size); // a binary file (DLL)
-        EXPECT_TRUE(buffer);
-        ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
-        EXPECT_EQ(size, 1'541'912LLU);
-    }
-
-    TEST(FILEIO, WRITE) {
-        // TODO
-    }
-
-} // namespace fileio
-
-namespace position {
-
-    TEST(POSITION, PARENTPOSITION) {
-        EXPECT_EQ(::parent_position(0), 0LLU);
-        EXPECT_EQ(::parent_position(1), 0LLU);
-        EXPECT_EQ(::parent_position(2), 0LLU);
-        EXPECT_EQ(::parent_position(3), 1LLU);
-        EXPECT_EQ(::parent_position(4), 1LLU);
-        EXPECT_EQ(::parent_position(5), 2LLU);
-        EXPECT_EQ(::parent_position(9), 4LLU);
-        EXPECT_EQ(::parent_position(13), 6LLU);
-        EXPECT_EQ(::parent_position(20), 9LLU);
-        EXPECT_EQ(::parent_position(58), 28LLU);
-    }
-
-    TEST(POSITION, LEFTCHILDPOSITION) {
-        EXPECT_EQ(::lchild_position(0), 1LLU);
-        EXPECT_EQ(::lchild_position(1), 3LLU);
-        EXPECT_EQ(::lchild_position(2), 5LLU);
-        EXPECT_EQ(::lchild_position(3), 7LLU);
-        EXPECT_EQ(::lchild_position(4), 9LLU);
-        EXPECT_EQ(::lchild_position(5), 11LLU);
-        EXPECT_EQ(::lchild_position(9), 19LLU);
-        EXPECT_EQ(::lchild_position(13), 27LLU);
-        EXPECT_EQ(::lchild_position(20), 41LLU);
-        EXPECT_EQ(::lchild_position(58), 117LLU);
-    }
-
-    TEST(POSITION, RIGHTCHILDPOSITION) {
-        EXPECT_EQ(::rchild_position(0), 2LLU);
-        EXPECT_EQ(::rchild_position(1), 4LLU);
-        EXPECT_EQ(::rchild_position(2), 6LLU);
-        EXPECT_EQ(::rchild_position(3), 8LLU);
-        EXPECT_EQ(::rchild_position(4), 10LLU);
-        EXPECT_EQ(::rchild_position(5), 12LLU);
-        EXPECT_EQ(::rchild_position(9), 20LLU);
-        EXPECT_EQ(::rchild_position(13), 28LLU);
-        EXPECT_EQ(::rchild_position(20), 42LLU);
-        EXPECT_EQ(::rchild_position(58), 118LLU);
-    }
-
-} // namespace position
+}

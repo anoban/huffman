@@ -51,13 +51,19 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="misc.cpp">
+    <ClCompile Include="utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="bintree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="custom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bitops.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fileio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
