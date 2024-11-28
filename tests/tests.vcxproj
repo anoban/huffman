@@ -173,7 +173,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="bintree.cpp" />
     <ClCompile Include="bitops.cpp" />
     <ClCompile Include="fileio.cpp" />
     <ClCompile Include="googletest\src\gtest-assertion-result.cc" />
