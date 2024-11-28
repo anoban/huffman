@@ -75,7 +75,7 @@ static_assert(offsetof(pqueue_t, tree) == 8);
 //                  AN ALTERNATIVE IMPLEMENTATION OF PRIORITY QUEUE THAT USES STACK FOR BETTER PERFORMANCE                       //
 //-------------------------------------------------------------------------------------------------------------------------------//
 
-static inline pqueue_t __stdcall pqueue_init(
+[[nodiscard]] static inline pqueue_t __stdcall pqueue_init(
     /* expects an array on the stack because pqueue_clean() will not free() this buffer */
     _In_count_(node_count) btnode_t* const restrict buffer,
     _In_ const unsigned long long node_count
@@ -97,6 +97,10 @@ static inline void __stdcall pqueue_clean(_Inout_ pqueue_t* const restrict prque
     memset(prqueue, 0U, sizeof(pqueue_t));
 }
 
+[[nodiscard]] static inline bool __stdcall compare(_In_ const btnode_t child, _In_ const btnode_t parent) {
+    return child.data.frequency > parent.data.frequency;
+}
+
 static inline bool __stdcall pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const btnode_t data) {
     assert(prqueue);
 
@@ -113,7 +117,7 @@ static inline bool __stdcall pqueue_push(_Inout_ pqueue_t* const restrict prqueu
     _childpos                         = prqueue->count - 1;
     _parentpos                        = parent_position(_childpos);
 
-    while ((_childpos > 0) && compare_trees(prqueue->tree[_childpos], prqueue->tree[_parentpos])) {
+    while ((_childpos > 0) && compare(prqueue->tree[_childpos], prqueue->tree[_parentpos])) {
         _temp                     = prqueue->tree[_childpos];
         prqueue->tree[_childpos]  = prqueue->tree[_parentpos];
         prqueue->tree[_parentpos] = _temp;
@@ -182,9 +186,30 @@ static inline bntree_t __cdecl build_huffman_tree(
     _In_reads_(BYTECOUNT) const unsigned long long* const restrict frequencies,
     _Inout_count_(GLOBAL_BTNODE_BUFFER_FIXEDCAPACITY) btnode_t* const restrict nodebuffer
 ) {
-    pqueue_t priority_queue = pqueue_init(nodebuffer, GLOBAL_BTNODE_BUFFER_FIXEDCAPACITY);
+    assert(frequencies);
+    assert(nodebuffer);
+
+    pqueue_t           prqueue       = pqueue_init(nodebuffer, GLOBAL_BTNODE_BUFFER_FIXEDCAPACITY);
+    btnode_t           temp          = { 0 };
+    bntree_t           huffman       = { 0 }; // Huffman tree
+    unsigned long long nonzero_bytes = 0;
+
     // first push all the leaf nodes into the priority queue
-    for ();
+    for (unsigned i = 0; i < BYTECOUNT; ++i) {
+        if (frequencies[i]) { // only entertain the bytes with non zero frequencies
+            temp.left = temp.right = NULL;
+            temp.data.symbol       = i;
+            temp.data.frequency    = frequencies[i];
+
+            pqueue_push(&prqueue, temp);
+
+            nonzero_bytes++; // register the number of bytes with non-zero frequencies
+        }
+    }
+
+    // now to the actual Huffman tree building
+
+    return huffman;
 }
 
 typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xFF << 0x03 } child_kind; // arms of a node
