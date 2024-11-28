@@ -5,26 +5,20 @@
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // the problem with the data structures in the other headers inside ./include/ is that they liberally rely on type erasure for the sake of supporting arbitraty user defined types
-// we lose a lot of type safety and performance because this requires storing type erased heap allocated pointers instead of directly storing the values
-// as this would make these data structures tightly coupled to a single type, hence losing their "library" status
+// we lose a lot of type safety and performance here because this requires storing type erased heap allocated pointers instead of directly storing the values
+// as this would make these data structures tightly coupled to a single type, hence losing their versatility
 
 // since this is not important to us and we need maximum performance, we'll make variants tailor made for huffman algorithms
 // embedding associated user defined types directly inside the data structures, leveraging the tight coupling to eliminate
 // type erasure, gratuitous heap allocations and maximize stack usage
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 
-typedef union _symbol {
-        unsigned char      byte; // only applicable to leaf nodes
-        // could use a smaller type for marker but the member freq inside hnode_t will warrant padding, so why not use that apace here??
-        unsigned long long marker; // a value (UINT32_MAX) registering a non-leaf node
-} symbol_t;
+#define BYTECOUNT                          (256LLU)
+#define GLOBAL_BTNODE_BUFFER_FIXEDCAPACITY (2LLU << 10) // number of btnode_t s a stack based priority queue can accomodate
 
-static_assert(sizeof(symbol_t) == 8);
-static_assert(offsetof(symbol_t, byte) == 0);
-static_assert(offsetof(symbol_t, marker) == 0);
-
-typedef struct _hnode {            // represents a Huffman node.
-        symbol_t           symbol; // byte for a leaf node, UINT32_MAX for internodes
+// represents a Huffman node.
+typedef struct _hnode {
+        unsigned long long symbol; // will be (0, UCHAR_MAX) for leaf nodes, and will be UINT32_MAX for others
         unsigned long long frequency;
 } hnode_t;
 
@@ -32,17 +26,7 @@ static_assert(sizeof(hnode_t) == 16);
 static_assert(offsetof(hnode_t, symbol) == 0);
 static_assert(offsetof(hnode_t, frequency) == 8);
 
-typedef struct _hcode { // represents a Huffman code
-        bool           is_used;
-        unsigned char  length;
-        unsigned short code;
-} hcode_t; // no padding yeehaw :)
-
-static_assert(sizeof(hcode_t) == 4);
-static_assert(offsetof(hcode_t, is_used) == 0);
-static_assert(offsetof(hcode_t, length) == 1);
-static_assert(offsetof(hcode_t, code) == 2);
-
+// represents a binary tree node, this is the type that will be used to build the Huffman tree using a priority queue
 typedef struct _btnode {
         struct _btnode* left;
         struct _btnode* right;
@@ -54,6 +38,7 @@ static_assert(offsetof(btnode_t, left) == 0);
 static_assert(offsetof(btnode_t, right) == 8);
 static_assert(offsetof(btnode_t, data) == 16);
 
+// represents a binary tree, to represent the Huffman tree
 typedef struct _bintree {
         unsigned long long node_count;
         btnode_t*          root;
@@ -63,10 +48,22 @@ static_assert(sizeof(bntree_t) == 16);
 static_assert(offsetof(bntree_t, node_count) == 0);
 static_assert(offsetof(bntree_t, root) == 8);
 
+// represents a Huffman code
+typedef struct _hcode {
+        bool           is_used; // ???????
+        unsigned char  length;
+        unsigned short code;
+} hcode_t; // no padding yeehaw :)
+
+static_assert(sizeof(hcode_t) == 4);
+static_assert(offsetof(hcode_t, is_used) == 0);
+static_assert(offsetof(hcode_t, length) == 1);
+static_assert(offsetof(hcode_t, code) == 2);
+
 typedef struct _pqueue {
         unsigned  count;
         unsigned  capacity;
-        bntree_t* tree;
+        btnode_t* tree;
 } pqueue_t;
 
 static_assert(sizeof(pqueue_t) == 16);
@@ -74,44 +71,48 @@ static_assert(offsetof(pqueue_t, count) == 0);
 static_assert(offsetof(pqueue_t, capacity) == 4);
 static_assert(offsetof(pqueue_t, tree) == 8);
 
-#define _PQUEUE_FIXEDCAPACITY       (2LLU << 10)
-#define _PQUEUE_FIXEDCAPACITY_BYTES (_PQUEUE_FIXEDCAPACITY * sizeof(hnode_t))
+//-------------------------------------------------------------------------------------------------------------------------------//
+//                  AN ALTERNATIVE IMPLEMENTATION OF PRIORITY QUEUE THAT USES STACK FOR BETTER PERFORMANCE                       //
+//-------------------------------------------------------------------------------------------------------------------------------//
 
-static bntree_t __PQUEUE_GLOBAL_BUFFER[_PQUEUE_FIXEDCAPACITY] = { 0 };
-
-static inline int __stdcall compare_trees(_In_ const bntree_t child, _In_ const bntree_t parent) {
-    if (child.root->data.frequency > parent.root->data.frequency) return -1;
-}
-
-static inline bool __cdecl pqueue_init(
-    _Inout_ pqueue_t* const restrict prqueue, _In_count_(size) bntree_t* const restrict buffer, _In_ const unsigned long long size
+static inline pqueue_t __stdcall pqueue_init(
+    /* expects an array on the stack because pqueue_clean() will not free() this buffer */
+    _In_count_(node_count) btnode_t* const restrict buffer,
+    _In_ const unsigned long long node_count
 ) {
-    assert(prqueue);
-    prqueue->tree     = buffer;
-    prqueue->count    = 0;
-    prqueue->capacity = size;
-    memset(prqueue->tree, 0U, sizeof(bntree_t) * size);
-    return true;
+    assert(buffer);
+
+    memset(buffer, 0U, sizeof(btnode_t) * node_count); // zero out the binary tree node buffer
+    pqueue_t prqueue;
+    prqueue.tree     = buffer;
+    prqueue.count    = 0;
+    prqueue.capacity = node_count;
+    // (pqueue_t) { .tree = buffer, .count = 0, .capacity = node_count }; this syntax is not supported by C++, yikes!
+    return prqueue;
 }
 
-static inline void __cdecl pqueue_clean(_Inout_ pqueue_t* const restrict prqueue) {
+static inline void __stdcall pqueue_clean(_Inout_ pqueue_t* const restrict prqueue) {
     assert(prqueue);
-    memset(prqueue->tree, 0U, sizeof(bntree_t) * prqueue->capacity);
+    memset(prqueue->tree, 0U, sizeof(btnode_t) * prqueue->capacity); // cleanup the buffer
     memset(prqueue, 0U, sizeof(pqueue_t));
 }
 
-static inline bool __cdecl pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const bntree_t data) {
+static inline bool __stdcall pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const btnode_t data) {
     assert(prqueue);
-    bntree_t           _temp     = { 0, NULL };       // NOLINT(readability-isolate-declaration)
+
+    btnode_t           _temp     = { 0 };
     unsigned long long _childpos = 0, _parentpos = 0; // NOLINT(readability-isolate-declaration)
-    if (prqueue->count + 1 > prqueue->capacity) {
+
+    if (prqueue->count + 1 > prqueue->capacity) [[unlikely]] {
         fputws(L"Error:: " __FUNCTIONW__ " failed because there's no more space in the pqueue_t buffer\n", stderr);
-        return false; // exit(A_SPECIFIC_ERROR_CODE) ????
+        return false;
     }
+
     prqueue->count++;
     prqueue->tree[prqueue->count - 1] = data;
     _childpos                         = prqueue->count - 1;
     _parentpos                        = parent_position(_childpos);
+
     while ((_childpos > 0) && compare_trees(prqueue->tree[_childpos], prqueue->tree[_parentpos])) {
         _temp                     = prqueue->tree[_childpos];
         prqueue->tree[_childpos]  = prqueue->tree[_parentpos];
@@ -120,30 +121,35 @@ static inline bool __cdecl pqueue_push(_Inout_ pqueue_t* const restrict prqueue,
         _childpos                 = _parentpos;
         _parentpos                = parent_position(_childpos);
     }
+
     return true;
 }
 
-static inline bool __cdecl pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, _Inout_ bntree_t* const restrict popped) {
+static inline bool __cdecl pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, _Inout_ btnode_t* const restrict popped) {
     assert(prqueue);
     assert(popped);
-    const bntree_t _placeholder = { 0, NULL };
+
+    const btnode_t _placeholder = { 0 };
 
     if (!prqueue->count) {
         *popped = _placeholder;
         return false;
     }
+
     if (prqueue->count == 1) {
         *popped        = prqueue->tree[0];
         prqueue->count = 0;
         pqueue_clean(prqueue);
         return true;
     }
+
     unsigned long long _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
-    bntree_t           _temp          = { 0, NULL };
+    btnode_t           _temp          = { 0 };
     *popped                           = prqueue->tree[0];
     prqueue->tree[0]                  = prqueue->tree[prqueue->count - 1];
     prqueue->tree[prqueue->count - 1] = _placeholder;
     prqueue->count--;
+
     while (true) {
         _leftchildpos  = lchild_position(_parentpos);
         _rightchildpos = rchild_position(_parentpos);
@@ -161,10 +167,24 @@ static inline bool __cdecl pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, 
     return true;
 }
 
-static inline bntree_t __stdcall pqueue_peek(_In_ const pqueue_t* const restrict prqueue) {
+static inline btnode_t __stdcall pqueue_peek(_In_ const pqueue_t* const restrict prqueue) {
     assert(prqueue);
-    const bntree_t _placeholder = { 0, NULL };
+
+    const btnode_t _placeholder = { 0 };
     return prqueue->tree ? prqueue->tree[0] : _placeholder;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------//
+//                                          ROUTINES FOR HUFFMAN TREE BUILDING                                                   //
+//-------------------------------------------------------------------------------------------------------------------------------//
+
+static inline bntree_t __cdecl build_huffman_tree(
+    _In_reads_(BYTECOUNT) const unsigned long long* const restrict frequencies,
+    _Inout_count_(GLOBAL_BTNODE_BUFFER_FIXEDCAPACITY) btnode_t* const restrict nodebuffer
+) {
+    pqueue_t priority_queue = pqueue_init(nodebuffer, GLOBAL_BTNODE_BUFFER_FIXEDCAPACITY);
+    // first push all the leaf nodes into the priority queue
+    for ();
 }
 
 typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xFF << 0x03 } child_kind; // arms of a node
@@ -297,8 +317,6 @@ static inline void __cdecl scan_frequencies(
     memset(frequencies, 0U, sizeof(unsigned long long) * 256);
     for (unsigned long long i = 0; i < size; ++i) frequencies[buffer[i]]++;
 }
-
-static inline bntree_t __cdecl build_huffman_tree() { }
 
 static inline unsigned long long __cdecl compress(
     _In_ const unsigned char* const restrict inbuffer, _Inout_ unsigned char* const restrict outbuffer, _In_ const unsigned long long size

@@ -16,11 +16,15 @@ TEST(FILEIO, OPEN) {
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
     EXPECT_EQ(size, 589'001LLU);
 
-    buffer = ::___open(LR"(./../media/excerpt.txt)",
-                       &size); // a text file
+    buffer = ::___open(LR"(./../media/mobydick.txt)", &size); // a text file
     EXPECT_TRUE(buffer);
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
-    EXPECT_EQ(size, 999'530LLU);
+    EXPECT_EQ(size, 988'635LLU);
+
+    buffer = ::___open(LR"(./../media/therepublic.txt)", &size); // another text file
+    EXPECT_TRUE(buffer);
+    ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
+    EXPECT_EQ(size, 1'219'217LLU);
 
     buffer = ::___open(LR"(./../media/sqlite3.dll)", &size); // a binary file (DLL)
     EXPECT_TRUE(buffer);
