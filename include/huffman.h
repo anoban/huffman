@@ -90,19 +90,16 @@ static_assert(offsetof(pqueue_t, tree) == 8);
 ) {
     assert(buffer);
 
-    memset(buffer, 0U, sizeof(btnode_t) * node_count); // zero out the binary tree node buffer
-    pqueue_t prqueue;
-    prqueue.tree     = buffer;
-    prqueue.count    = 0;
-    prqueue.capacity = node_count;
-    // (pqueue_t) { .tree = buffer, .count = 0, .capacity = node_count }; this syntax is not supported by C++, yikes!
+    memset(buffer, 0U, sizeof(typeof_unqual(*buffer)) * node_count); // zero out the binary tree node buffer
+    pqueue_t prqueue = { .tree = buffer, .count = 0, .capacity = node_count };
+    // (pqueue_t) { .tree = buffer, .count = 0, .capacity = node_count }; this syntax is invalid in C++, yikes!
     return prqueue;
 }
 
 static inline void __stdcall pqueue_clean(_Inout_ pqueue_t* const restrict prqueue) {
     assert(prqueue);
-    memset(prqueue->tree, 0U, sizeof(btnode_t) * prqueue->capacity); // cleanup the buffer
-    memset(prqueue, 0U, sizeof(pqueue_t));
+    memset(prqueue->tree, 0U, sizeof(typeof_unqual(*prqueue->tree)) * prqueue->capacity); // cleanup the buffer
+    memset(prqueue, 0U, sizeof(typeof_unqual(*prqueue)));
 }
 
 static inline bool __stdcall pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const btnode_t data) {
@@ -378,11 +375,11 @@ static inline bntree_t __cdecl bntree_merge(
 static inline void __cdecl scan_frequencies(
     _In_bytecount_(size) const unsigned char* const restrict buffer,
     _In_ const unsigned long long size,
-    _Inout_count_(256) unsigned long long* const restrict frequencies // could be a stack based or heap allocated array
+    _Inout_count_(BYTECOUNT) unsigned long long* const restrict frequencies // could be a stack based or heap allocated array
 ) {
     assert(buffer);
     assert(size);
-    memset(frequencies, 0U, sizeof(unsigned long long) * 256);
+    memset(frequencies, 0U, sizeof(typeof_unqual(*frequencies)) * BYTECOUNT);
     for (unsigned long long i = 0; i < size; ++i) frequencies[buffer[i]]++;
 }
 
