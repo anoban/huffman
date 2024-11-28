@@ -75,6 +75,21 @@ static_assert(offsetof(pqueue_t, capacity) == 4);
 static_assert(offsetof(pqueue_t, tree) == 8);
 
 //-------------------------------------------------------------------------------------------------------------------------------//
+//                                                      MISCELLANEOUS PRELIMINARIES                                              //
+//-------------------------------------------------------------------------------------------------------------------------------//
+
+static inline void __cdecl scan_frequencies( // the first step in Huffman encoding is the determination of symbol frequencies
+    _In_bytecount_(size) const unsigned char* const restrict buffer,
+    _In_ const unsigned long long size,
+    _Inout_count_(BYTECOUNT) unsigned long long* const restrict frequencies // could be a stack based or heap allocated array
+) {
+    assert(buffer);
+    assert(size);
+    memset(frequencies, 0U, sizeof(typeof_unqual(*frequencies)) * BYTECOUNT);
+    for (unsigned long long i = 0; i < size; ++i) frequencies[buffer[i]]++;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------//
 //                  AN ALTERNATIVE IMPLEMENTATION OF PRIORITY QUEUE THAT USES STACK FOR BETTER PERFORMANCE                       //
 //-------------------------------------------------------------------------------------------------------------------------------//
 
@@ -91,7 +106,7 @@ static_assert(offsetof(pqueue_t, tree) == 8);
     assert(buffer);
 
     memset(buffer, 0U, sizeof(typeof_unqual(*buffer)) * node_count); // zero out the binary tree node buffer
-    pqueue_t prqueue = { .tree = buffer, .count = 0, .capacity = node_count };
+    pqueue_t prqueue = { .count = 0, .capacity = (unsigned) node_count, .tree = buffer };
     // (pqueue_t) { .tree = buffer, .count = 0, .capacity = node_count }; this syntax is invalid in C++, yikes!
     return prqueue;
 }
@@ -370,18 +385,6 @@ static inline bntree_t __cdecl bntree_merge(
 // = 9 x 1.58496250072116
 // = 14.2646625064904
 // again, in theory all the 'C' characters in the above string can be represented by a total of 14.2646625064904 bits
-
-// the first step in Huffman encoding is the determination of symbol frequencies
-static inline void __cdecl scan_frequencies(
-    _In_bytecount_(size) const unsigned char* const restrict buffer,
-    _In_ const unsigned long long size,
-    _Inout_count_(BYTECOUNT) unsigned long long* const restrict frequencies // could be a stack based or heap allocated array
-) {
-    assert(buffer);
-    assert(size);
-    memset(frequencies, 0U, sizeof(typeof_unqual(*frequencies)) * BYTECOUNT);
-    for (unsigned long long i = 0; i < size; ++i) frequencies[buffer[i]]++;
-}
 
 static inline unsigned long long __cdecl compress(
     _In_ const unsigned char* const restrict inbuffer, _Inout_ unsigned char* const restrict outbuffer, _In_ const unsigned long long size

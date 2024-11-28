@@ -2,9 +2,11 @@
 #include <sal.h>
 
 // these helpers make the codebase ugly, so opting for plain C style casts
+
 #ifdef __cplusplus // for the sake of C++ compatibility
     #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (reinterpret_cast<type>((identifier)))
     #define _CXX_COMPAT_CONST_CAST(type, identifier)       (const_cast<type>((identifier)))
+    #define typeof_unqual(expression)                      decltype(expression)
     #define _CXX_COMPAT_STDC_KEYWORD_GUARD(keyword)
 #else
     #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (identifier)

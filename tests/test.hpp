@@ -11,6 +11,9 @@
 static constexpr unsigned long long ELEMENT_COUNT_WITHOUT_REALLOCATION { 5 << 7 };
 static constexpr unsigned long long ELEMENT_COUNT_WITH_REALLOCATION { 5 << 10 };
 
+static constexpr unsigned long long PQUEUE_MAX_ELEMENT_COUNT { 8 << 10 };
+static constexpr unsigned long long DUMMY_FILEBUFFER_SIZE { 1184 << 10 };
+
 namespace pqueue_test {
 
     using node_type             = unsigned long long; // for testing using fixtures

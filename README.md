@@ -11,6 +11,6 @@ The text files are ebooks downloaded from `Project Guttenberg`.
 
 ------------
 
-Reference implementation : `Mastering Algorithms with C (1999) Kyle Loudon`
+Reference : `Mastering Algorithms with C (1999) Kyle Loudon`
 
 ------------
