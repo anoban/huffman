@@ -182,6 +182,7 @@ static inline bool __stdcall pqueue_pop(_Inout_ pqueue_t* const restrict prqueue
         prqueue->tree[_pos]       = _temp;
         _parentpos                = _pos;
     }
+
     return true;
 }
 
@@ -242,25 +243,27 @@ static inline bntree_t __cdecl build_huffman_tree(
         huffman.tree[write_caret++] = temp; // copy the popped node to the tree's buffer
         huffman.node_count++;               // document the copy
 
-        if (pqueue_pop(&prqueue, &temp)) { // pop another node to pair with the previous node
-            dbgwprinf_s(L"%10llX - %10llu\n", temp.data.symbol, temp.data.frequency);
+        // pop another node to pair with the previous node
+        if (!pqueue_pop(&prqueue, &temp)) break;
 
-            huffman.tree[write_caret++] = temp; // copy the popped node to the tree's buffer
-            huffman.node_count++;               // document the copy
+        dbgwprinf_s(L"%10llX - %10llu\n", temp.data.symbol, temp.data.frequency);
 
-            // make the third node, with the combined frequency of the two popped nodes
-            // Huffman tree is left balanced, so the smallest node goes to the left
-            aggregate.left        = huffman.tree + write_caret - 2; // popped first, the smallest
-            aggregate.right       = huffman.tree + write_caret - 1; // popped second, the next smallest
-            aggregate.data.symbol = UINT32_MAX;                     // this a marker that registers that this is not a leaf node
-            aggregate.data.frequency =
-                aggregate.left->data.frequency + aggregate.right->data.frequency; // cumulative frequency of the two child nodes
+        huffman.tree[write_caret++] = temp; // copy the popped node to the tree's buffer
+        huffman.node_count++;               // document the copy
 
-            if (!pqueue_push(&prqueue, aggregate)) [[unlikely]] { // push the new non-leaf node into the priority queue
-                // TODO
-            }
+        // make the third node, with the combined frequency of the two popped nodes
+        // Huffman tree is left balanced, so the smallest node goes to the left
+        aggregate.left        = huffman.tree + write_caret - 2; // popped first, the smallest
+        aggregate.right       = huffman.tree + write_caret - 1; // popped second, the next smallest
+        aggregate.data.symbol = UINT32_MAX;                     // this a marker that registers that this is not a leaf node
+        aggregate.data.frequency =
+            aggregate.left->data.frequency + aggregate.right->data.frequency; // cumulative frequency of the two child nodes
+
+        if (!pqueue_push(&prqueue, aggregate)) [[unlikely]] { // push the new non-leaf node into the priority queue
+            // TODO
         }
     }
+    dbgwprinf_s(L"Have appended %8llu nodes to the Huffman tree\n", write_caret);
 
     return huffman;
 }

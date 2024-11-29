@@ -38,7 +38,7 @@ auto main() -> int {
     std::sort(randoms_sorted.begin(), randoms_sorted.end(), std::greater<pqueue_test::node_type> {});
 
     std::for_each(stress_test_randoms.begin(), stress_test_randoms.end(), [&rndeng](pqueue_stress_test::node_type& elem) noexcept -> void {
-        elem.unit_price = rndeng() / 100.00;
+        elem.unit_price = rndeng() / 100.00F;
     });
     std::copy(stress_test_randoms.cbegin(), stress_test_randoms.cend(), stress_test_randoms_sorted.begin());
     std::sort(stress_test_randoms_sorted.begin(), stress_test_randoms_sorted.end(), std::greater<pqueue_stress_test::node_type> {});
