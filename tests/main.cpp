@@ -12,16 +12,16 @@ extern "C" {
 }
 
 // all these globals are used in the .cpp files for tests
-std::vector<pqueue_test::node_type> randoms;
-std::vector<pqueue_test::node_type> randoms_sorted;
+std::vector<pqueue_test::node_type>        randoms;
+std::vector<pqueue_test::node_type>        randoms_sorted;
 
 std::vector<pqueue_stress_test::node_type> stress_test_randoms;
 std::vector<pqueue_stress_test::node_type> stress_test_randoms_sorted;
 
-std::vector<unsigned char> dummy_filebuffer;
-std::vector<::btnode_t>    btnode_buffer;
+std::vector<unsigned char>                 dummy_filebuffer;
+std::vector<::btnode_t>                    btnode_buffer;
 
-auto main() -> int {
+auto                                       main() -> int {
     randoms.resize(ELEMENT_COUNT_WITHOUT_REALLOCATION);
     randoms_sorted.resize(ELEMENT_COUNT_WITHOUT_REALLOCATION);
 

@@ -9,7 +9,7 @@ static btnode_t           bntree_buffer[GLOBAL_BTNODE_BUFFER_FIXEDCAPACITY] = { 
 
 // the whole buffer being just 32KiBs, can probably fit in the CPU's caches :))
 
-int wmain(_In_opt_ [[maybe_unused]] int argc, _In_opt_count_(argc) [[maybe_unused]] wchar_t* argv[]) {
+int                       wmain(_In_opt_ [[maybe_unused]] int argc, _In_opt_count_(argc) [[maybe_unused]] wchar_t* argv[]) {
     unsigned                   filesize   = 0;
     const unsigned char* const filebuffer = open(L"./media/therepublic.txt", &filesize);
     assert(filebuffer);

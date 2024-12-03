@@ -11,7 +11,7 @@ extern "C" {
 TEST(FILEIO, OPEN) {
     unsigned long size {};
 
-    const auto* buffer = ::___open(LR"(./../media/bronze.jpg)", &size); // an image file
+    const auto*   buffer = ::___open(LR"(./../media/bronze.jpg)", &size); // an image file
     EXPECT_TRUE(buffer);
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
     EXPECT_EQ(size, 589'001LLU);

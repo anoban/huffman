@@ -25,11 +25,11 @@ namespace pqueue_test {
 namespace pqueue_stress_test {
 
     struct record final {
-            unsigned record_id;
-            unsigned year_of_release;
-            float    unit_price;
-            unsigned reserved;
-            double   sales;
+            unsigned       record_id;
+            unsigned       year_of_release;
+            float          unit_price;
+            unsigned       reserved;
+            double         sales;
 
             constexpr bool operator>(_In_ const record& other) const noexcept { return unit_price > other.unit_price; }
     };

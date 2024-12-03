@@ -28,8 +28,8 @@ extern "C" {
     }
 }
 
-template<typename _TyNode>
-[[nodiscard]] static __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
+template<typename _TyNode> [[nodiscard]] static
+    __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
     requires requires(const _TyNode& _left, const _TyNode& _right) {
         // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this type constraint
         _left.operator>(_right);
@@ -38,14 +38,14 @@ template<typename _TyNode>
         ->operator>(*reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(parent));
 }
 
-extern std::vector<pqueue_test::node_type> randoms;        // defined in main.cpp
-extern std::vector<pqueue_test::node_type> randoms_sorted; // defined in main.cpp
+extern std::vector<pqueue_test::node_type>        randoms;        // defined in main.cpp
+extern std::vector<pqueue_test::node_type>        randoms_sorted; // defined in main.cpp
 
 extern std::vector<pqueue_stress_test::node_type> stress_test_randoms;        // defined in main.cpp
 extern std::vector<pqueue_stress_test::node_type> stress_test_randoms_sorted; // defined in main.cpp
 
 struct PQueueFixture : public testing::Test {
-        ::pqueue prqueue {};
+        ::pqueue            prqueue {};
 
         inline virtual void SetUp() noexcept override { ASSERT_TRUE(::pqueue_init(&prqueue, ::comp)); }
 

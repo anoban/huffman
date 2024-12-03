@@ -79,8 +79,8 @@
 typedef struct _pqueue {   // priority queue
         unsigned count;    // number of nodes.
         unsigned capacity; // number of nodes the prqueue can hold before requiring a reallocation.
-        bool (*predptr)(_In_ const void* const, _In_ const void* const);
-        void** tree; // a heap allocated array containing pointers to heap allocated nodes. use malloc to allocate the tree and the nodes.
+        bool     (*predptr)(_In_ const void* const, _In_ const void* const);
+        void**   tree; // a heap allocated array containing pointers to heap allocated nodes. use malloc to allocate the tree and the nodes.
 } pqueue;
 
 static_assert(sizeof(pqueue) == 24);
