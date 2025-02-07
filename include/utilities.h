@@ -1,7 +1,7 @@
 #pragma once
 #include <sal.h>
 
-// these helpers make the codebase ugly, so opting for plain C style casts
+// these helpers make the codebase ugly so opting for plain C style casts
 
 #ifdef __cplusplus // for the sake of C++ compatibility
     #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (reinterpret_cast<type>((identifier)))
