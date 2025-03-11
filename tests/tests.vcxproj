@@ -129,11 +129,12 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Precise</FloatingPointModel>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <ExceptionHandling>Async</ExceptionHandling>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,13 +157,16 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Precise</FloatingPointModel>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <SupportJustMyCode>true</SupportJustMyCode>
       <ExceptionHandling>Async</ExceptionHandling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
