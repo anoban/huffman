@@ -11,7 +11,7 @@ extern "C" {
 TEST(FILEIO, OPEN) {
     unsigned long size {};
 
-    const auto*   buffer = ::___open(LR"(./../media/bronze.jpg)", &size); // an image file
+    const auto* buffer = ::___open(LR"(./../media/bronze.jpg)", &size); // an image file
     EXPECT_TRUE(buffer);
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
     EXPECT_EQ(size, 589'001LLU);
@@ -21,10 +21,10 @@ TEST(FILEIO, OPEN) {
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
     EXPECT_EQ(size, 988'635LLU);
 
-    buffer = ::___open(LR"(./../media/therepublic.txt)", &size); // another text file
+    buffer = ::___open(LR"(./../media/table.csv)", &size); // a csv file
     EXPECT_TRUE(buffer);
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
-    EXPECT_EQ(size, 1'219'217LLU);
+    EXPECT_EQ(size, 1'113'978LLU);
 
     buffer = ::___open(LR"(./../media/sqlite3.dll)", &size); // a binary file (DLL)
     EXPECT_TRUE(buffer);
