@@ -126,7 +126,7 @@
       <LanguageStandard_C>stdclatest</LanguageStandard_C>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <DisableSpecificWarnings>4305;4505;4514;4625;4626;4668;4820;4710;4711;5026;5027;5045;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <CompileAs>CompileAsCpp</CompileAs>
+      <CompileAs>CompileAsC</CompileAs>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -155,7 +155,7 @@
       <LanguageStandard_C>stdclatest</LanguageStandard_C>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <DisableSpecificWarnings>4305;4505;4514;4625;4626;4668;4820;4710;4711;5026;5027;5045;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <CompileAs>CompileAsCpp</CompileAs>
+      <CompileAs>CompileAsC</CompileAs>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -187,7 +187,7 @@
     <ClCompile Include="pqueue.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="test.hpp" />
+    <ClInclude Include="test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
