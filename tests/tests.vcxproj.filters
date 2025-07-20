@@ -15,22 +15,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pqueue.cpp">
+    <ClCompile Include="pqueue.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="utilities.cpp">
+    <ClCompile Include="utilities.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="huffman.cpp">
+    <ClCompile Include="huffman.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bitops.cpp">
+    <ClCompile Include="bitops.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fileio.cpp">
+    <ClCompile Include="fileio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

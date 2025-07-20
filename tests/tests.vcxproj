@@ -179,12 +179,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="bitops.cpp" />
-    <ClCompile Include="fileio.cpp" />
-    <ClCompile Include="huffman.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="utilities.cpp" />
-    <ClCompile Include="pqueue.cpp" />
+    <ClCompile Include="bitops.c" />
+    <ClCompile Include="fileio.c" />
+    <ClCompile Include="huffman.c" />
+    <ClCompile Include="main.c" />
+    <ClCompile Include="utilities.c" />
+    <ClCompile Include="pqueue.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.hpp" />
