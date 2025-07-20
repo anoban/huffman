@@ -181,15 +181,6 @@
   <ItemGroup>
     <ClCompile Include="bitops.cpp" />
     <ClCompile Include="fileio.cpp" />
-    <ClCompile Include="googletest\src\gtest-assertion-result.cc" />
-    <ClCompile Include="googletest\src\gtest-death-test.cc" />
-    <ClCompile Include="googletest\src\gtest-filepath.cc" />
-    <ClCompile Include="googletest\src\gtest-matchers.cc" />
-    <ClCompile Include="googletest\src\gtest-port.cc" />
-    <ClCompile Include="googletest\src\gtest-printers.cc" />
-    <ClCompile Include="googletest\src\gtest-test-part.cc" />
-    <ClCompile Include="googletest\src\gtest-typed-test.cc" />
-    <ClCompile Include="googletest\src\gtest.cc" />
     <ClCompile Include="huffman.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="utilities.cpp" />
