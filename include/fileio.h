@@ -1,89 +1,82 @@
 #pragma once
 
 #include <assert.h>
+#include <errno.h>
 #include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <unistd.h>
 
-// static_assert(max(10, 0), "see max is reachable here!");
-#if defined(min) && defined(max)
-    #undef min
-    #undef max
-#endif
+#include <sys/fcntl.h>
+#include <sys/stat.h>
 
-#ifdef __cplusplus
-    #define _TRIPLE_UNDERSCORE_PREFIX(name) ___##name
-#else
-    #define _TRIPLE_UNDERSCORE_PREFIX(name) name
-#endif // __cplusplus
+static inline unsigned char* __open(const char* const fpath, long* const nreadbytes) {
+    *nreadbytes             = 0;
+    unsigned char* buffer   = 0;
+    struct stat    filestat = { 0 };
+    long           nbytes   = 0;
 
-// corecrt_io.h also has open & write functions defined as deprecated POSIX extensions inside an #ifdef __cplusplus block,
-// which leads to name collision when compiled as C++ for testing, hence the conditional prefixing
-[[nodiscard]] static inline unsigned char* __cdecl _TRIPLE_UNDERSCORE_PREFIX(open)(
-    _In_ const wchar_t* const restrict filepath, _Inout_ unsigned long* const restrict nbytes
-) {
-    assert(filepath);
-    assert(nbytes);
-
-    *nbytes               = 0;
-    const HANDLE64 hFile  = CreateFileW(filepath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
-    unsigned char* buffer = NULL; // DO NOT REFACTOR THIS AS AN SINGLE INLINE DEFINITION AT LINE 63
-    // C++ DOES NOT ALLOW goto TO JUMP OVER UNINITIALIZED VARIABLES!!!
-
-    if (hFile == INVALID_HANDLE_VALUE) [[unlikely]] {
-        fwprintf_s(stderr, L"Error %lu in CreateFileW while opening %s\n", GetLastError(), filepath);
-        return NULL;
+    const int fdesc         = open(fpath, O_RDONLY);
+    if (fdesc == -1) { // if open() failed, the return value will be -1
+        fprintf(stderr, "Call to open() failed inside %s at line %d!; errno %d\n", __FUNCTION__, __LINE__, errno);
+        return nullptr;
     }
 
-    LARGE_INTEGER fsize = { .QuadPart = 0 };
-    if (!GetFileSizeEx(hFile, &fsize)) [[unlikely]] {
-        fwprintf_s(stderr, L"Error %lu in GetFileSizeEx while opening %s\n", GetLastError(), filepath);
-        goto PREMATURE_RETURN;
+    if (fstat(fdesc, &filestat)) { // if succeeds, 0 is returned, -1 if fails
+        fprintf(stderr, "Call to fstat() failed inside %s at line %d!; errno %d\n", __FUNCTION__, __LINE__, errno);
+        goto CLOSE_AND_RETURN;
     }
 
-    buffer = (unsigned char*) malloc(fsize.QuadPart); // caller is responsible for freeing this buffer.
-    if (!buffer) [[unlikely]] {
-        fputws(L"Memory allocation error: malloc returned NULL", stderr);
-        goto PREMATURE_RETURN;
+    if (!(buffer = malloc(filestat.st_size))) { // caller is responsible for freeing this buffer
+        fprintf(stderr, "Call to new() failed inside %s at line %d!\n", __FUNCTION__, __LINE__);
+        goto CLOSE_AND_RETURN;
     }
 
-    if (!ReadFile(hFile, buffer, fsize.QuadPart, nbytes, NULL)) [[unlikely]] {
-        fwprintf_s(stderr, L"Error %lu in ReadFile while opening %s\n", GetLastError(), filepath);
+    if ((nbytes = read(fdesc, buffer, filestat.st_size)) != -1) {
+        *nreadbytes = nbytes;
+        assert(nbytes == filestat.st_size); // double checking
+    } else {
+        fprintf(stderr, "Call to read() failed inside %s at line %d!; errno %d\n", __FUNCTION__, __LINE__, errno);
         free(buffer);
-        goto PREMATURE_RETURN;
+        buffer = nullptr;
     }
+    // then, fall through the CLOSE_AND_RETURN label
 
-    CloseHandle(hFile);
+CLOSE_AND_RETURN:
+    // close() returns 0 on success and -1 on failure
+    if (close(fdesc)) fprintf(stderr, "Call to close() failed inside %s at line %d!; errno %d\n", __FUNCTION__, __LINE__, errno);
     return buffer;
-
-PREMATURE_RETURN:
-    CloseHandle(hFile);
-    return NULL;
 }
 
-static inline bool __cdecl _TRIPLE_UNDERSCORE_PREFIX(write)(
-    _In_ const wchar_t* const restrict filepath, _In_reads_(size) const unsigned char* const restrict buffer, _In_ const unsigned long size
-) {
-    assert(filepath); // ??
-    assert(buffer);
-
-    // this is void* const
-    const HANDLE64 hfile = CreateFileW(filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-    if (hfile == INVALID_HANDLE_VALUE) [[unlikely]] {
-        fwprintf_s(stderr, L"Error %lu in CreateFileW while creating %s\n", GetLastError(), filepath);
-        return false;
+// a file format agnostic write routine to serialize binary image files, if a file with the specified name exists on disk, it will be overwritten
+static inline bool __write(const char* const filename, const unsigned char* const buffer, const long* const size) {
+    assert(filename); // too much??
+    if (!buffer) {
+        fprintf(stderr, "Empty buffer passed to function %s at line %d\n", __FUNCTION__, __LINE__);
+        return false; // fail if the buffer is a nullptr
     }
 
-    unsigned long nbyteswritten = 0;
-    if (!WriteFile(hfile, buffer, size, &nbyteswritten, NULL)) [[unlikely]] {
-        fwprintf_s(stderr, L"Error %lu in WriteFile while creating %s\n", GetLastError(), filepath);
-        CloseHandle(hfile);
-        return false;
+    bool      is_success = false; // has every step succeeded???
+    long      nbytes     = 0;     // number of bytes serialized to the disk
+    const int fdesc      = open(filename, O_CREAT | O_WRONLY, S_IRUSR | S_IROTH | S_IWUSR | S_IWOTH);
+    // without explicitly specifying the mode_t, we had to use sudo to open the written images, open the file descriptor with create and write privileges
+
+    if (fdesc == -1) {
+        fprintf(stderr, "Call to open() failed inside %s at line %d!; errno %d\n", __FUNCTION__, __LINE__, errno);
+        goto CLOSE_AND_RETURN;
     }
 
-    CloseHandle(hfile);
-    return true;
+    nbytes = write(fdesc, buffer, size);
+    if (nbytes == -1) {
+        fprintf(stderr, "Call to write() failed inside %s at line %d!; errno %d\n", __FUNCTION__, __LINE__, errno);
+        goto CLOSE_AND_RETURN;
+    }
+
+    // if the write was successful,
+    is_success = size == nbytes;
+    // then, fall through the CLOSE_AND_RETURN label
+
+CLOSE_AND_RETURN:
+    close(fdesc);
+    return is_success;
 }
-
-#undef _TRIPLE_UNDERSCORE_PREFIX

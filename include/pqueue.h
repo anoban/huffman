@@ -82,7 +82,7 @@
 typedef struct _pqueue {   // priority queue
         unsigned count;    // number of nodes.
         unsigned capacity; // number of nodes the prqueue can hold before requiring a reallocation.
-        bool     (*predptr)(_In_ const void* const, _In_ const void* const);
+        bool     (*predptr)(const void* const, const void* const);
         void**   tree; // a heap allocated array containing pointers to heap allocated nodes. use malloc to allocate the tree and the nodes.
 } pqueue;
 
@@ -100,8 +100,7 @@ static inline bool __cdecl predicate(const void* const  child, const void* const
 */
 
 static inline bool __cdecl pqueue_init(
-    _Inout_ pqueue* const restrict prqueue,
-    _In_ bool (*const predicate)(_In_ const void* const restrict child, _In_ const void* const restrict parent)
+    pqueue* const restrict prqueue, bool (*const predicate)(const void* const restrict child, const void* const restrict parent)
 ) {
     assert(prqueue);
     assert(predicate);
@@ -122,7 +121,7 @@ static inline bool __cdecl pqueue_init(
     return true;
 }
 
-static inline void __cdecl pqueue_clean(_Inout_ pqueue* const restrict prqueue) {
+static inline void __cdecl pqueue_clean(pqueue* const restrict prqueue) {
     for (size_t i = 0; i < prqueue->count; ++i) free(prqueue->tree[i]); // free the heap allocated nodes.
     free(prqueue->tree);                                                // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
     memset(prqueue, 0U, sizeof(pqueue));                                // zero out the struct
@@ -130,14 +129,13 @@ static inline void __cdecl pqueue_clean(_Inout_ pqueue* const restrict prqueue) 
 
 // enqueue
 static inline bool __cdecl pqueue_push(
-    _Inout_ pqueue* const restrict prqueue,
-    _In_ void* const restrict data /* expects a heap allocated memory block to push into the prqueue */
+    pqueue* const restrict prqueue, void* const restrict data /* expects a heap allocated memory block to push into the prqueue */
 ) {
     assert(prqueue);
     assert(data);
 
-    void * _temp_node = NULL, **_temp_tree = NULL; // NOLINT(readability-isolate-declaration)
-    size_t _childpos = 0, _parentpos = 0;          // NOLINT(readability-isolate-declaration)
+    void * _temp_node = nullptr, **_temp_tree = nullptr; // NOLINT(readability-isolate-declaration)
+    size_t _childpos = 0, _parentpos = 0;                // NOLINT(readability-isolate-declaration)
 
     // if the current buffer doesn't have space for another pointer, ask for an additional DEFAULT_PQUEUE_CAPACITY_BYTES bytes.
     if (prqueue->count + 1 > prqueue->capacity) {
@@ -248,13 +246,13 @@ static inline bool __cdecl pqueue_push(
 
 // dequeue
 static inline bool __cdecl pqueue_pop(
-    _Inout_ pqueue* const restrict prqueue, _Inout_ void** const restrict popped /* popped out pointer */
+    pqueue* const restrict prqueue, void** const restrict popped /* popped out pointer */
 ) {
     assert(prqueue);
     assert(popped);
 
     if (!prqueue->count) { // if the prqueue is already empty
-        *popped = NULL;
+        *popped = nullptr;
         return false;
     }
 
@@ -266,15 +264,15 @@ static inline bool __cdecl pqueue_pop(
     }
 
     size_t _leftchildpos = 0, _rightchildpos = 0, _parentpos = 0, _pos = 0; // NOLINT(readability-isolate-declaration)
-    void*  _temp     = NULL;
+    void*  _temp     = nullptr;
 
     // {25, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
     *popped          = prqueue->tree[0]; // give up the node at the top (root node)
-    // {NULL, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
+    // {nullptr, 20, 24, 17, 19, 22, 12, 15, 7, 9, 18, 10}
 
     /* now the tree looks like this:
 
-                             (NULL)                <--- 3rd (Root/Top)
+                             (nullptr)                <--- 3rd (Root/Top)
                              /     \
                             /       \
                            /         \
@@ -291,7 +289,7 @@ static inline bool __cdecl pqueue_pop(
     */
 
     prqueue->tree[0] = prqueue->tree[prqueue->count - 1]; // move the last node in the array to the root's position, offset 0.
-    prqueue->tree[prqueue->count - 1] = NULL;
+    prqueue->tree[prqueue->count - 1] = nullptr;
     prqueue->count--; // register the loss of a node
 
     /* now the tree looks like this:
@@ -403,4 +401,4 @@ static inline bool __cdecl pqueue_pop(
     return true;
 }
 
-static inline void* __stdcall pqueue_peek(_In_ const pqueue* const restrict prqueue) { return prqueue->tree ? prqueue->tree[0] : NULL; }
+static inline void* pqueue_peek(const pqueue* const restrict prqueue) { return prqueue->tree ? prqueue->tree[0] : nullptr; }
