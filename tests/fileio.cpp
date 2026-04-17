@@ -1,5 +1,5 @@
-#include <random>
 #include <algorithm>
+#include <random>
 
 #include <test.hpp>
 
@@ -9,42 +9,42 @@ extern "C" {
 #undef restrict
 }
 
-TEST(FILEIO, OPEN) {
+TEST(fileio, __open) {
     long size {};
 
-    const auto* buffer = ::__open(R"(./../media/bronze.jpg)", &size); // an image file
+    const auto* buffer = ::__read(R"(./../media/bronze.jpg)", &size); // an image file
     EXPECT_TRUE(buffer);
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
-    EXPECT_EQ(size, 589'001LLU);
+    EXPECT_EQ(size, 589'001);
 
-    buffer = ::__open(R"(./../media/mobydick.txt)", &size); // a text file
+    buffer = ::__read(R"(./../media/mobydick.txt)", &size); // a text file
     EXPECT_TRUE(buffer);
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
-    EXPECT_EQ(size, 988'635LLU);
+    EXPECT_EQ(size, 988'635);
 
-    buffer = ::__open(R"(./../media/table.csv)", &size); // a csv file
+    buffer = ::__read(R"(./../media/table.csv)", &size); // a csv file
     EXPECT_TRUE(buffer);
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
-    EXPECT_EQ(size, 1'113'978LLU);
+    EXPECT_EQ(size, 1'113'978);
 
-    buffer = ::__open(R"(./../media/sqlite3.dll)", &size); // a binary file (DLL)
+    buffer = ::__read(R"(./../media/sqlite3.dll)", &size); // a binary file (DLL)
     EXPECT_TRUE(buffer);
     ::free(reinterpret_cast<void*>(const_cast<unsigned char*>(buffer)));
-    EXPECT_EQ(size, 1'541'912LLU);
+    EXPECT_EQ(size, 1'541'912);
 }
 
-TEST(FILEIO, WRITE) {
+TEST(fileio, __write) {
     unsigned long long         buffsize { 1'000'000 };
     std::vector<unsigned char> buffer(buffsize);
     std::mt19937_64            rndengine { std::random_device {}() };
-    long              fsize {};
+    long                       fsize {};
     unsigned char*             fbuffer {};
 
     std::generate(buffer.begin(), buffer.end(), [&rndengine]() noexcept -> auto {
         return static_cast<unsigned char>(rndengine() % std::numeric_limits<unsigned char>::max());
     });
     EXPECT_TRUE(::__write(R"(./../media/temp01.dat)", buffer.data(), buffsize));
-    fbuffer = ::__open(R"(./../media/temp01.dat)", &fsize);
+    fbuffer = ::__read(R"(./../media/temp01.dat)", &fsize);
     EXPECT_TRUE(fbuffer);
     EXPECT_TRUE(std::equal(buffer.cbegin(), buffer.cend(), fbuffer));
     EXPECT_EQ(fsize, buffsize);
@@ -59,12 +59,12 @@ TEST(FILEIO, WRITE) {
         return static_cast<unsigned char>(rndengine() % std::numeric_limits<unsigned char>::max());
     });
     EXPECT_TRUE(::__write(R"(./../media/temp02.dat)", buffer.data(), buffsize));
-    fbuffer = ::__open(R"(./../media/temp02.dat)", &fsize);
+    fbuffer = ::__read(R"(./../media/temp02.dat)", &fsize);
     EXPECT_TRUE(fbuffer);
     EXPECT_TRUE(std::equal(buffer.cbegin(), buffer.cend(), fbuffer));
     EXPECT_EQ(fsize, buffsize);
     ::free(fbuffer);
 
-    EXPECT_TRUE(::DeleteFileW(R"(./../media/temp01.dat)"));
-    EXPECT_TRUE(::DeleteFileW(R"(./../media/temp02.dat)"));
+    EXPECT_FALSE(::remove(R"(./../media/temp01.dat)")); // ::remove() returns 0 upon successful deletion
+    EXPECT_FALSE(::remove(R"(./../media/temp02.dat)"));
 }

@@ -4,7 +4,7 @@
 #include <utilities.h>
 // clang-format on
 
-static inline unsigned char* __open(const char* const fpath, long* const nreadbytes) {
+static inline unsigned char* __read(const char* const fpath, long* const nreadbytes) {
     *nreadbytes             = 0;
     unsigned char* buffer   = 0;
     struct stat    filestat = { 0 };

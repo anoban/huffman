@@ -89,12 +89,12 @@ static_assert(offsetof(pqueue, tree) == 16);
 
 /*
 // must return true whenever a swap is needed.
-static inline bool __cdecl predicate(const void* const  child, const void* const  parent){
+static inline bool  predicate(const void* const  child, const void* const  parent){
     retrun child->comparable > parent->comparable;
 }
 */
 
-static inline bool __cdecl pqueue_init(
+static inline bool pqueue_init(
     pqueue* const restrict prqueue, bool (*const predicate)(const void* const restrict child, const void* const restrict parent)
 ) {
     assert(prqueue);
@@ -105,7 +105,7 @@ static inline bool __cdecl pqueue_init(
     // will allocate memory to store DEFAULT_PQUEUE_CAPACITY number of pointers in the tree.
 
     if (!prqueue->tree) [[unlikely]] {
-        fputws(L"Error:: malloc failed inside " __FUNCTIONW__ "\n", stderr);
+        fprintf(stderr, "Error in %s at line %d:: malloc failed inside %s\n", __FILE__, __LINE__, __FUNCTION__);
         return false;
     }
 
@@ -116,14 +116,14 @@ static inline bool __cdecl pqueue_init(
     return true;
 }
 
-static inline void __cdecl pqueue_clean(pqueue* const restrict prqueue) {
+static inline void pqueue_clean(pqueue* const restrict prqueue) {
     for (size_t i = 0; i < prqueue->count; ++i) free(prqueue->tree[i]); // free the heap allocated nodes.
     free(prqueue->tree);                                                // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
     memset(prqueue, 0U, sizeof(pqueue));                                // zero out the struct
 }
 
 // enqueue
-static inline bool __cdecl pqueue_push(
+static inline bool pqueue_push(
     pqueue* const restrict prqueue, void* const restrict data /* expects a heap allocated memory block to push into the prqueue */
 ) {
     assert(prqueue);
@@ -140,7 +140,7 @@ static inline bool __cdecl pqueue_push(
                   (prqueue->capacity * sizeof(uintptr_t)) /* size of the existing buffer in bytes */ + DEFAULT_PQUEUE_CAPACITY_BYTES
               ))) [[unlikely]] {
             // NOLINTEND(bugprone-assignment-in-if-condition, bugprone-multi-level-implicit-pointer-conversion)
-            fputws(L"Error:: realloc failed inside " __FUNCTIONW__ "\n", stderr);
+            fprintf(stderr, "Error in %s at line %d:: realloc failed inside %s\n", __FILE__, __LINE__, __FUNCTION__);
             // at this point, prqueue->tree is still valid and points to the old buffer
             return false; // return false if reallocation fails.
         }
@@ -240,7 +240,7 @@ static inline bool __cdecl pqueue_push(
 }
 
 // dequeue
-static inline bool __cdecl pqueue_pop(
+static inline bool pqueue_pop(
     pqueue* const restrict prqueue, void** const restrict popped /* popped out pointer */
 ) {
     assert(prqueue);

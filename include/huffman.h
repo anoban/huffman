@@ -85,7 +85,7 @@ static inline void  scan_frequencies( // the first step in Huffman encoding is t
 ) {
     assert(buffer);
     assert(size);
-    memset(frequencies, 0U, sizeof(typeof_unqual(*frequencies)) * BYTECOUNT);
+    memset(frequencies, 0U, sizeof(unsigned long long) * BYTECOUNT);
     for (unsigned long long i = 0; i < size; ++i) frequencies[buffer[i]]++;
 }
 
@@ -105,7 +105,7 @@ static inline void  scan_frequencies( // the first step in Huffman encoding is t
 ) {
     assert(buffer);
 
-    memset(buffer, 0U, sizeof(typeof_unqual(*buffer)) * node_count); // zero out the binary tree node buffer
+    memset(buffer, 0U, sizeof(btnode_t) * node_count); // zero out the binary tree node buffer
     pqueue_t prqueue = { .count = 0, .capacity = (unsigned) node_count, .tree = buffer };
     // (pqueue_t) { .tree = buffer, .count = 0, .capacity = node_count }; this syntax is invalid in C++, yikes!
     return prqueue;
@@ -113,8 +113,8 @@ static inline void  scan_frequencies( // the first step in Huffman encoding is t
 
 static inline void pqueue_clean(pqueue_t* const restrict prqueue) {
     assert(prqueue);
-    memset(prqueue->tree, 0U, sizeof(typeof_unqual(*prqueue->tree)) * prqueue->capacity); // cleanup the buffer
-    memset(prqueue, 0U, sizeof(typeof_unqual(*prqueue)));
+    memset(prqueue->tree, 0U, sizeof(btnode_t) * prqueue->capacity); // cleanup the buffer
+    memset(prqueue, 0U, sizeof(pqueue_t));
 }
 
 static inline bool pqueue_push(pqueue_t* const restrict prqueue, const btnode_t data) {

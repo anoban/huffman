@@ -6,8 +6,8 @@ extern "C" {
 #undef restrict
 }
 
-static constexpr unsigned long long  BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
-static constexpr unsigned long long  BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bits
+static constexpr unsigned long long BITSTREAM_BYTE_COUNT { 1000LLU };                 // in bytes
+static constexpr unsigned long long BITSTREAM_BIT_COUNT { BITSTREAM_BYTE_COUNT * 8 }; // in bits
 
 static constexpr unsigned char const bitstream[BITSTREAM_BYTE_COUNT] = {
     0b00110110, 0b10011110, 0b11101111, 0b10010011, 0b01110100, 0b10100011, 0b01001011, 0b00110110, 0b00110010, 0b01000100, 0b01111101,
@@ -165,9 +165,9 @@ static constexpr char binstr[BITSTREAM_BIT_COUNT + 1 /* + 1 for the NULL termina
     "01000100101001010111101100001111001110010110100001001000111111110101111101010101000101100001000101001111011110010011001000100111011101"
     "0011001010101000011000011101010100011000010100011100111100100101010010100010011101101000000010";
 
-static unsigned char           mutablestream[BITSTREAM_BYTE_COUNT] = { 0 }; // writable buffer for testing
+static unsigned char mutablestream[BITSTREAM_BYTE_COUNT]          = { 0 }; // writable buffer for testing
 
-static constexpr unsigned char xorbitstream[BITSTREAM_BYTE_COUNT]  = {
+static constexpr unsigned char xorbitstream[BITSTREAM_BYTE_COUNT] = {
     0b10111010, 0b01011100, 0b11101101, 0b00100001, 0b11000111, 0b00011000, 0b10000010, 0b10101010, 0b10100101, 0b10011110, 0b11110101,
     0b00110000, 0b10110101, 0b00111101, 0b11001101, 0b00101000, 0b11010101, 0b10111101, 0b11010101, 0b11101001, 0b10010101, 0b00010000,
     0b11001101, 0b01101011, 0b10001001, 0b11111100, 0b11100000, 0b01010111, 0b00001111, 0b01101101, 0b00001011, 0b10010000, 0b01111000,
@@ -261,18 +261,18 @@ static constexpr unsigned char xorbitstream[BITSTREAM_BYTE_COUNT]  = {
     0b00101110, 0b01000110, 0b01111110, 0b00110100, 0b00011111, 0b01000010, 0b10011001, 0b01100010, 0b10001101, 0b01101110
 };
 
-TEST(BITOPS, GETBIT) {
-    for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) EXPECT_EQ(::getbit(bitstream, i), (binstr[i] - 48)); // '0' is 48 and '1' is 49
+TEST(bitops, getbit) {
+    for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) EXPECT_EQ(::getbit(bitstream, i), binstr[i] - 48); // '0' is 48 and '1' is 49
 }
 
-TEST(BITOPS, SETBIT) {
+TEST(bitops, setbit) {
     for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) ::setbit(mutablestream, i, i % 2);
     // set all odd bits true and even bits false, which will effectively make every byte in the stream equivalent to 0b0101'0101
     for (size_t i = 0; i < BITSTREAM_BYTE_COUNT; ++i) EXPECT_EQ(mutablestream[i], 0b0101'0101);
 }
 
-TEST(BITOPS, XORBIT) {
-    ::memset(mutablestream, 0U, BITSTREAM_BYTE_COUNT); // cleanu up after the previous use
+TEST(bitops, xorbit) {
+    ::memset(mutablestream, 0U, sizeof(mutablestream)); // cleanu up after the previous use
 
     for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) {
         ::xorbit(bitstream, xorbitstream, mutablestream, i);

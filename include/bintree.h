@@ -174,7 +174,7 @@ static inline bntree bntree_merge(
             ROOT, // this is just a placeholder here because since the parent is nullptr our target becomes the root node, the control flow won't even reach the switch block
             data
         )) { // if the insertion failed
-        fputws(L"Error:: ", stderr);
+        fprintf(stderr, "Error:: ", );
         return merged;
     }
 
