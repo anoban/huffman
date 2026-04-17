@@ -1,17 +1,18 @@
 #pragma once
 
-// these helpers make the codebase ugly so opting for plain C style casts
+#include <assert.h>
+#include <errno.h>
+#include <malloc.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-#ifdef __cplusplus // for the sake of C++ compatibility
-    #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (reinterpret_cast<type>((identifier)))
-    #define _CXX_COMPAT_CONST_CAST(type, identifier)       (const_cast<type>((identifier)))
-    #define typeof_unqual(expression)                      decltype(expression)
-    #define _CXX_COMPAT_STDC_KEYWORD_GUARD(keyword)
-#else
-    #define _CXX_COMPAT_REINTERPRET_CAST(type, identifier) (identifier)
-    #define _CXX_COMPAT_CONST_CAST(type, identifier)       (identifier)
-    #define _CXX_COMPAT_STDC_KEYWORD_GUARD(keyword)        keyword
-#endif // __cplusplus
+#include <sys/fcntl.h>
+#include <sys/stat.h>
 
 #if defined(__TEST__) && defined(__VERBOSE_TEST_IO__)
     #define dbgprinf(...) fprintf(stderr, __VA_ARGS__)

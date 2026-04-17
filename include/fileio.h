@@ -1,14 +1,8 @@
 #pragma once
 
-#include <assert.h>
-#include <errno.h>
-#include <malloc.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <unistd.h>
-
-#include <sys/fcntl.h>
-#include <sys/stat.h>
+// clang-format off
+#include <utilities.h>
+// clang-format on
 
 static inline unsigned char* __open(const char* const fpath, long* const nreadbytes) {
     *nreadbytes             = 0;

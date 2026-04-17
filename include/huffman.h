@@ -1,9 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
 // clang-format off
 #include <fileio.h>
 #include <utilities.h>

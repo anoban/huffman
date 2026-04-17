@@ -1,7 +1,4 @@
 #pragma once
-#include <assert.h>
-#include <stddef.h>
-#include <stdlib.h>
 
 // clang-format off
 #include <utilities.h>

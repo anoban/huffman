@@ -1,7 +1,8 @@
 #pragma once
-#include <assert.h>
-#include <stdbool.h>
-#include <stdint.h>
+
+// clang-format off
+#include <utilities.h>
+// clang-format on
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                      CAUTION                                                      //
