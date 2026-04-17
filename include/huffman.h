@@ -1,8 +1,13 @@
 #pragma once
-#include <fileio.h>
+
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+
+// clang-format off
+#include <fileio.h>
 #include <utilities.h>
+// clang-format on
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // the problem with the data structures in the other headers inside ./include/ is that they liberally rely on type erasure for the sake of supporting arbitraty user defined types
@@ -78,10 +83,10 @@ static_assert(offsetof(pqueue_t, tree) == 8);
 //                                                      MISCELLANEOUS PRELIMINARIES                                              //
 //-------------------------------------------------------------------------------------------------------------------------------//
 
-static inline void __cdecl scan_frequencies( // the first step in Huffman encoding is the determination of symbol frequencies
-    _In_bytecount_(size) const unsigned char* const restrict buffer,
-    _In_ const unsigned long long size,
-    _Inout_count_(BYTECOUNT) unsigned long long* const restrict frequencies // could be a stack based or heap allocated array
+static inline void  scan_frequencies( // the first step in Huffman encoding is the determination of symbol frequencies
+    const unsigned char* const restrict buffer,
+     const unsigned long long size,
+     unsigned long long* const restrict frequencies // could be a stack based or heap allocated array
 ) {
     assert(buffer);
     assert(size);
@@ -93,15 +98,15 @@ static inline void __cdecl scan_frequencies( // the first step in Huffman encodi
 //                  AN ALTERNATIVE IMPLEMENTATION OF PRIORITY QUEUE THAT USES STACK FOR BETTER PERFORMANCE                       //
 //-------------------------------------------------------------------------------------------------------------------------------//
 
-[[nodiscard]] static inline bool __stdcall compare(_In_ const btnode_t child, _In_ const btnode_t parent) {
+[[nodiscard]] static inline bool compare(const btnode_t child, const btnode_t parent) {
     return child.data.frequency < parent.data.frequency; // we need the priority queue to yield the node with smallest frequency first
     // hence the less than operator
 }
 
-[[nodiscard]] static inline pqueue_t __stdcall pqueue_init(
+[[nodiscard]] static inline pqueue_t pqueue_init(
     /* expects an array on the stack because pqueue_clean() will not free() this buffer */
-    _In_count_(node_count) btnode_t* const restrict buffer,
-    _In_ const unsigned long long node_count
+    btnode_t* const restrict buffer,
+    const unsigned long long node_count
 ) {
     assert(buffer);
 
@@ -111,20 +116,20 @@ static inline void __cdecl scan_frequencies( // the first step in Huffman encodi
     return prqueue;
 }
 
-static inline void __stdcall pqueue_clean(_Inout_ pqueue_t* const restrict prqueue) {
+static inline void pqueue_clean(pqueue_t* const restrict prqueue) {
     assert(prqueue);
     memset(prqueue->tree, 0U, sizeof(typeof_unqual(*prqueue->tree)) * prqueue->capacity); // cleanup the buffer
     memset(prqueue, 0U, sizeof(typeof_unqual(*prqueue)));
 }
 
-static inline bool __stdcall pqueue_push(_Inout_ pqueue_t* const restrict prqueue, _In_ const btnode_t data) {
+static inline bool pqueue_push(pqueue_t* const restrict prqueue, const btnode_t data) {
     assert(prqueue);
 
     btnode_t           _temp     = { 0 };
     unsigned long long _childpos = 0, _parentpos = 0; // NOLINT(readability-isolate-declaration)
 
     if (prqueue->count + 1 > prqueue->capacity) [[unlikely]] {
-        fputws(L"Error:: " __FUNCTIONW__ " failed because there's no more space in the pqueue_t buffer\n", stderr);
+        fprintf(stderr, "Error:: %s failed because there's no more space in the pqueue_t buffer\n", __PRETTY_FUNCTION__);
         return false;
     }
 
@@ -145,7 +150,7 @@ static inline bool __stdcall pqueue_push(_Inout_ pqueue_t* const restrict prqueu
     return true;
 }
 
-static inline bool __stdcall pqueue_pop(_Inout_ pqueue_t* const restrict prqueue, _Inout_ btnode_t* const restrict popped) {
+static inline bool pqueue_pop(pqueue_t* const restrict prqueue, btnode_t* const restrict popped) {
     assert(prqueue);
     assert(popped);
 
@@ -186,7 +191,7 @@ static inline bool __stdcall pqueue_pop(_Inout_ pqueue_t* const restrict prqueue
     return true;
 }
 
-static inline btnode_t __stdcall pqueue_peek(_In_ const pqueue_t* const restrict prqueue) {
+static inline btnode_t pqueue_peek(const pqueue_t* const restrict prqueue) {
     assert(prqueue);
 
     const btnode_t _placeholder = { 0 };
@@ -197,10 +202,10 @@ static inline btnode_t __stdcall pqueue_peek(_In_ const pqueue_t* const restrict
 //                                          ROUTINES FOR HUFFMAN TREE BUILDING                                                   //
 //-------------------------------------------------------------------------------------------------------------------------------//
 
-static inline bntree_t __cdecl build_huffman_tree(
-    _In_reads_(BYTECOUNT) const unsigned long long* const restrict frequencies,
-    _Inout_count_(GLOBAL_BTNODE_BUFFER_FIXEDCAPACITY) btnode_t* const restrict pqueue_nodebuffer,
-    _Inout_count_(GLOBAL_BTNODE_BUFFER_FIXEDCAPACITY) btnode_t* const restrict bntree_nodebuffer
+static inline bntree_t build_huffman_tree(
+    const unsigned long long* const restrict frequencies,
+    btnode_t* const restrict pqueue_nodebuffer,
+    btnode_t* const restrict bntree_nodebuffer
 ) {
     assert(frequencies);
     assert(pqueue_nodebuffer);
@@ -225,7 +230,7 @@ static inline bntree_t __cdecl build_huffman_tree(
         }
     }
 
-    dbgwprinf_s(L"There were %4llu unique symbols in this buffer\n", nsymbols_with_nonzero_frequency);
+    dbgprinf("There were %4llu unique symbols in this buffer\n", nsymbols_with_nonzero_frequency);
     temp.data.symbol = temp.data.frequency = 0; // .left and .right are already set to NULL
 
     // bootstrap the binary tree
@@ -235,7 +240,7 @@ static inline bntree_t __cdecl build_huffman_tree(
     while (pqueue_pop(&prqueue, &temp) // || pqueue_pop(&prqueue, &popped_02)
            // when the first call returns true the programme never evaluates the second call, FUCKING SHORTCIRCUITING HEH :(
     ) { // while the priority queue is not empty, take nodes one by one and start building the Huffman tree
-        dbgwprinf_s(L"%10llX - %10llu\n", temp.data.symbol, temp.data.frequency);
+        dbgprinf("%10llX - %10llu\n", temp.data.symbol, temp.data.frequency);
 
         // when the priority queue is empty, pqueue_pop() will update the popped struct to be an empty struct so we do not need to
         // do that at the end of the loop manually
@@ -246,7 +251,7 @@ static inline bntree_t __cdecl build_huffman_tree(
         // pop another node to pair with the previous node
         if (!pqueue_pop(&prqueue, &temp)) break;
 
-        dbgwprinf_s(L"%10llX - %10llu\n", temp.data.symbol, temp.data.frequency);
+        dbgprinf("%10llX - %10llu\n", temp.data.symbol, temp.data.frequency);
 
         huffman.tree[write_caret++] = temp; // copy the popped node to the tree's buffer
         huffman.node_count++;               // document the copy
@@ -263,7 +268,7 @@ static inline bntree_t __cdecl build_huffman_tree(
             // TODO
         }
     }
-    dbgwprinf_s(L"Have appended %8llu nodes to the Huffman tree\n", write_caret);
+    dbgprinf("Have appended %8llu nodes to the Huffman tree\n", write_caret);
 
     return huffman;
 }
@@ -285,14 +290,14 @@ static inline bntree_t __cdecl build_huffman_tree(
 // = 14.2646625064904
 // again, in theory all the 'C' characters in the above string can be represented by a total of 14.2646625064904 bits
 
-static inline unsigned long long __cdecl compress(
-    _In_ const unsigned char* const restrict inbuffer, _Inout_ unsigned char* const restrict outbuffer, _In_ const unsigned long long size
+static inline unsigned long long compress(
+    const unsigned char* const restrict inbuffer, unsigned char* const restrict outbuffer, const unsigned long long size
 ) {
     //
 }
 
-static inline unsigned long long __cdecl decompress(
-    _In_ const unsigned char* const restrict inbuffer, _Inout_ unsigned char* const restrict outbuffer, _In_ const unsigned long long size
+static inline unsigned long long decompress(
+    const unsigned char* const restrict inbuffer, unsigned char* const restrict outbuffer, const unsigned long long size
 ) {
     //
 }

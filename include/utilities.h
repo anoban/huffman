@@ -1,5 +1,4 @@
 #pragma once
-#include <sal.h>
 
 // these helpers make the codebase ugly so opting for plain C style casts
 
@@ -15,21 +14,25 @@
 #endif // __cplusplus
 
 #if defined(__TEST__) && defined(__VERBOSE_TEST_IO__)
-    #define dbgwprinf_s(...) fwprintf_s(stderr, __VA_ARGS__)
+    #define dbgprinf(...) fprintf(stderr, __VA_ARGS__)
 #else
-    #define dbgwprinf_s(...)
+    #define dbgprinf(...)
 #endif
 
 #define HELPER(expression) #expression
 #define TO_STR(expression) HELPER(expression)
 
 // retruns the offset of the parent node
-static inline unsigned long long __stdcall parent_position(_In_ const unsigned long long child) {
+static inline unsigned long long __attribute__((__always_inline__)) parent_position(const unsigned long long child) {
     return !child ? 0 : (child - 1) / 2 /* deliberate truncating division. */;
 }
 
 // retruns the offset of the left child node
-static inline unsigned long long __stdcall lchild_position(_In_ const unsigned long long parent) { return parent * 2 + 1; }
+static inline unsigned long long __attribute__((__always_inline__)) lchild_position(const unsigned long long parent) {
+    return parent * 2 + 1;
+}
 
 // retruns the offset of the left right node
-static inline unsigned long long __stdcall rchild_position(_In_ const unsigned long long parent) { return parent * 2 + 2; }
+static inline unsigned long long __attribute__((__always_inline__)) rchild_position(const unsigned long long parent) {
+    return parent * 2 + 2;
+}

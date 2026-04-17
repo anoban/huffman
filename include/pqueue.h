@@ -4,7 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// clang-format off
 #include <utilities.h>
+// clang-format on
 
 #define DEFAULT_PQUEUE_CAPACITY       1024LLU
 #define DEFAULT_PQUEUE_CAPACITY_BYTES (DEFAULT_PQUEUE_CAPACITY * sizeof(uintptr_t))

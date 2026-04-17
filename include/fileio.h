@@ -1,21 +1,5 @@
 #pragma once
 
-// clang-format off
-    #define _AMD64_
-    #define WIN32_LEAN_AND_MEAN
-    #define WIN32_EXTRA_MEAN
-    // UCRT headers, for some freaking reason, use a plain #if predicate for __STDC_WANT_SECURE_LIB__
-    // not an #ifdef predicate, so we need to provide a valued definition for __STDC_WANT_SECURE_LIB__,
-    // a plain #define results in compile time error
-    #define __STDC_WANT_SECURE_LIB__ 1
-    #define NOMINMAX     // it seems that only <Windows.h> has the internal header guards receptive to NOMINMAX
-    // if we include system headers directly without relying on <Windows.h> for transient includes, #define NOMINMAX offers no help! YIKES!
-    #include <windef.h>
-    #include <errhandlingapi.h>
-    #include <fileapi.h>
-    #include <handleapi.h>
-// clang-format on
-
 #include <assert.h>
 #include <malloc.h>
 #include <stdbool.h>

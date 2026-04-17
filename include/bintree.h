@@ -1,5 +1,11 @@
 #pragma once
+#include <assert.h>
+#include <stddef.h>
+#include <stdlib.h>
+
+// clang-format off
 #include <utilities.h>
+// clang-format on
 
 // binary tree is a hierarchical arrangement of nodes, with each node having a parent node and (optionally - a pair of) child nodes
 // each node usually has 3 members, one data members and two pointers, for left and right child nodes
@@ -37,11 +43,11 @@ typedef enum _child_kind { ROOT = 0xFF << 0x01, LEFT = 0xFF << 0x02, RIGHT = 0xF
 
 // create a node with the data provided and insert it into the binary tree as the child of the specified parent node
 static inline bool __cdecl bntree_insert(
-    _Inout_ bntree* const restrict tree,
-    _Inout_opt_ btnode* const restrict parent, // the parent node in the binary tree where we want new node to be linked to
-    _In_ const child_kind which,               // which arm of the parent node the data needs to be connected to
-    // when parent is NULL, argument which will not be used
-    _In_ void* const restrict data // the raw data the new node needs to encapsulate
+    bntree* const restrict tree,
+    btnode* const restrict parent, // the parent node in the binary tree where we want new node to be linked to
+    const child_kind which,        // which arm of the parent node the data needs to be connected to
+                                   // when parent is NULL, argument which will not be used
+    void* const restrict data      // the raw data the new node needs to encapsulate
 ) {
     assert(tree);
     assert(data);
@@ -97,9 +103,9 @@ static inline bool __cdecl bntree_insert(
 
 // remove the child of the specified parent node from the given binary tree
 static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
-    _Inout_ bntree* const restrict tree,
-    _Inout_opt_ btnode* const restrict parent,
-    _In_ const child_kind which
+     bntree* const restrict tree,
+     btnode* const restrict parent,
+     const child_kind which
 ) {
     assert(tree);
     // parent can be NULL
@@ -138,9 +144,9 @@ static inline bool __cdecl bntree_remove( // NOLINT(misc-no-recursion)
 
 // merge two binary trees into one
 static inline bntree __cdecl bntree_merge(
-    _In_ bntree* const restrict left,  // to be merged
-    _In_ bntree* const restrict right, // to be merged
-    _In_ void* const restrict data     // data for the new root node
+    bntree* const restrict left,  // to be merged
+    bntree* const restrict right, // to be merged
+    void* const restrict data     // data for the new root node
 ) {
     assert(left);
     assert(right);

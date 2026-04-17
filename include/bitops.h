@@ -13,8 +13,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // returns the nth bit in the buffer (which is an array of bytes that is viewed as a contiguous stream of bits)
-static inline bool  getbit(
-     const unsigned char* const restrict bitstream,  const unsigned long long offset /* nth bit */
+static inline bool getbit(
+    const unsigned char* const restrict bitstream, const unsigned long long offset /* nth bit */
 ) {
     // const unsigned char byte   = bitstream[offset / 8 /* deliberate integer division */]; // first find the byte that contains the asked bit.
     // const unsigned long long  bit    = offset % 8;                                              // offset of the asked bit within the byte.
@@ -26,8 +26,8 @@ static inline bool  getbit(
 }
 
 // toggles a select bit on or off.
-static inline void  setbit(
-     unsigned char* const restrict bitstream,  const unsigned long long offset,  const bool flag /* on or off */
+static inline void setbit(
+    unsigned char* const restrict bitstream, const unsigned long long offset, const bool flag /* on or off */
 ) {
     // const unsigned long long bit    = offset % 8;
     // unsigned char      mask   = 0b1000'0000;
