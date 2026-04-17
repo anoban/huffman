@@ -14,7 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // returns the nth bit in the buffer (which is an array of bytes that is viewed as a contiguous stream of bits)
-static inline bool getbit(
+static inline bool __attribute__((__always_inline__)) getbit(
     const unsigned char* const restrict bitstream, const unsigned long long offset /* nth bit */
 ) {
     // const unsigned char byte   = bitstream[offset / 8 /* deliberate integer division */]; // first find the byte that contains the asked bit.
@@ -27,7 +27,7 @@ static inline bool getbit(
 }
 
 // toggles a select bit on or off.
-static inline void setbit(
+static inline void __attribute__((__always_inline__)) setbit(
     unsigned char* const restrict bitstream, const unsigned long long offset, const bool flag /* on or off */
 ) {
     // const unsigned long long bit    = offset % 8;
@@ -42,7 +42,7 @@ static inline void setbit(
 }
 
 // computes the bitwise xor of the passed buffers, and stores the result in the output buffer.
-static inline void  xorbit( // the result will be false only if both of the bits are identical
+static inline void __attribute__((__always_inline__)) xorbit( // the result will be false only if both of the bits are identical
      const unsigned char* const restrict inbuff_a,
      const unsigned char* const restrict inbuff_b,
      unsigned char* const restrict outbuff,

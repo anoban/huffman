@@ -1,6 +1,9 @@
 #pragma once
 #define __VERBOSE_TEST_IO__
 
+#include <gtest/gtest.h>
+#include <type_traits>
+
 // the problem with namspacing <huffman.h> prior to including <gtest/gtest.h> is that all the symbols from headers directly and
 // indirecty included in <huffman.h> get scoped inside the namespace, won't be available in the global namespace this includes symbols from __STDC__ headers :(
 // but the header guards copied into our TUs will prevent these headers from being reincluded in gtest.h, hence we run in to a slew of errors
@@ -29,7 +32,7 @@ namespace pqueue_stress_test {
             unsigned reserved;
             double   sales;
 
-            constexpr bool operator>(_In_ const record& other) const noexcept { return unit_price > other.unit_price; }
+            constexpr bool operator>(const record& other) const noexcept { return unit_price > other.unit_price; }
     };
 
     using node_type    = record;

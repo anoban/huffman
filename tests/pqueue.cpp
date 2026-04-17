@@ -13,15 +13,15 @@ extern "C" {
 
 extern "C" {
     // return true when a swap is needed, i.e when the child is heavier than the parent
-    [[nodiscard]] static __declspec(noinline) bool __stdcall comp(_In_ const void* const child, _In_ const void* const parent) noexcept {
+    [[nodiscard]] static  bool  comp( const void* const child,  const void* const parent) noexcept {
         return *reinterpret_cast<pqueue_test::constant_node_pointer>(child) > *reinterpret_cast<pqueue_test::constant_node_pointer>(parent);
     }
 
-    // argument typedef int (__cdecl* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*)
-    [[nodiscard, deprecated]] static __declspec(noinline) int __cdecl ptrcomp( // to be used with qsort_s()
-        _In_opt_ [[maybe_unused]] void* const context,                         // we do not need this for our tests
-        _In_ pqueue_test::constant_node_pointer* const current,                // cannot use long double here directly
-        _In_ pqueue_test::constant_node_pointer* const next
+    // argument typedef int (* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*)
+    [[nodiscard, deprecated]] static  int  ptrcomp( // to be used with qsort_s()
+         [[maybe_unused]] void* const context,                         // we do not need this for our tests
+         pqueue_test::constant_node_pointer* const current,                // cannot use long double here directly
+         pqueue_test::constant_node_pointer* const next
     ) noexcept {
         assert(reinterpret_cast<uintptr_t>(*current) & reinterpret_cast<uintptr_t>(*next));
         return (**current == **next) ? 0 : (**current > **next) ? 1 : -1;
@@ -29,7 +29,7 @@ extern "C" {
 }
 
 template<typename _TyNode> [[nodiscard]] static
-    __declspec(noinline) bool __stdcall nodecomp(_In_ const void* const child, _In_ const void* const parent) noexcept
+     bool  nodecomp( const void* const child,  const void* const parent) noexcept
     requires requires(const _TyNode& _left, const _TyNode& _right) {
         // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this type constraint
         _left.operator>(_right);
