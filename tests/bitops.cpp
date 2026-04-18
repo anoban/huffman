@@ -266,9 +266,12 @@ TEST(bitops, getbit) {
 }
 
 TEST(bitops, setbit) {
-    for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) ::setbit(mutablestream, i, i % 2);
-    // set all odd bits true and even bits false, which will effectively make every byte in the stream equivalent to 0b0101'0101
-    for (size_t i = 0; i < BITSTREAM_BYTE_COUNT; ++i) EXPECT_EQ(mutablestream[i], 0b0101'0101);
+    bool flag {};
+    for (size_t i = 0; i < BITSTREAM_BIT_COUNT; ++i) {
+        flag = ::rand() % 2;
+        ::setbit(mutablestream, i, flag);
+        EXPECT_EQ(flag, ::getbit(mutablestream, i));
+    }
 }
 
 TEST(bitops, xorbit) {

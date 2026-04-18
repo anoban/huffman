@@ -13,12 +13,12 @@ extern "C" {
 
 extern "C" {
     // return true when a swap is needed, i.e when the child is heavier than the parent
-    [[nodiscard]] static  bool  comp( const void* const child,  const void* const parent) noexcept {
+    [[nodiscard]] static bool comp(const void* const child, const void* const parent) noexcept {
         return *reinterpret_cast<pqueue_test::constant_node_pointer>(child) > *reinterpret_cast<pqueue_test::constant_node_pointer>(parent);
     }
 
     // argument typedef int (* _CoreCrtSecureSearchSortCompareFunction)(void*, void const*, void const*)
-    [[nodiscard, deprecated]] static  int  ptrcomp( // to be used with qsort_s()
+    [[maybe_unused, deprecated]] static  int  ptrcomp( // to be used with qsort_s()
          [[maybe_unused]] void* const context,                         // we do not need this for our tests
          pqueue_test::constant_node_pointer* const current,                // cannot use long double here directly
          pqueue_test::constant_node_pointer* const next
@@ -28,8 +28,7 @@ extern "C" {
     }
 }
 
-template<typename _TyNode> [[nodiscard]] static
-     bool  nodecomp( const void* const child,  const void* const parent) noexcept
+template<typename _TyNode> [[nodiscard]] static bool nodecomp(const void* const child, const void* const parent) noexcept
     requires requires(const _TyNode& _left, const _TyNode& _right) {
         // explicitly calling the .operator>() member instead of using > because we do not want primitive types meeting this type constraint
         _left.operator>(_right);
@@ -38,14 +37,14 @@ template<typename _TyNode> [[nodiscard]] static
         ->operator>(*reinterpret_cast<typename std::add_pointer_t<typename std::add_const_t<_TyNode>>>(parent));
 }
 
-extern std::vector<pqueue_test::node_type>        randoms;        // defined in main.cpp
-extern std::vector<pqueue_test::node_type>        randoms_sorted; // defined in main.cpp
+extern std::vector<pqueue_test::node_type> randoms;        // defined in main.cpp
+extern std::vector<pqueue_test::node_type> randoms_sorted; // defined in main.cpp
 
 extern std::vector<pqueue_stress_test::node_type> stress_test_randoms;        // defined in main.cpp
 extern std::vector<pqueue_stress_test::node_type> stress_test_randoms_sorted; // defined in main.cpp
 
 struct PQueueFixture : public testing::Test {
-        ::pqueue            prqueue {};
+        ::pqueue prqueue {};
 
         inline virtual void SetUp() noexcept override { ASSERT_TRUE(::pqueue_init(&prqueue, ::comp)); }
 
@@ -54,14 +53,14 @@ struct PQueueFixture : public testing::Test {
 
 // FOLLOWING ARE TESTS THAT DO NOT INVOLVE ANY REALLOCATION INSIDE THE PRIORITY QUEUE
 
-TEST_F(PQueueFixture, INIT) {
+TEST_F(PQueueFixture, pqueue_init) {
     EXPECT_FALSE(prqueue.count);
     EXPECT_EQ(prqueue.capacity, DEFAULT_PQUEUE_CAPACITY);
     EXPECT_EQ(prqueue.predptr, std::addressof(::comp));
     EXPECT_TRUE(prqueue.tree);
 }
 
-TEST_F(PQueueFixture, PUSH) {
+TEST_F(PQueueFixture, pqueue_push) {
     pqueue_test::node_pointer temp {}; // pointers to heap allocated random numbers
 
     for (size_t i = 0; i < ELEMENT_COUNT_WITHOUT_REALLOCATION; ++i) {
@@ -79,7 +78,7 @@ TEST_F(PQueueFixture, PUSH) {
     EXPECT_EQ(*reinterpret_cast<pqueue_test::node_pointer>(prqueue.tree[0]), randoms_sorted[0]);
 }
 
-TEST_F(PQueueFixture, POP) {
+TEST_F(PQueueFixture, pqueue_pop) {
     pqueue_test::node_pointer temp {};
 
     for (size_t i = 0; i < ELEMENT_COUNT_WITHOUT_REALLOCATION; ++i) {
@@ -107,7 +106,7 @@ TEST_F(PQueueFixture, POP) {
     EXPECT_FALSE(prqueue.tree);
 }
 
-TEST_F(PQueueFixture, PEEK) {
+TEST_F(PQueueFixture, pqueue_peek) {
     pqueue_test::node_pointer temp {};
 
     for (size_t i = 0; i < ELEMENT_COUNT_WITHOUT_REALLOCATION; ++i) {
@@ -137,7 +136,7 @@ TEST_F(PQueueFixture, PEEK) {
 
 // STRESS TEST INVOLVE REALLOCATIONS INSIDE THE PRIORITY QUEUE
 
-TEST(PQUEUE, STRESS_TEST) {
+TEST(pqueue, stress_test) {
     ::pqueue prqueue {};
     ::pqueue_init(&prqueue, ::nodecomp<pqueue_stress_test::node_type>);
 

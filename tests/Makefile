@@ -1,8 +1,8 @@
 CXX = /usr/bin/g++
 
-CXXFLAGS = -Wall -Wextra -static -std=c++20 -march=tigerlake -mavx512f -ffast-math -mprefer-vector-width=512
+CXXFLAGS = -Wall -Wextra -std=c++20 -march=tigerlake -mavx512f -ffast-math -mprefer-vector-width=512
 
-INCLUDE_PATHS = -I./ -I./googletest -I./googletest/include -I./../include
+INCLUDE_PATHS = -I./ -I./../include -I./googletest -I./googletest/include
 
 DEBUG = -DDEBUG -D_DEBUG -O0 -g3
 
